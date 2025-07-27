@@ -1,3 +1,5 @@
+import imageAbout from "../image/bannerAboutUs/bannerAboutUs.png"
+
 export default function CardLandscape() {
   return (
     <div className="relative overflow-hidden py-20 px-5 sm:px-6 lg:px-24 bg-gradient-to-br from-blue-50 to-white">
@@ -8,7 +10,7 @@ export default function CardLandscape() {
             <div className="absolute -inset-4 bg-gradient-to-r from-sky-400 to-blue-600 rounded-2xl opacity-30 group-hover:opacity-50 blur-md transition-all duration-500"></div>
             <img 
               className="relative w-full h-auto rounded-xl shadow-2xl object-cover transform group-hover:-translate-y-1 transition-transform duration-300 border-4 border-white" 
-              src="src/assets/image/bannerAboutUs/bannerAboutUs.png" 
+              src={imageAbout} 
               alt="About Ekraf Market"
             />
             <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-600 rounded-full opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
