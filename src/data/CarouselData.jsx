@@ -1,6 +1,6 @@
-import carousel1 from '../assets/image/carousel/carousel.png';
-import carousel2 from '../assets/image/carousel/carousel1.png';
-import carousel3 from '../assets/image/carousel/carousel2.png';
+import carousel1 from '../assets/image/carousel/carousel.webp';
+import carousel2 from '../assets/image/carousel/carousel1.webp';
+import carousel3 from '../assets/image/carousel/carousel2.webp';
 
 const carouselData = [
   {
