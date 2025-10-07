@@ -1,6 +1,6 @@
-import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaTelegramPlane, FaWhatsapp, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import Navbar from '../assets/components/Navbar';
 
 const ContactUs = () => {
@@ -8,64 +8,103 @@ const ContactUs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
 
+  // Memoized function to clear notification
+  const clearNotification = useCallback(() => {
+    setSubmitStatus(null);
+  }, []);
+
+  // Auto-hide notification after 5 seconds
+  useEffect(() => {
+    if (!submitStatus) return;
+    
+    const timer = setTimeout(clearNotification, 5000);
+    return () => clearTimeout(timer);
+  }, [submitStatus, clearNotification]);
+
   const sendEmail = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
 
+    // Form validation
+    if (!form.current) {
+      setSubmitStatus({ 
+        success: false, 
+        message: 'Form tidak dapat diakses. Silakan refresh halaman.' 
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const formData = new FormData(form.current);
-      const data = Object.fromEntries(formData.entries());
-
-      // URL endpoint Google Apps Script
-      const scriptUrl = import.meta.env.VITE_APP_SCRIPT_URL || 
-        'https://script.google.com/macros/s/AKfycbzbTKxxtJsZYE1yIqbgA82ewg0qFoF7v06g4rwEH1bqkH063JXNOvXhoyOx00rR7D1C/exec';
-
-      // Menggunakan FormData asli untuk pengiriman dengan CSRF protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(scriptUrl, {
+      // Validate required fields
+      const requiredFields = ['user_name', 'user_email', 'subject', 'message'];
+      const missingFields = requiredFields.filter(field => !formData.get(field)?.trim());
+      
+      if (missingFields.length > 0) {
+        throw new Error('Mohon lengkapi semua field yang diperlukan.');
+      }
+      
+      // Use Formspree endpoint from environment variable
+      const formspreeUrl = import.meta.env.VITE_FORMSPREE_URL || 'https://formspree.io/f/YOUR_FORM_ID';
+      
+      if (formspreeUrl.includes('YOUR_FORM_ID')) {
+        throw new Error('Konfigurasi form belum lengkap. Hubungi administrator.');
+      }
+      
+      const response = await fetch(formspreeUrl, {
         method: 'POST',
         body: formData,
-        redirect: 'follow',
         headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Origin': window.location.origin
+          'Accept': 'application/json'
         },
-        credentials: 'same-origin',
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+      if (response.ok) {
+        setSubmitStatus({ 
+          success: true, 
+          message: 'Pesan berhasil dikirim! Kami akan segera menghubungi Anda melalui email atau WhatsApp.' 
+        });
+        form.current.reset();
+      } else {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
-
-      setSubmitStatus({ 
-        success: true, 
-        message: 'Pesan berhasil dikirim! Kami akan segera menghubungi Anda.' 
-      });
-      form.current.reset();
-
     } catch (error) {
-      console.error('Error:', error);
+      clearTimeout(timeoutId);
+      console.error('Form submission error:', error);
+      
       let errorMessage = 'Terjadi kesalahan saat mengirim pesan.';
       
       if (error.name === 'AbortError') {
-        errorMessage = 'Koneksi timeout. Silakan periksa koneksi internet Anda.';
-      } else if (error.message.includes('HTTP error')) {
-        errorMessage = 'Server tidak dapat diakses. Silakan coba lagi nanti.';
-      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Koneksi timeout (15 detik). Periksa koneksi internet Anda.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
+      } else if (error.message.includes('CORS')) {
+        errorMessage = 'Masalah konfigurasi server. Hubungi administrator.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       setSubmitStatus({ 
         success: false, 
-        message: `${errorMessage} Atau hubungi kami melalui alternatif lain.` 
+        message: `${errorMessage} Silakan coba lagi atau hubungi kami langsung.` 
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
@@ -134,7 +173,9 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Telepon</h4>
-                      <p className="mt-1 text-sm sm:text-base text-blue-200 font-medium">+62 123 4567 8910</p>
+                      <a href="tel:+6281234567890" className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors">
+                        +62 812 3456 7890
+                      </a>
                       <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Senin - Jumat, 08:00 - 17:00</p>
                     </div>
                   </motion.div>
@@ -148,7 +189,9 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Email</h4>
-                      <p className="mt-1 text-sm sm:text-base text-blue-200 font-medium break-all">polteksi.ac.id</p>
+                      <a href="mailto:info@polteksi.ac.id" className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors break-all">
+                        info@polteksi.ac.id
+                      </a>
                       <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Respon dalam 24 jam kerja</p>
                     </div>
                   </motion.div>
@@ -174,7 +217,7 @@ const ContactUs = () => {
                     <motion.a 
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       whileTap={{ scale: 0.95 }}
-                      href="https://wa.me/6212345678910" 
+                      href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-green-500/25"
@@ -225,17 +268,72 @@ const ContactUs = () => {
             >
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Kirim Pesan</h3>
               
-              {submitStatus && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border ${submitStatus.success ? 'bg-green-500/10 border-green-500/30 text-green-300' : 'bg-red-500/10 border-red-500/30 text-red-300'} backdrop-blur-sm`}
-                >
-                  <p className="text-sm sm:text-base font-medium">{submitStatus.message}</p>
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {submitStatus && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className={`mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl border backdrop-blur-sm relative overflow-hidden ${
+                      submitStatus.success 
+                        ? 'bg-green-500/15 border-green-400/40 text-green-200' 
+                        : 'bg-red-500/15 border-red-400/40 text-red-200'
+                    }`}
+                  >
+                    {/* Background glow effect */}
+                    <div className={`absolute inset-0 opacity-20 ${
+                      submitStatus.success ? 'bg-green-400' : 'bg-red-400'
+                    } blur-xl`}></div>
+                    
+                    <div className="relative flex items-start gap-3">
+                      <div className={`flex-shrink-0 p-1 rounded-full ${
+                        submitStatus.success ? 'bg-green-400/20' : 'bg-red-400/20'
+                      }`}>
+                        {submitStatus.success ? (
+                          <FaCheckCircle className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <FaExclamationTriangle className="h-5 w-5 text-red-400" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h4 className={`font-semibold text-sm sm:text-base mb-1 ${
+                          submitStatus.success ? 'text-green-300' : 'text-red-300'
+                        }`}>
+                          {submitStatus.success ? 'Berhasil Dikirim!' : 'Gagal Mengirim'}
+                        </h4>
+                        <p className="text-xs sm:text-sm leading-relaxed">
+                          {submitStatus.message}
+                        </p>
+                      </div>
+                      
+                      <button
+                        onClick={() => setSubmitStatus(null)}
+                        className="flex-shrink-0 text-gray-400 hover:text-white transition-colors p-1"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Progress bar for auto-hide */}
+                    <motion.div
+                      initial={{ width: '100%' }}
+                      animate={{ width: '0%' }}
+                      transition={{ duration: 5, ease: 'linear' }}
+                      className={`absolute bottom-0 left-0 h-1 ${
+                        submitStatus.success ? 'bg-green-400' : 'bg-red-400'
+                      } opacity-60`}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <form ref={form} onSubmit={sendEmail} className="space-y-4 sm:space-y-6">
+                {/* Formspree honeypot field */}
+                <input type="text" name="_gotcha" style={{ display: 'none' }} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -320,7 +418,7 @@ const ContactUs = () => {
                     type="submit"
                     disabled={isSubmitting}
                     className={`w-full bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-400 text-white font-bold py-3 sm:py-4 px-6 rounded-xl shadow-2xl transition-all duration-300 flex items-center justify-center text-sm sm:text-base ${
-                      isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-purple-500/25 hover:shadow-2xl'
+                      isSubmitting ? 'opacity-70 cursor-not-allowed scale-95' : 'hover:shadow-purple-500/25 hover:shadow-2xl hover:scale-[1.02]'
                     }`}
                   >
                     {isSubmitting ? (

@@ -1,44 +1,52 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-export default function CategoryCard({ category }) {
+export default function CategoryCard({ category, className = '' }) {
   const Icon = category.icon;
 
   return (
-    
-    <div className="group relative bg-white rounded-xl p-3 sm:p-4 transition-all duration-300 border border-gray-200 hover:border-blue-300 shadow-xs hover:shadow-sm flex-1 min-w-[100px] sm:min-w-0">
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-50/50 to-yellow-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+    <motion.div 
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      className={`group relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 transition-all duration-300 border border-gray-200/50 hover:border-blue-300/60 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 flex-1 min-w-[120px] sm:min-w-0 ${className}`}
+    >
+      {/* Enhanced gradient overlay */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-50/60 via-cyan-50/40 to-indigo-50/30 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
       
-      <Link to={category.link} className="flex flex-col sm:flex-row items-center gap-3 h-full">
-        {/* Animated icon */}
-        <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 group-hover:from-blue-200 group-hover:to-blue-100 flex items-center justify-center transition-all duration-300 shadow-inner">
-          <Icon className="w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
-        </div>
+      {/* Decorative corner accent */}
+      <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-blue-400/20 to-transparent rounded-bl-2xl rounded-tr-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <Link to={category.link} className="relative flex flex-col items-center gap-3 h-full text-center">
+        {/* Enhanced animated icon */}
+        <motion.div 
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-blue-100 via-blue-50 to-cyan-50 group-hover:from-blue-200 group-hover:via-blue-100 group-hover:to-cyan-100 flex items-center justify-center transition-all duration-300 shadow-md group-hover:shadow-lg mb-1"
+        >
+          <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 group-hover:text-blue-700 transition-colors" />
+        </motion.div>
 
-        {/* Content */}
-        <div className="text-center sm:text-left flex-1">
-          <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+        {/* Enhanced content */}
+        <div className="flex-1">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight mb-1">
             {category.name}
           </h3>
-          {/* Hidden on mobile */}
-          <p className="hidden sm:block text-xs text-gray-500 mt-1 line-clamp-2 group-hover:text-gray-600 transition-colors">
+          <p className="text-xs sm:text-sm text-gray-500 group-hover:text-gray-600 transition-colors line-clamp-2 leading-relaxed">
             {category.description}
           </p>
         </div>
 
-        {/* Desktop-only arrow */}
-        <svg 
-          className="hidden sm:block w-4 h-4 text-blue-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-        </svg>
+        {/* Enhanced hover indicator */}
+        <motion.div 
+          initial={{ width: 0 }}
+          whileHover={{ width: '60%' }}
+          className="h-0.5 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transition-all duration-300 mt-2"
+        />
       </Link>
 
-      {/* Animated indicator */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 group-hover:w-[80%] transition-all duration-300"></div>
-    </div>
+      {/* Floating particles effect */}
+      <div className="absolute top-2 left-2 w-1 h-1 bg-blue-400/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100"></div>
+      <div className="absolute top-4 right-3 w-1.5 h-1.5 bg-cyan-400/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
+      <div className="absolute bottom-3 left-3 w-1 h-1 bg-indigo-400/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"></div>
+    </motion.div>
   );
 }
