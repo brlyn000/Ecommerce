@@ -213,7 +213,8 @@ const ProductData = [
         category: "food",
         whatsapp: "https://api.whatsapp.com/send/?phone=62881025097&text=Halo+saya+tertarik+dengan+produk+Macaron+anda&type=phone_number&app_absent=0",
         discount: '8%',
-    }
+    },
+    
 ];
 
 export default ProductData;
