@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { getIcon } from '../../utils/iconMapper';
 
 export default function CategoryCard({ category, className = '' }) {
-  const Icon = category.icon;
+  const Icon = getIcon(category.icon);
 
   return (
     <motion.div 

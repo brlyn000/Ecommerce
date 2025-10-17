@@ -1,13 +1,48 @@
 import { useParams, Link } from 'react-router-dom';
 import { FiArrowLeft, FiFrown } from 'react-icons/fi';
-import ProductData from '../data/ProductData';
+import { api } from '../services/api';
+import { useState, useEffect } from 'react';
 
 export default function CategoryList() {
   const { category } = useParams();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryName, setCategoryName] = useState('');
 
-  const filteredProducts = ProductData.filter(
-    (item) => item.category === category
-  );
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Get all categories to find category ID
+        const categories = await api.getCategories();
+        const categoryData = categories.find(cat => 
+          cat.name.toLowerCase().replace(' ', '-') === category.toLowerCase()
+        );
+        
+        if (categoryData) {
+          setCategoryName(categoryData.name);
+          const productsData = await api.getProductsByCategory(categoryData.id);
+          setProducts(productsData || []);
+        } else {
+          // Fallback: get all products and filter by category name
+          const allProducts = await api.getProducts();
+          const filtered = allProducts.filter(product => 
+            product.category_name?.toLowerCase().replace(' ', '-') === category.toLowerCase()
+          );
+          setProducts(filtered);
+          setCategoryName(category);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, [category]);
+
+  const filteredProducts = products;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
@@ -31,14 +66,28 @@ export default function CategoryList() {
               Semua Kategori
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 capitalize">
-              Produk <span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">{category}</span>
+              Produk <span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">{categoryName || category}</span>
             </h1>
             <p className="text-gray-500 mt-2">{filteredProducts.length} produk tersedia</p>
           </div>
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-48 md:h-56 bg-gray-200"></div>
+                <div className="p-5">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((item) => (
               <div 
@@ -62,7 +111,7 @@ export default function CategoryList() {
                     )}
                     {item.discount && (
                       <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                        {item.discount}% OFF
+                        {item.discount} OFF
                       </span>
                     )}
                   </div>
@@ -87,7 +136,7 @@ export default function CategoryList() {
 
                   {/* See More Button */}
                   <Link 
-                    to={`${item.link}`}
+                    to={`/product/${item.id}`}
                     className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     Lihat Detail

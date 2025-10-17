@@ -2,11 +2,14 @@ import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaTelegramPlane, FaWhatsapp, Fa
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Navbar from '../assets/components/Navbar';
+import { createContact } from '../services/api';
+import { useSettings } from '../context/SettingsContext';
 
 const ContactUs = () => {
   const form = useRef();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const { settings } = useSettings();
 
   // Memoized function to clear notification
   const clearNotification = useCallback(() => {
@@ -26,7 +29,6 @@ const ContactUs = () => {
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    // Form validation
     if (!form.current) {
       setSubmitStatus({ 
         success: false, 
@@ -36,75 +38,40 @@ const ContactUs = () => {
       return;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
     try {
       const formData = new FormData(form.current);
       
+      const contactData = {
+        name: formData.get('user_name')?.trim(),
+        email: formData.get('user_email')?.trim(),
+        subject: formData.get('subject')?.trim(),
+        message: formData.get('message')?.trim()
+      };
+      
       // Validate required fields
-      const requiredFields = ['user_name', 'user_email', 'subject', 'message'];
-      const missingFields = requiredFields.filter(field => !formData.get(field)?.trim());
+      const requiredFields = ['name', 'email', 'subject', 'message'];
+      const missingFields = requiredFields.filter(field => !contactData[field]);
       
       if (missingFields.length > 0) {
         throw new Error('Mohon lengkapi semua field yang diperlukan.');
       }
       
-      // Use Formspree endpoint from environment variable
-      const formspreeUrl = import.meta.env.VITE_FORMSPREE_URL || 'https://formspree.io/f/YOUR_FORM_ID';
+      await createContact(contactData);
       
-      if (formspreeUrl.includes('YOUR_FORM_ID')) {
-        throw new Error('Konfigurasi form belum lengkap. Hubungi administrator.');
-      }
-      
-      const response = await fetch(formspreeUrl, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        },
-        signal: controller.signal
+      setSubmitStatus({ 
+        success: true, 
+        message: 'Pesan berhasil dikirim! Kami akan segera menghubungi Anda melalui email atau WhatsApp.' 
       });
+      form.current.reset();
       
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        setSubmitStatus({ 
-          success: true, 
-          message: 'Pesan berhasil dikirim! Kami akan segera menghubungi Anda melalui email atau WhatsApp.' 
-        });
-        form.current.reset();
-      } else {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
-        }
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('Form submission error:', error);
-      
-      let errorMessage = 'Terjadi kesalahan saat mengirim pesan.';
-      
-      if (error.name === 'AbortError') {
-        errorMessage = 'Koneksi timeout (15 detik). Periksa koneksi internet Anda.';
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
-      } else if (error.message.includes('CORS')) {
-        errorMessage = 'Masalah konfigurasi server. Hubungi administrator.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
       
       setSubmitStatus({ 
         success: false, 
-        message: `${errorMessage} Silakan coba lagi atau hubungi kami langsung.` 
+        message: error.message || 'Terjadi kesalahan saat mengirim pesan. Silakan coba lagi.' 
       });
     } finally {
-      clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
@@ -173,8 +140,8 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Telepon</h4>
-                      <a href="tel:+6281234567890" className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors">
-                        +62 812 3456 7890
+                      <a href={`tel:${settings.phone}`} className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors">
+                        {settings.phone}
                       </a>
                       <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Senin - Jumat, 08:00 - 17:00</p>
                     </div>
@@ -189,8 +156,8 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Email</h4>
-                      <a href="mailto:info@polteksi.ac.id" className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors break-all">
-                        info@polteksi.ac.id
+                      <a href={`mailto:${settings.adminEmail}`} className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors break-all">
+                        {settings.adminEmail}
                       </a>
                       <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Respon dalam 24 jam kerja</p>
                     </div>
@@ -205,8 +172,7 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Lokasi</h4>
-                      <p className="mt-1 text-sm sm:text-base text-blue-200 leading-relaxed">Jl. Kartini No.25 C, Kesemen, Sukorame</p>
-                      <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Kec. Gresik, Kabupaten Gresik, Jawa Timur</p>
+                      <p className="mt-1 text-sm sm:text-base text-blue-200 leading-relaxed">{settings.companyAddress}</p>
                     </div>
                   </motion.div>
                 </div>
@@ -217,7 +183,7 @@ const ContactUs = () => {
                     <motion.a 
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       whileTap={{ scale: 0.95 }}
-                      href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda" 
+                      href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Halo,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-green-500/25"
@@ -332,8 +298,6 @@ const ContactUs = () => {
               </AnimatePresence>
               
               <form ref={form} onSubmit={sendEmail} className="space-y-4 sm:space-y-6">
-                {/* Formspree honeypot field */}
-                <input type="text" name="_gotcha" style={{ display: 'none' }} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}

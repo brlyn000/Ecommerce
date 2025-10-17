@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
-import productData from '../../data/ProductData';
+import { api } from '../../services/api';
+import { getProductImage } from '../../utils/imageMapper';
+import { getImageUrl } from '../../utils/imageUtils';
+
 import SearchBar from '../components/SearchBar';
 import { FiStar, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
@@ -10,7 +13,28 @@ const CardProduct = () => {
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const productsPerPage = 15;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await api.getProducts();
+        setProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+    
+    // Auto refresh products every 60 seconds
+    const interval = setInterval(fetchProducts, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -27,10 +51,10 @@ const CardProduct = () => {
     }).format(number);
   };
 
-  const filteredProducts = productData.filter((product) =>
+  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (product.category_name && product.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const indexOfLastProduct = currentPage * productsPerPage;
@@ -57,7 +81,11 @@ const CardProduct = () => {
         </div>
       </motion.div>
 
-      {currentProducts.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : currentProducts.length > 0 ? (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             {currentProducts.map((product, index) => (
@@ -72,12 +100,15 @@ const CardProduct = () => {
                 onMouseLeave={() => setHoveredProduct(null)}
               >
                 <div className="relative overflow-hidden h-36 sm:h-44 md:h-48 lg:h-56">
-                  <Link to={product.link}>
+                  <Link to={`/product/${product.id}`}>
                     <img 
-                      src={product.image} 
+                      src={product.image ? `${product.image}?t=${Date.now()}` : '/images/placeholder.svg'} 
                       alt={product.name} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                       loading="lazy"
+                      onError={(e) => {
+                        e.target.src = '/images/placeholder.svg';
+                      }}
                     />
                   </Link>
                   {product.discount && (
@@ -89,12 +120,12 @@ const CardProduct = () => {
                       -{product.discount}
                     </motion.div>
                   )}
-                  {product.stock === 'limited' && (
+                  {product.stock_status === 'limited' && (
                     <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                       Terbatas
                     </div>
                   )}
-                  {product.stock === 'sold-out' && (
+                  {product.stock_status === 'sold-out' && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">Habis</span>
                     </div>
@@ -115,7 +146,7 @@ const CardProduct = () => {
                     <span className="text-xs text-gray-500 ml-1 font-medium">({product.rating})</span>
                   </div>
                   
-                  <Link to={product.link}>
+                  <Link to={`/product/${product.id}`}>
                     <h3 className="text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600 mb-1 sm:mb-2 line-clamp-2 leading-tight">
                       {product.name}
                     </h3>
@@ -136,7 +167,7 @@ const CardProduct = () => {
                       )}
                     </div>
                     <Link 
-                      to={product.link}
+                      to={`/product/${product.id}`}
                       className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 self-start sm:self-auto"
                     >
                       Detail →

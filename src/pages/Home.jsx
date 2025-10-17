@@ -3,10 +3,33 @@ import Carousel from '../assets/components/Carousel';
 import HeadingTypography from "../assets/components/HeadingTypography";
 import CardProduct from "../assets/components/CardProduct";
 import CategoryCard from "../assets/components/CategoryCard";
-import CategoriesData from "../data/CategoriesData";
+import { api } from '../services/api';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 export const Home = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await api.getCategories();
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+    
+    // Auto refresh categories every 60 seconds
+    const interval = setInterval(fetchCategories, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
       {/* Enhanced Background Ornaments */}
@@ -95,26 +118,41 @@ export const Home = () => {
           
           {/* Enhanced category grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
-            {CategoriesData.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ 
-                  scale: 1.05, 
-                  y: -5,
-                  transition: { duration: 0.2 }
-                }}
-                className="group"
-              >
-                <CategoryCard 
-                  category={category} 
-                  className="transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 group-hover:bg-white/80 backdrop-blur-sm"
-                />
-              </motion.div>
-            ))}
+            {loading ? (
+              // Loading skeleton
+              [...Array(5)].map((_, index) => (
+                <div key={index} className="bg-white rounded-xl p-4 shadow-sm animate-pulse">
+                  <div className="h-12 w-12 bg-gray-200 rounded-lg mb-3 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                </div>
+              ))
+            ) : categories.length > 0 ? (
+              categories.map((category, index) => (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    y: -5,
+                    transition: { duration: 0.2 }
+                  }}
+                  className="group"
+                >
+                  <CategoryCard 
+                    category={category} 
+                    className="transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 group-hover:bg-white/80 backdrop-blur-sm"
+                  />
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">Tidak ada kategori tersedia</p>
+              </div>
+            )}
           </div>
         </motion.section>
 

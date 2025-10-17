@@ -1,14 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import carouselData from '../../data/CarouselData';
+import { api } from '../../services/api';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 export default function Carousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [carouselData, setCarouselData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const intervalRef = useRef();
+
+  useEffect(() => {
+    const fetchCarouselData = async () => {
+      try {
+        const data = await api.getCarousel();
+        setCarouselData(data || []);
+      } catch (error) {
+        console.error('Error fetching carousel data:', error);
+        setCarouselData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCarouselData();
+  }, []);
 
   const prevSlide = () => {
     if (isAnimating) return;
@@ -53,11 +70,36 @@ export default function Carousel() {
   };
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      if (!isHovered) nextSlide();
-    }, 5000);
-    return () => clearInterval(intervalRef.current);
-  }, [isHovered, currentIndex]);
+    if (carouselData.length > 0) {
+      intervalRef.current = setInterval(() => {
+        if (!isHovered) nextSlide();
+      }, 5000);
+      return () => clearInterval(intervalRef.current);
+    }
+  }, [isHovered, currentIndex, carouselData.length]);
+
+  if (loading) {
+    return (
+      <div className="relative max-w-7xl mx-auto overflow-hidden rounded-2xl shadow-2xl">
+        <div className="h-64 sm:h-80 md:h-96 lg:h-[32rem] bg-gray-200 animate-pulse flex items-center justify-center">
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (carouselData.length === 0) {
+    return (
+      <div className="relative max-w-7xl mx-auto overflow-hidden rounded-2xl shadow-2xl">
+        <div className="h-64 sm:h-80 md:h-96 lg:h-[32rem] bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+          <div className="text-white text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Selamat Datang</h2>
+            <p className="text-sm sm:text-base md:text-lg">Temukan produk terbaik untuk kebutuhan Anda</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -97,11 +139,19 @@ export default function Carousel() {
           isAnimating ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
         }`}>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 drop-shadow-lg">
-            {carouselData[currentIndex].title}
+            {carouselData[currentIndex]?.title}
           </h2>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-md">
-            {carouselData[currentIndex].description}
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-md mb-4">
+            {carouselData[currentIndex]?.description}
           </p>
+          {carouselData[currentIndex]?.button_text && (
+            <a 
+              href={carouselData[currentIndex]?.button_link || '#'}
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-lg"
+            >
+              {carouselData[currentIndex]?.button_text}
+            </a>
+          )}
         </div>
       </div>
 

@@ -1,17 +1,40 @@
 import { useParams } from 'react-router-dom';
 import { FaStar, FaRegStar, FaShoppingCart, FaHeart, FaShareAlt, FaChevronLeft } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
-import ProductData from '../data/ProductData';
+import { api } from '../services/api';
 import html2canvas from 'html2canvas';
+import CommentSection from '../assets/components/CommentSection';
 
 export default function ProductDetail() {
-  const { slug } = useParams();
-  const product = ProductData.find((p) => p.link === `/product/${slug}`);
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const productCardRef = useRef(null);
   const shareButtonRef = useRef(null);
   const shareDropdownRef = useRef(null);
+
+  // Fetch product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await api.getProductById(id);
+        setProduct(data);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchProduct();
+    } else {
+      setLoading(false);
+    }
+  }, [id]);
 
   // Handle clicks outside the share dropdown
   useEffect(() => {
@@ -121,6 +144,16 @@ export default function ProductDetail() {
     setShowShareOptions(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-yellow-50/90">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Loading product details...</p>
+        <p className="text-sm text-gray-500 mt-2">Product ID: {id}</p>
+      </div>
+    );
+  }
+
   if (!product) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-yellow-50/90 p-8">
       <div className="bg-white/95 rounded-3xl shadow-xl p-8 max-w-md text-center border border-gray-100 backdrop-blur-sm">
@@ -193,7 +226,7 @@ export default function ProductDetail() {
                   )}
                   {product.discount && (
                     <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      {product.discount}% OFF
+                      {product.discount} OFF
                     </span>
                   )}
                 </div>
@@ -236,7 +269,7 @@ export default function ProductDetail() {
                 <p className="text-gray-600 leading-relaxed">{product.description}</p>
                 <div className="mt-3">
                   <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                    {product.category}
+                    {product.category_name || 'Uncategorized'}
                   </span>
                 </div>
               </div>
@@ -314,7 +347,7 @@ export default function ProductDetail() {
                     <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
-                    Stock: {product.stock}
+                    Stock: {product.stock_status || 'available'}
                   </div>
                 </div>
               </div>
@@ -334,11 +367,16 @@ export default function ProductDetail() {
           <div className="p-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Complete Information</h3>
             <div className="prose max-w-none text-gray-600">
-              {product.longDescription || (
+              {product.long_description || (
                 <p>No additional information available for this product.</p>
               )}
             </div>
           </div>
+        </div>
+        
+        {/* Comment Section */}
+        <div className="mt-8">
+          <CommentSection productId={product.id} />
         </div>
       </div>
     </div>
