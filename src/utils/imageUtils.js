@@ -20,6 +20,6 @@ export const getImageUrl = (imagePath) => {
   }
   
   // If it's a relative path, construct full URL with cache buster
-  const baseUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5003';
+  const baseUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5006';
   return addCacheBuster(`${baseUrl}${imagePath}`);
 };

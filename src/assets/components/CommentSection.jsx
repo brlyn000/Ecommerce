@@ -1,251 +1,257 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiStar, FiUser, FiTrash2, FiMessageCircle, FiSend } from 'react-icons/fi';
-import { getCommentsByProductId, createComment, deleteComment } from '../../services/api';
+import { FiSend, FiUser, FiClock, FiEdit, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
+import { api } from '../../services/api';
 
 const CommentSection = ({ productId }) => {
   const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    comment: '',
-    rating: 5
-  });
+  const [newComment, setNewComment] = useState('');
+
+  const [commentType] = useState('comment');
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [editingComment, setEditingComment] = useState(null);
+  const [editText, setEditText] = useState('');
+
 
   useEffect(() => {
-    if (productId) {
-      fetchComments();
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
+    loadComments();
   }, [productId]);
 
-  const fetchComments = async () => {
+  const loadComments = async () => {
     try {
-      setLoading(true);
-      const data = await getCommentsByProductId(productId);
-      setComments(data);
+      const response = await fetch(`http://localhost:5006/api/comments/product/${productId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data);
+      }
     } catch (error) {
-      console.error('Error fetching comments:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error loading comments:', error);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.comment) return;
 
+
+  const handleEdit = (comment) => {
+    setEditingComment(comment.id);
+    setEditText(comment.comment);
+  };
+
+  const handleUpdate = async (commentId) => {
     try {
-      setSubmitting(true);
-      await createComment({
-        product_id: productId,
-        ...formData
+      await api.updateComment(commentId, {
+        comment: editText
       });
-      setFormData({ name: '', email: '', comment: '', rating: 5 });
-      fetchComments();
+      setEditingComment(null);
+      loadComments();
     } catch (error) {
-      console.error('Error submitting comment:', error);
-    } finally {
-      setSubmitting(false);
+      console.error('Error updating comment:', error);
     }
   };
 
   const handleDelete = async (commentId) => {
-    if (window.confirm('Hapus komentar ini?')) {
+    if (confirm('Are you sure you want to delete this comment?')) {
       try {
-        await deleteComment(commentId);
-        fetchComments();
+        await api.deleteComment(commentId);
+        loadComments();
       } catch (error) {
         console.error('Error deleting comment:', error);
       }
     }
   };
 
-  const renderStars = (rating, interactive = false, onChange = null) => {
-    return (
-      <div className="flex space-x-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <motion.button
-            key={star}
-            type={interactive ? 'button' : undefined}
-            onClick={interactive ? () => onChange(star) : undefined}
-            whileHover={interactive ? { scale: 1.2, rotate: 5 } : {}}
-            whileTap={interactive ? { scale: 0.9 } : {}}
-            className={`${interactive ? 'cursor-pointer' : 'cursor-default'} transition-all duration-200`}
-          >
-            <FiStar
-              className={`h-5 w-5 transition-all duration-200 ${
-                star <= rating 
-                  ? 'text-yellow-400 fill-current drop-shadow-sm' 
-                  : interactive 
-                    ? 'text-gray-300 hover:text-yellow-300' 
-                    : 'text-gray-300'
-              }`}
-            />
-          </motion.button>
-        ))}
-      </div>
-    );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      alert('Please login to comment');
+      return;
+    }
+    
+    if (!newComment.trim()) return;
+    
+    setLoading(true);
+    
+    try {
+      // Send to backend API
+      const response = await fetch('http://localhost:5006/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          name: user.full_name || user.username,
+          email: user.email,
+          comment: newComment.trim(),
+          comment_type: commentType,
+          user_id: user.id
+        })
+      });
+      
+      if (response.ok) {
+        // Reload comments from server
+        loadComments();
+        setNewComment('');
+      } else {
+        throw new Error('Failed to add comment');
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      alert('Failed to add comment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+      return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}d ago`;
+    }
   };
 
   return (
-    <div className="bg-gradient-to-br from-white/80 to-blue-50/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-      <div className="flex items-center space-x-3 mb-8">
-        <div className="p-3 bg-blue-500  rounded-2xl shadow-lg">
-          <FiMessageCircle className="h-6 w-6 text-white" />
-        </div>
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Komentar & Ulasan</h3>
-      </div>
+    <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100 p-8">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6">Comments ({comments.length})</h3>
       
       {/* Comment Form */}
-      <motion.form 
-        onSubmit={handleSubmit} 
-        className="mb-10 p-6 bg-gradient-to-br from-white/60 to-blue-50/30 backdrop-blur-lg rounded-2xl border border-white/30 shadow-xl"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Nama"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-blue-500 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 placeholder-gray-500"
-              required
-            />
-          </div>
-          <div className="relative">
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-blue-500 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 placeholder-gray-500"
-              required
-            />
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">Rating:</label>
-          <div className="flex items-center space-x-1">
-            {renderStars(formData.rating, true, (rating) => setFormData({ ...formData, rating }))}
-            <span className="ml-3 text-sm text-gray-600 font-medium">{formData.rating}/5</span>
-          </div>
-        </div>
-        
-        <div className="relative mb-6">
-          <textarea
-            placeholder="Tulis komentar Anda..."
-            value={formData.comment}
-            onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-blue-500 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 placeholder-gray-500 resize-none"
-            required
-          />
-        </div>
-        
-        <motion.button
-          type="submit"
-          disabled={submitting}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center space-x-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
-        >
-          <FiSend className="h-4 w-4" />
-          <span>{submitting ? 'Mengirim...' : 'Kirim Komentar'}</span>
-        </motion.button>
-      </motion.form>
-
-      {/* Comments List */}
-      <AnimatePresence>
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <motion.div 
-                key={i} 
-                className="animate-pulse p-6 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                  </div>
-                </div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </motion.div>
-            ))}
-          </div>
-        ) : comments.length === 0 ? (
-          <motion.div 
-            className="text-center py-12"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <FiMessageCircle className="h-8 w-8 text-gray-400" />
+      {user ? (
+        <form onSubmit={handleSubmit} className="mb-8">
+          <div className="flex items-start space-x-4">
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-medium text-sm">
+                {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+              </span>
             </div>
-            <p className="text-gray-500 text-lg font-medium">Belum ada komentar</p>
-            <p className="text-gray-400 text-sm mt-1">Jadilah yang pertama memberikan ulasan!</p>
-          </motion.div>
-        ) : (
-          <div className="space-y-4">
-            {comments.map((comment, index) => (
-              <motion.div
-                key={comment.id}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="group p-6 bg-gradient-to-br from-white/60 to-blue-50/30 backdrop-blur-lg rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-500 rounded-full shadow-md">
-                      <FiUser className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <span className="font-semibold text-gray-900">{comment.name}</span>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {renderStars(comment.rating)}
-                        <span className="text-xs text-gray-500 font-medium">{comment.rating}/5</span>
-                      </div>
+            <div className="flex-1">
+
+              
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+                className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                rows={3}
+                disabled={loading}
+              />
+              <div className="flex justify-between items-center mt-3">
+                <span className="text-sm text-gray-500">
+                  Commenting as {user.full_name || user.username}
+                </span>
+                <button
+                  type="submit"
+                  disabled={loading || !newComment.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <FiSend className="w-4 h-4" />
+                  <span>{loading ? 'Posting...' : 'Post Comment'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      ) : (
+        <div className="mb-8 p-6 bg-gray-50 rounded-xl text-center">
+          <p className="text-gray-600 mb-4">Please login to leave a comment</p>
+          <a
+            href="/login"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Login to Comment
+          </a>
+        </div>
+      )}
+      
+      {/* Comments List */}
+      <div className="space-y-6">
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <div key={comment.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+              <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0">
+                <FiUser className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="font-medium text-gray-900">{comment.name}</h4>
+
+                    <div className="flex items-center text-gray-500 text-sm">
+                      <FiClock className="w-4 h-4 mr-1" />
+                      <span>{formatDate(comment.created_at)}</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500 font-medium">
-                      {new Date(comment.created_at).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                    </span>
-                    <motion.button
-                      onClick={() => handleDelete(comment.id)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                      title="Hapus komentar"
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </motion.button>
-                  </div>
+                  
+                  {user && comment.user_id === user.id && (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(comment)}
+                        className="text-blue-500 hover:text-blue-700 p-1"
+                      >
+                        <FiEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(comment.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <p className="text-gray-700 leading-relaxed">{comment.comment}</p>
-              </motion.div>
-            ))}
+                
+                {editingComment === comment.id ? (
+                  <div className="space-y-3">
+
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none"
+                      rows={3}
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleUpdate(comment.id)}
+                        className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center"
+                      >
+                        <FiCheck className="w-4 h-4 mr-1" /> Save
+                      </button>
+                      <button
+                        onClick={() => setEditingComment(null)}
+                        className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 flex items-center"
+                      >
+                        <FiX className="w-4 h-4 mr-1" /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+
+                    <p className="text-gray-700 leading-relaxed">{comment.comment}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <FiUser className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No comments yet. Be the first to comment!</p>
           </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

@@ -4,6 +4,23 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
+// Optional auth middleware
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token) {
+    const jwt = require('jsonwebtoken');
+    try {
+      const user = jwt.verify(token, 'your-secret-key');
+      req.user = user;
+    } catch (err) {
+      // Continue without user if token invalid
+    }
+  }
+  next();
+};
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '../../public/uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -44,7 +61,7 @@ const upload = multer({
 });
 
 // Upload single file
-router.post('/single', (req, res) => {
+router.post('/single', optionalAuth, (req, res) => {
   // Create dynamic storage based on URL parameter or default to products
   const uploadType = req.query.type || req.body.type || 'products';
   
@@ -95,6 +112,7 @@ router.post('/single', (req, res) => {
       message: 'File uploaded successfully',
       filename: req.file.filename,
       url: fileUrl,
+      imageUrl: fileUrl,
       size: req.file.size
     });
   });

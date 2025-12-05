@@ -20,7 +20,7 @@ const Login = () => {
     setLoading(true);
     setError('');
 
-    const success = login(credentials.username, credentials.password);
+    const success = await login(credentials.username, credentials.password);
     
     if (!success) {
       setError('Username atau password salah');
@@ -107,6 +107,15 @@ const Login = () => {
             {loading ? 'Masuk...' : 'Masuk'}
           </motion.button>
         </form>
+
+        <div className="text-center mt-6">
+          <p className="text-blue-200 text-sm">
+            Belum punya akun?{' '}
+            <a href="/register" className="text-blue-400 hover:text-blue-300 font-medium">
+              Daftar di sini
+            </a>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,9 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { FaStar, FaRegStar, FaShoppingCart, FaHeart, FaShareAlt, FaChevronLeft } from 'react-icons/fa';
+import { FaStar, FaRegStar, FaShoppingCart, FaHeart, FaShareAlt, FaChevronLeft, FaPlus, FaMinus } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../services/api';
 import html2canvas from 'html2canvas';
 import CommentSection from '../assets/components/CommentSection';
+import LoginModal from '../assets/components/LoginModal';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -11,6 +12,14 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [quantityError, setQuantityError] = useState('');
   const productCardRef = useRef(null);
   const shareButtonRef = useRef(null);
   const shareDropdownRef = useRef(null);
@@ -21,6 +30,21 @@ export default function ProductDetail() {
       try {
         const data = await api.getProductById(id);
         setProduct(data);
+        setLikesCount(data.likes_count || 0);
+        
+        // Increment view count
+        const viewsData = JSON.parse(localStorage.getItem('productViews') || '{}');
+        viewsData[id] = (viewsData[id] || 0) + 1;
+        localStorage.setItem('productViews', JSON.stringify(viewsData));
+        
+        // Get like status
+        try {
+          const likeStatus = await api.getLikeStatus(id);
+          setIsLiked(likeStatus.liked);
+        } catch (error) {
+          // Ignore error if not authenticated
+          setIsLiked(false);
+        }
       } catch (error) {
         console.error('Error fetching product:', error);
         setProduct(null);
@@ -144,6 +168,42 @@ export default function ProductDetail() {
     setShowShareOptions(false);
   };
 
+  const handleLikeAndWishlist = async () => {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    try {
+      const result = await api.toggleLike(id);
+      setIsLiked(result.liked);
+      setLikesCount(prev => result.liked ? prev + 1 : Math.max(0, prev - 1));
+      
+      // Handle wishlist
+      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      if (result.liked) {
+        // Add to wishlist
+        const isInWishlist = savedWishlist.some(item => item.id === parseInt(id));
+        if (!isInWishlist) {
+          const updated = [...savedWishlist, product];
+          localStorage.setItem('wishlist', JSON.stringify(updated));
+          window.dispatchEvent(new Event('wishlistUpdated'));
+          
+          // Notification is now handled by backend in likeController
+        }
+      } else {
+        // Remove from wishlist
+        const updated = savedWishlist.filter(item => item.id !== parseInt(id));
+        localStorage.setItem('wishlist', JSON.stringify(updated));
+        window.dispatchEvent(new Event('wishlistUpdated'));
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      setShowLoginModal(true);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-yellow-50/90">
@@ -213,9 +273,12 @@ export default function ProductDetail() {
             <div className="space-y-4">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 h-96 border border-gray-200">
                 <img 
-                  src={product.image} 
+                  src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'} 
                   alt={product.name} 
                   className="w-full h-full object-contain transition-transform duration-500 hover:scale-105 p-4"
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.svg';
+                  }}
                 />
                 {/* Badges */}
                 <div className="absolute top-4 left-4 flex space-x-2">
@@ -226,16 +289,23 @@ export default function ProductDetail() {
                   )}
                   {product.discount && (
                     <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      {product.discount} OFF
+                      -{product.discount}%
                     </span>
                   )}
                 </div>
-                <button 
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={`absolute top-4 right-4 p-2 rounded-full shadow-sm transition-colors ${isWishlisted ? 'bg-red-100 text-red-500' : 'bg-white/90 text-gray-400 hover:bg-red-100 hover:text-red-500'}`}
-                >
-                  <FaHeart className={isWishlisted ? 'fill-current' : ''} />
-                </button>
+                <div className="absolute top-4 right-4 flex space-x-2">
+                  <button 
+                    onClick={handleLikeAndWishlist}
+                    className={`p-2 rounded-full shadow-sm transition-colors flex items-center space-x-1 ${
+                      isLiked 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-white/90 text-gray-600 hover:bg-red-100 hover:text-red-500'
+                    }`}
+                  >
+                    <FaHeart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-xs font-medium">{likesCount}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -243,22 +313,39 @@ export default function ProductDetail() {
             <div className="flex flex-col">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{product.name}</h1>
               
-              {/* Rating */}
-              <div className="flex items-center mb-4">
-                <div className="flex mr-2">
-                  {renderStars(product.rating)}
+              {/* Rating & Likes */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="flex mr-2">
+                    {renderStars(product.rating)}
+                  </div>
+                  <span className="text-gray-600 text-sm">({product.reviewCount} reviews)</span>
                 </div>
-                <span className="text-gray-600 text-sm">({product.reviewCount} reviews)</span>
+                <div className="flex items-center text-gray-600">
+                  <FaHeart className="w-4 h-4 mr-1 text-red-400" />
+                  <span className="text-sm font-medium">{likesCount} likes</span>
+                </div>
               </div>
 
               {/* Price */}
               <div className="mb-6">
-                <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
-                  {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
-                </span>
-                {product.originalPrice && (
-                  <span className="ml-2 text-lg text-gray-400 line-through">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.originalPrice)}
+                {product.discount ? (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-lg text-gray-400 line-through">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
+                    </span>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price * (1 - product.discount / 100))}
+                      </span>
+                      <span className="bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded-full">
+                        -{product.discount}%
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                   </span>
                 )}
               </div>
@@ -276,11 +363,55 @@ export default function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="mt-auto space-y-4">
-                <div className="flex space-x-4">
-                  <a href={product.whatsapp} className="flex-1 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+                      if (!token) {
+                        setShowLoginModal(true);
+                        return;
+                      }
+                      
+                      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                      const existingItem = cart.find(item => item.id === product.id);
+                      
+                      if (existingItem) {
+                        existingItem.quantity += 1;
+                        setCartMessage(`Updated quantity to ${existingItem.quantity}`);
+                      } else {
+                        cart.push({ ...product, quantity: 1 });
+                        setCartMessage('Added to cart successfully!');
+                      }
+                      
+                      localStorage.setItem('cart', JSON.stringify(cart));
+                      window.dispatchEvent(new Event('cartUpdated'));
+                      setShowCartModal(true);
+                      
+                      // Auto close modal after 2 seconds
+                      setTimeout(() => setShowCartModal(false), 2000);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+                  >
+                    <FaShoppingCart className="mr-2" />
+                    ADD TO CART
+                  </button>
+                  <button
+                    onClick={() => {
+                      const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+                      if (!token) {
+                        setShowLoginModal(true);
+                        return;
+                      }
+                      
+                      setOrderQuantity(1);
+                      setQuantityError('');
+                      setShowCheckoutModal(true);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+                  >
                     <FaShoppingCart className="mr-2" />
                     ORDER NOW
-                  </a>
+                  </button>
                   <div className="relative">
                     <button 
                       ref={shareButtonRef}
@@ -342,12 +473,17 @@ export default function ProductDetail() {
                 </div>
 
                 {/* Additional Info */}
-                <div className="flex items-center text-sm text-gray-500 mt-3">
+                <div className="flex items-center gap-3 text-sm text-gray-500 mt-3">
                   <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
                     <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
-                    Stock: {product.stock_status || 'available'}
+                    Status: {product.stock_status || 'available'}
+                  </div>
+                  <div className="flex items-center bg-blue-100 px-3 py-1 rounded-full">
+                    <span className="text-blue-600 font-medium">
+                      Stock: {product.stock || 0} pcs
+                    </span>
                   </div>
                 </div>
               </div>
@@ -378,6 +514,200 @@ export default function ProductDetail() {
         <div className="mt-8">
           <CommentSection productId={product.id} />
         </div>
+        
+        {/* Login Modal */}
+        <LoginModal 
+          isOpen={showLoginModal} 
+          onClose={() => setShowLoginModal(false)}
+          onLoginSuccess={() => {
+            setShowLoginModal(false);
+            window.location.reload();
+          }}
+        />
+        
+        {/* Cart Success Modal */}
+        {showCartModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-auto transform animate-bounce-in">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Success!</h3>
+                <p className="text-gray-600 mb-4">{cartMessage}</p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowCartModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Continue Shopping
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCartModal(false);
+                      window.location.href = '/cart';
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    View Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Checkout Confirmation Modal */}
+        {showCheckoutModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-auto">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaShoppingCart className="text-2xl text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Confirm Order</h3>
+                <p className="text-gray-600 mb-4">Are you sure you want to order this product?</p>
+                
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <img
+                      src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'}
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                    <div className="flex-1 text-left">
+                      <h4 className="font-medium text-gray-900">{product.name}</h4>
+                      {product.discount ? (
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 line-through text-sm">
+                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
+                          </span>
+                          <span className="text-blue-600 font-bold">
+                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price * (1 - product.discount / 100))}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-blue-600 font-bold">
+                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Jumlah:</span>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => {
+                          if (orderQuantity > 1) {
+                            setOrderQuantity(orderQuantity - 1);
+                            setQuantityError('');
+                          }
+                        }}
+                        className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
+                      >
+                        <FaMinus className="w-3 h-3" />
+                      </button>
+                      <span className="w-12 text-center font-medium">{orderQuantity}</span>
+                      <button
+                        onClick={() => {
+                          setOrderQuantity(orderQuantity + 1);
+                          setQuantityError('');
+                        }}
+                        className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
+                      >
+                        <FaPlus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {orderQuantity > 1 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal:</span>
+                        <span className="font-bold text-blue-600">
+                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
+                            (product.discount ? product.price * (1 - product.discount / 100) : product.price) * orderQuantity
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {quantityError && (
+                    <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+                      {quantityError}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowCheckoutModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (orderQuantity <= 0) {
+                        setQuantityError('Jumlah pesanan tidak boleh 0');
+                        return;
+                      }
+                      
+                      try {
+                        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                        
+                        // Create order
+                        const finalPrice = product.discount ? product.price * (1 - product.discount / 100) : product.price;
+                        const orderData = {
+                          items: [{ ...product, quantity: orderQuantity }],
+                          total: finalPrice * orderQuantity,
+                          customer_name: currentUser.full_name || currentUser.username
+                        };
+                        
+                        const orderResponse = await fetch('http://localhost:5006/api/orders', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('userToken')}`
+                          },
+                          body: JSON.stringify(orderData)
+                        });
+                        
+                        const orderResult = await orderResponse.json();
+                        
+                        if (orderResult.success) {
+                          setShowCheckoutModal(false);
+                          
+                          // Redirect to WhatsApp with validation
+                          const validateWhatsAppURL = (url) => {
+                            return url && (url.startsWith('https://wa.me/') || url.startsWith('https://api.whatsapp.com/'));
+                          };
+                          
+                          if (product.whatsapp && validateWhatsAppURL(product.whatsapp)) {
+                            window.open(product.whatsapp, '_blank');
+                          } else {
+                            const message = `Hi, I want to order ${product.name} x${orderQuantity} (Order ID: ${orderResult.order_id}) - ${window.location.href}`;
+                            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Order failed:', error);
+                        alert('Order failed. Please try again.');
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Confirm Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

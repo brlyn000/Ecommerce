@@ -14,20 +14,26 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    const savedUsers = localStorage.getItem('systemUsers');
-    const users = savedUsers ? JSON.parse(savedUsers) : [
-      { id: 1, name: 'Admin User', email: 'admin@naragatra.com', role: 'Admin', status: 'Active', password: 'admin123' }
-    ];
-    
-    const foundUser = users.find(u => u.email === email && u.password === password && u.status === 'Active');
-    if (foundUser) {
-      localStorage.setItem('adminToken', 'authenticated');
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      setIsAuthenticated(true);
-      return true;
+  const login = async (username, password) => {
+    try {
+      const response = await fetch('http://localhost:5006/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

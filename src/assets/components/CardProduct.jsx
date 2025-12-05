@@ -5,7 +5,8 @@ import { getProductImage } from '../../utils/imageMapper';
 import { getImageUrl } from '../../utils/imageUtils';
 
 import SearchBar from '../components/SearchBar';
-import { FiStar, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import LoginModal from './LoginModal';
+import { FiStar, FiSearch, FiChevronLeft, FiChevronRight, FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 const CardProduct = () => {
@@ -15,6 +16,10 @@ const CardProduct = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [likedProducts, setLikedProducts] = useState(new Set());
+  const [likeCounts, setLikeCounts] = useState({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState(new Set());
   const productsPerPage = 15;
 
   useEffect(() => {
@@ -22,6 +27,33 @@ const CardProduct = () => {
       try {
         const data = await api.getProducts();
         setProducts(data || []);
+        
+        // Initialize like counts and status
+        const counts = {};
+        const liked = new Set();
+        
+        for (const product of data || []) {
+          counts[product.id] = product.likes_count || 0;
+          try {
+            const likeStatus = await api.getLikeStatus(product.id);
+            if (likeStatus.liked) {
+              liked.add(product.id);
+            }
+          } catch (error) {
+            // Ignore error if not authenticated
+          }
+        }
+        
+        setLikeCounts(counts);
+        setLikedProducts(liked);
+        
+        // Load wishlist
+        const savedWishlist = localStorage.getItem('wishlist');
+        if (savedWishlist) {
+          const wishlist = JSON.parse(savedWishlist);
+          const wishlistIds = new Set(wishlist.map(item => item.id));
+          setWishlistItems(wishlistIds);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
         setProducts([]);
@@ -66,6 +98,65 @@ const CardProduct = () => {
   const nextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
   const prevPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
 
+
+
+  const handleLikeAndWishlist = async (product, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    try {
+      // Handle like
+      const result = await api.toggleLike(product.id);
+      
+      if (result.liked) {
+        setLikedProducts(prev => new Set([...prev, product.id]));
+        setLikeCounts(prev => ({ ...prev, [product.id]: (prev[product.id] || 0) + 1 }));
+        
+        // Add to wishlist
+        const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        const isInWishlist = savedWishlist.some(item => item.id === product.id);
+        if (!isInWishlist) {
+          const updated = [...savedWishlist, product];
+          localStorage.setItem('wishlist', JSON.stringify(updated));
+          setWishlistItems(prev => new Set([...prev, product.id]));
+          window.dispatchEvent(new Event('wishlistUpdated'));
+          
+          // Notification is now handled by backend in likeController
+        }
+      } else {
+        setLikedProducts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(product.id);
+          return newSet;
+        });
+        setLikeCounts(prev => ({ ...prev, [product.id]: Math.max(0, (prev[product.id] || 0) - 1) }));
+        
+        // Remove from wishlist
+        const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        const updated = savedWishlist.filter(item => item.id !== product.id);
+        localStorage.setItem('wishlist', JSON.stringify(updated));
+        setWishlistItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(product.id);
+          return newSet;
+        });
+        window.dispatchEvent(new Event('wishlistUpdated'));
+      }
+    } catch (error) {
+      if (error.message === 'Authentication required') {
+        setShowLoginModal(true);
+      } else {
+        console.error('Error toggling like:', error);
+      }
+    }
+  };
+
   return (
     <div className="px-3 sm:px-4 lg:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
       <motion.div 
@@ -102,7 +193,7 @@ const CardProduct = () => {
                 <div className="relative overflow-hidden h-36 sm:h-44 md:h-48 lg:h-56">
                   <Link to={`/product/${product.id}`}>
                     <img 
-                      src={product.image ? `${product.image}?t=${Date.now()}` : '/images/placeholder.svg'} 
+                      src={product.image ? `http://localhost:5006${product.image}?t=${Date.now()}` : '/images/placeholder.svg'} 
                       alt={product.name} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                       loading="lazy"
@@ -131,6 +222,18 @@ const CardProduct = () => {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
+                  
+                  {/* Like & Wishlist Button */}
+                  <button
+                    onClick={(e) => handleLikeAndWishlist(product, e)}
+                    className={`absolute bottom-2 right-2 p-2 rounded-full shadow-lg transition-all duration-300 ${
+                      likedProducts.has(product.id) 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-white/90 text-gray-600 hover:bg-red-100 hover:text-red-500'
+                    }`}
+                  >
+                    <FiHeart className={`w-4 h-4 ${likedProducts.has(product.id) ? 'fill-current' : ''}`} />
+                  </button>
                 </div>
 
                 <div className="p-3 sm:p-4">
@@ -155,23 +258,79 @@ const CardProduct = () => {
                     </p>
                   </Link>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="flex flex-col">
-                      <span className="text-blue-600 font-bold text-sm sm:text-base">
-                        {formatRupiah(product.price)}
-                      </span>
-                      {product.originalPrice && (
-                        <span className="text-xs text-gray-400 line-through">
-                          {formatRupiah(product.originalPrice)}
-                        </span>
-                      )}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        {product.discount ? (
+                          <>
+                            <span className="text-xs text-gray-400 line-through">
+                              {formatRupiah(product.price)}
+                            </span>
+                            <span className="text-blue-600 font-bold text-sm sm:text-base">
+                              {formatRupiah(product.price * (1 - product.discount / 100))}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-blue-600 font-bold text-sm sm:text-base">
+                            {formatRupiah(product.price)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <FiHeart className="w-3 h-3 mr-1" />
+                        {likeCounts[product.id] || 0}
+                      </div>
                     </div>
-                    <Link 
-                      to={`/product/${product.id}`}
-                      className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 self-start sm:self-auto"
-                    >
-                      Detail →
-                    </Link>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col">
+                        <Link 
+                          to={`/product/${product.id}`}
+                          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+                        >
+                          Detail →
+                        </Link>
+                        <span className="text-xs text-gray-500">
+                          Stock: {product.stock || 0}
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+                          if (!token) {
+                            setShowLoginModal(true);
+                            return;
+                          }
+                          
+                          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                          const existingItem = cart.find(item => item.id === product.id);
+                          
+                          if (existingItem) {
+                            existingItem.quantity += 1;
+                          } else {
+                            cart.push({ ...product, quantity: 1 });
+                          }
+                          
+                          localStorage.setItem('cart', JSON.stringify(cart));
+                          window.dispatchEvent(new Event('cartUpdated'));
+                          
+                          // Show success feedback
+                          const button = e.target;
+                          const originalText = button.textContent;
+                          button.textContent = '✓';
+                          button.style.backgroundColor = '#10b981';
+                          setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.backgroundColor = '';
+                          }, 1000);
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors duration-200"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -266,6 +425,16 @@ const CardProduct = () => {
           </p>
         </motion.div>
       )}
+      
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={() => {
+          setShowLoginModal(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };

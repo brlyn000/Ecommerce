@@ -97,10 +97,13 @@ export default function CategoryList() {
                 {/* Product Image */}
                 <div className="relative h-48 md:h-56 overflow-hidden bg-gray-50">
                   <img 
-                    src={item.image} 
+                    src={item.image?.startsWith('http') ? item.image : `http://localhost:5006${item.image}`} 
                     alt={item.name} 
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 p-4" 
                     loading="lazy"
+                    onError={(e) => {
+                      e.target.src = '/images/placeholder.svg';
+                    }}
                   />
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col items-start gap-1">

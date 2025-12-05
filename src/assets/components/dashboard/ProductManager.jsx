@@ -32,6 +32,7 @@ const ProductManager = () => {
   const [uploading, setUploading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +94,7 @@ const ProductManager = () => {
     });
     setEditingProduct(null);
     setShowAddForm(false);
+    setImageKey(0);
   };
 
   const handleSubmit = async (e) => {
@@ -141,10 +143,11 @@ const ProductManager = () => {
     setUploading(true);
     try {
       const result = await api.uploadFile(file, 'products');
-      const imageUrl = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5005'}${result.url}`;
+      const imageUrl = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}${result.url}`;
       
-      // Force component re-render by updating formData
+      // Force component re-render by updating formData and image key
       setFormData(prev => ({ ...prev, image: imageUrl }));
+      setImageKey(prev => prev + 1);
       showNotification('Image uploaded successfully!');
       
       // Clear file input
@@ -170,7 +173,7 @@ const ProductManager = () => {
       price: product.price?.toString() || '0',
       image: product.image || '',
       rating: product.rating || 0,
-      stock: product.stock || 'available',
+      stock: product.stock_status || product.stock || 'available',
       category: categorySlug,
       discount: product.discount || '',
       slug: product.slug || '',
@@ -292,198 +295,254 @@ const ProductManager = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
+            className="fixed inset-0 bg-black opacity-50 flex items-center justify-center z-40 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </h3>
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {editingProduct ? 'Update product information' : 'Fill in the details to create a new product'}
+                  </p>
+                </div>
                 <button
                   onClick={resetForm}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
                 >
-                  <FiX className="h-5 w-5" />
+                  <FiX className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                    <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <input
-                    type="text"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
-                  <textarea
-                    value={formData.long_description}
-                    onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.name.toLowerCase().replace(' ', '-')}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                    <select
-                      value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="available">Available</option>
-                      <option value="limited">Limited</option>
-                      <option value="sold-out">Sold Out</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                    <select
-                      value={formData.rating}
-                      onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {[1,2,3,4,5].map(num => (
-                        <option key={num} value={num}>{num} Star{num > 1 ? 's' : ''}</option>
-                      ))}
-                    </select>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Enter product name"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Price (Rp) *</label>
+                      <input
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        placeholder="0"
+                        min="0"
+                        step="1000"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-                    <div className="space-y-2">
-                      <div className="flex space-x-2">
-                        <input
-                          type="text"
-                          value={formData.image}
-                          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                          placeholder="Image URL or upload file"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <label className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors">
-                          <FiUpload className="mr-1 h-4 w-4" />
-                          {uploading ? 'Uploading...' : 'Upload'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            disabled={uploading}
-                          />
-                        </label>
+                {/* Description */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Product Description</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Short Description *</label>
+                      <input
+                        type="text"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Brief product description"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
+                      <textarea
+                        value={formData.long_description}
+                        onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
+                        placeholder="Detailed product information, features, specifications..."
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Details */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Product Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.name.toLowerCase().replace(/\s+/g, '-')}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
+                      <select
+                        value={formData.stock}
+                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option value="available">✅ Available</option>
+                        <option value="limited">⚠️ Limited Stock</option>
+                        <option value="sold-out">❌ Sold Out</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                      <select
+                        value={formData.rating}
+                        onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        {[1,2,3,4,5].map(num => (
+                          <option key={num} value={num}>{'⭐'.repeat(num)} ({num} Star{num > 1 ? 's' : ''})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Image */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Product Image</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">Image URL</label>
+                      <input
+                        type="text"
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                      <div className="text-center">
+                        <span className="text-sm text-gray-500">or</span>
                       </div>
-                      {formData.image && (
-                        <img
-                          src={`${formData.image}?t=${Date.now()}`}
-                          alt="Preview"
-                          className="w-full h-24 object-cover rounded-lg border"
-                          onError={(e) => {
-                            e.target.src = '/images/placeholder.svg';
-                          }}
+                      <label className="flex items-center justify-center px-4 py-3 bg-blue-50 text-blue-700 border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-100 cursor-pointer transition-colors">
+                        <FiUpload className="mr-2 h-5 w-5" />
+                        {uploading ? 'Uploading...' : 'Upload Image File'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          disabled={uploading}
                         />
+                      </label>
+                      <p className="text-xs text-gray-500">Supported: JPG, PNG, WebP (Max 5MB)</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Preview</label>
+                      {formData.image ? (
+                        <div className="w-full h-48 border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                          <img
+                            key={`${formData.image}-${imageKey}`}
+                            src={getImageUrl(formData.image)}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                            onLoad={(e) => {
+                              e.target.style.display = 'block';
+                              e.target.nextSibling.style.display = 'none';
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-500">
+                            <FiPackage className="h-8 w-8 mb-2" />
+                            <span className="text-sm">Loading image...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                          <FiPackage className="h-12 w-12 mb-2" />
+                          <span className="text-sm">No image selected</span>
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Discount</label>
-                    <input
-                      type="text"
-                      value={formData.discount}
-                      onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
-                      placeholder="10%"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                {/* Additional Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Additional Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Discount</label>
+                      <input
+                        type="text"
+                        value={formData.discount}
+                        onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                        placeholder="10% or Rp 50000"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Link</label>
+                      <input
+                        type="url"
+                        value={formData.whatsapp}
+                        onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                        placeholder="https://wa.me/6281234567890"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
                     <input
                       type="text"
                       value={formData.slug}
                       onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
+                      placeholder="product-url-slug"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Link</label>
-                    <input
-                      type="url"
-                      value={formData.whatsapp}
-                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                    <p className="text-xs text-gray-500 mt-1">Used for SEO-friendly URLs (auto-generated if empty)</p>
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={uploading}
+                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                   >
                     <FiSave className="mr-2 h-4 w-4" />
-                    {editingProduct ? 'Update' : 'Create'} Product
+                    {uploading ? 'Processing...' : editingProduct ? 'Update Product' : 'Create Product'}
                   </button>
                 </div>
               </form>
@@ -504,7 +563,7 @@ const ProductManager = () => {
           >
             <div className="aspect-w-16 aspect-h-9">
               <img
-                src={product.image ? `${product.image}?t=${Date.now()}` : '/images/placeholder.svg'}
+                src={product.image ? getImageUrl(product.image) : '/images/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-48 object-cover"
                 onError={(e) => {

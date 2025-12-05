@@ -31,7 +31,7 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+    <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen pb-20 md:pb-0">
       {/* Enhanced Background Ornaments */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         {/* Animated floating circles */}

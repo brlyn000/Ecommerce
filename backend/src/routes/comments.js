@@ -4,6 +4,7 @@ const commentController = require('../controllers/commentController');
 
 router.get('/product/:productId', commentController.getByProductId);
 router.post('/', commentController.create);
+router.put('/:id', commentController.update);
 router.delete('/:id', commentController.delete);
 
 module.exports = router;

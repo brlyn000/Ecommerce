@@ -1,9 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
 
 const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required');
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
@@ -28,24 +31,45 @@ export const api = {
   },
 
   async createProduct(productData) {
+    const token = localStorage.getItem('adminToken');
     return fetchWithTimeout(`${API_BASE_URL}/products`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(productData)
     });
   },
 
   async updateProduct(id, productData) {
+    const token = localStorage.getItem('adminToken');
     return fetchWithTimeout(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(productData)
     });
   },
 
   async deleteProduct(id) {
+    const token = localStorage.getItem('adminToken');
     return fetchWithTimeout(`${API_BASE_URL}/products/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async getUserProducts() {
+    const token = localStorage.getItem('adminToken');
+    return fetchWithTimeout(`${API_BASE_URL}/products/user/my-products`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
   },
 
@@ -116,10 +140,12 @@ export const api = {
     console.log('API uploadFile called with:', file.name, type);
     const formData = new FormData();
     formData.append('image', file);
+    const token = localStorage.getItem('adminToken');
     
     try {
       const response = await fetch(`${API_BASE_URL}/upload/single?type=${type}`, {
         method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData
       });
       
@@ -212,9 +238,218 @@ export const api = {
     });
   },
 
+  async updateComment(id, commentData) {
+    return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(commentData)
+    });
+  },
+
   async deleteComment(id) {
     return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
       method: 'DELETE'
+    });
+  },
+
+  // Likes
+  async toggleLike(productId) {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/likes/products/${productId}/toggle`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async getLikeStatus(productId) {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
+    if (!token) {
+      return { liked: false, likesCount: 0 };
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/likes/products/${productId}/status`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  // Notifications
+  async createNotification(notificationData) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/notifications`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(notificationData)
+    });
+  },
+
+  async getTenantNotifications(type = null) {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('tenantToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    const url = type ? `${API_BASE_URL}/notifications/tenant?type=${type}` : `${API_BASE_URL}/notifications/tenant`;
+    
+    try {
+      const response = await fetchWithTimeout(url, {
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      return response.notifications || [];
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
+    }
+  },
+
+  async markAllNotificationsAsRead(type = null) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/notifications/mark-all-read`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ type })
+    });
+  },
+
+  async markNotificationAsRead(notificationId) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+      method: 'PUT',
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  // Tenant Analytics
+  async getTenantProductAnalytics() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/products`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async getTenantOverviewStats() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/overview`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async getTenantChartData(year, month) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    const params = new URLSearchParams();
+    if (year) params.append('year', year);
+    if (month && month !== 'all') params.append('month', month);
+    
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/charts?${params}`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  // Orders
+  async getTenantOrders() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/orders/tenant`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async updateOrderStatus(orderId, status, rejectionReason = null) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status, rejection_reason: rejectionReason })
+    });
+  },
+
+  async getUserOrders() {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/orders/user`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  async confirmOrderReceived(orderId, status) {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+    
+    return fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}/received`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ received_status: status })
     });
   }
 };
@@ -226,6 +461,7 @@ export const getProductsByCategory = api.getProductsByCategory;
 export const createProduct = api.createProduct;
 export const updateProduct = api.updateProduct;
 export const deleteProduct = api.deleteProduct;
+export const getUserProducts = api.getUserProducts;
 
 export const getCategories = api.getCategories;
 export const getCategoryById = api.getCategoryById;
@@ -254,3 +490,6 @@ export const getContactAnalytics = api.getContactAnalytics;
 export const getCommentsByProductId = api.getCommentsByProductId;
 export const createComment = api.createComment;
 export const deleteComment = api.deleteComment;
+
+export const toggleLike = api.toggleLike;
+export const getLikeStatus = api.getLikeStatus;
