@@ -55,7 +55,7 @@ const ContactManager = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-800';
+      case 'new': return 'bg-red-100 text-red-800';
       case 'read': return 'bg-yellow-100 text-yellow-800';
       case 'replied': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -75,7 +75,7 @@ const ContactManager = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -91,7 +91,7 @@ const ContactManager = () => {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === status
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-red-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -119,7 +119,7 @@ const ContactManager = () => {
                   key={contact.id}
                   whileHover={{ backgroundColor: '#f9fafb' }}
                   className={`p-4 border-b cursor-pointer ${
-                    selectedContact?.id === contact.id ? 'bg-blue-50' : ''
+                    selectedContact?.id === contact.id ? 'bg-red-50' : ''
                   }`}
                   onClick={() => setSelectedContact(contact)}
                 >

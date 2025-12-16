@@ -10,10 +10,37 @@ const BottomNavbar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    const fetchUser = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        try {
+          const response = await fetch('http://localhost:5006/api/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('BottomNavbar: Error fetching user:', error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    
+    fetchUser();
+    
+    // Listen for login events
+    const handleLogin = () => {
+      fetchUser();
+    };
+    window.addEventListener('userLoggedIn', handleLogin);
     
     // Update counts
     updateCounts();
@@ -31,6 +58,7 @@ const BottomNavbar = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('cartUpdated', handleStorageChange);
       window.removeEventListener('wishlistUpdated', handleStorageChange);
+      window.removeEventListener('userLoggedIn', handleLogin);
     };
   }, []);
 
@@ -52,13 +80,21 @@ const BottomNavbar = () => {
   }, [showDropUp]);
   
   const updateCounts = () => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
-      setWishlistCount(wishlist.length);
-    } else {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+        setWishlistCount(wishlist.length);
+      } else {
+        setCartCount(0);
+        setWishlistCount(0);
+      }
+    } catch (error) {
+      console.error('Error parsing cart/wishlist data:', error);
+      localStorage.removeItem('cart');
+      localStorage.removeItem('wishlist');
       setCartCount(0);
       setWishlistCount(0);
     }
@@ -73,7 +109,7 @@ const BottomNavbar = () => {
 
   const dropUpItems = [
     { id: 'wishlist', label: 'Wishlist', icon: FiHeart, path: '/wishlist', count: wishlistCount, countColor: 'bg-red-500' },
-    { id: 'cart', label: 'Cart', icon: FiShoppingCart, path: '/cart', count: cartCount, countColor: 'bg-blue-500' },
+    { id: 'cart', label: 'Cart', icon: FiShoppingCart, path: '/cart', count: cartCount, countColor: 'bg-red-500' },
     { id: 'orders', label: user ? 'Orders' : 'Login', icon: user ? FiShoppingCart : FiUser, path: user ? '/orders' : '/login' },
     { id: 'contact', label: 'Contact Us', icon: FiPhone, path: '/contact-us' },
     { id: 'about', label: 'About Us', icon: FiInfo, path: '/about-us' }
@@ -92,7 +128,7 @@ const BottomNavbar = () => {
       {/* Drop-up Menu */}
       {showDropUp && (
         <div className="md:hidden fixed bottom-20 left-3 right-3 drop-up-container z-40">
-          <div className="bg-gradient-to-br from-white via-blue-50 to-white rounded-2xl shadow-2xl border border-blue-100 backdrop-blur-md animate-slide-up">
+          <div className="bg-gradient-to-br from-white via-blue-50 to-white rounded-2xl shadow-2xl border border-red-100 backdrop-blur-md animate-slide-up">
             <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full"></div>
             <div className="p-4">
               <div className="grid grid-cols-2 gap-3">
@@ -107,8 +143,8 @@ const BottomNavbar = () => {
                       onClick={handleDropUpItemClick}
                       className={`relative flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                         isActive 
-                          ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg' 
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-white hover:shadow-md'
+                          ? 'text-white bg-gradient-to-br from-red-500 to-red-600 shadow-lg' 
+                          : 'text-gray-700 hover:text-red-600 hover:bg-white hover:shadow-md'
                       }`}
                     >
                       <div className="relative">
@@ -130,7 +166,7 @@ const BottomNavbar = () => {
       )}
       
       {/* Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white via-blue-50 to-white backdrop-blur-md border-t border-blue-100 shadow-lg z-50">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white via-blue-50 to-white backdrop-blur-md border-t border-red-100 shadow-lg z-50">
         <div className="flex justify-around items-center py-3 px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -143,8 +179,8 @@ const BottomNavbar = () => {
                   onClick={handleDropUpClick}
                   className={`relative flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-300 transform ${
                     showDropUp 
-                      ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 scale-110 shadow-lg' 
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-105'
+                      ? 'text-white bg-gradient-to-br from-red-500 to-red-600 scale-110 shadow-lg' 
+                      : 'text-gray-600 hover:text-red-600 hover:bg-red-50 hover:scale-105'
                   }`}
                 >
                   <div className="relative">
@@ -167,8 +203,8 @@ const BottomNavbar = () => {
                 to={item.path}
                 className={`relative flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-300 transform ${
                   isActive 
-                    ? 'text-white bg-gradient-to-br from-blue-500 to-blue-600 scale-110 shadow-lg' 
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-105'
+                    ? 'text-white bg-gradient-to-br from-red-500 to-red-600 scale-110 shadow-lg' 
+                    : 'text-gray-600 hover:text-red-600 hover:bg-red-50 hover:scale-105'
                 }`}
               >
                 <div className="relative">

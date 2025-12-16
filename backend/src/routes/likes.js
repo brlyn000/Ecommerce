@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const likeController = require('../controllers/likeController');
-const { authenticateToken } = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth');
 
 // Toggle like/unlike for a product
 router.post('/products/:productId/toggle', authenticateToken, likeController.toggleLike);

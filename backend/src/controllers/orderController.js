@@ -23,8 +23,8 @@ const orderController = {
         }
         
         await db.execute(
-          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-          [order_id, item.id, item.quantity, finalPrice]
+          'INSERT INTO order_items (order_id, product_id, quantity, price, status) VALUES (?, ?, ?, ?, ?)',
+          [order_id, item.id, item.quantity, finalPrice, 'pending']
         );
         
         // Get product info and update stock
@@ -80,7 +80,8 @@ const orderController = {
       const tenant_id = req.user.id;
       
       const [orders] = await db.execute(
-        `SELECT o.*, oi.product_id, oi.quantity, oi.price, p.name as product_name,
+        `SELECT o.*, oi.product_id, oi.quantity, oi.price, oi.status as item_status, 
+                oi.rejection_reason as item_rejection_reason, p.name as product_name,
                 u.email as customer_email, u.phone as customer_phone
          FROM orders o
          JOIN order_items oi ON o.order_id = oi.order_id
@@ -101,12 +102,66 @@ const orderController = {
   async updateOrderStatus(req, res) {
     try {
       const { order_id } = req.params;
-      const { status } = req.body;
+      const { status, product_id, rejection_reason } = req.body;
+      const tenant_id = req.user.id;
       
-      await db.execute(
-        'UPDATE orders SET status = ? WHERE order_id = ?',
-        [status, order_id]
-      );
+      // If product_id is provided, update only that specific item
+      if (product_id) {
+        // Verify tenant owns this product
+        const [productCheck] = await db.execute(
+          'SELECT created_by FROM products WHERE id = ?',
+          [product_id]
+        );
+        
+        if (productCheck.length === 0 || productCheck[0].created_by !== tenant_id) {
+          return res.status(403).json({ error: 'Access denied: You can only update orders for your own products' });
+        }
+        
+        // Update specific order item
+        if (rejection_reason) {
+          await db.execute(
+            `UPDATE order_items oi 
+             JOIN products p ON oi.product_id = p.id 
+             SET oi.status = ?, oi.rejection_reason = ? 
+             WHERE oi.order_id = ? AND oi.product_id = ? AND p.created_by = ?`,
+            [status, rejection_reason, order_id, product_id, tenant_id]
+          );
+        } else {
+          await db.execute(
+            `UPDATE order_items oi 
+             JOIN products p ON oi.product_id = p.id 
+             SET oi.status = ? 
+             WHERE oi.order_id = ? AND oi.product_id = ? AND p.created_by = ?`,
+            [status, order_id, product_id, tenant_id]
+          );
+        }
+        
+        // Check if all items in the order have the same status to update main order
+        const [orderItems] = await db.execute(
+          'SELECT DISTINCT status FROM order_items WHERE order_id = ?',
+          [order_id]
+        );
+        
+        if (orderItems.length === 1) {
+          // All items have same status, update main order
+          await db.execute(
+            'UPDATE orders SET status = ? WHERE order_id = ?',
+            [orderItems[0].status, order_id]
+          );
+        } else {
+          // Mixed statuses, set main order to 'mixed'
+          await db.execute(
+            'UPDATE orders SET status = ? WHERE order_id = ?',
+            ['mixed', order_id]
+          );
+        }
+      } else {
+        // Legacy: update entire order (for backward compatibility)
+        await db.execute(
+          'UPDATE orders SET status = ? WHERE order_id = ?',
+          [status, order_id]
+        );
+      }
       
       res.json({ success: true, message: 'Order status updated' });
     } catch (error) {
@@ -118,14 +173,58 @@ const orderController = {
   async confirmOrderReceived(req, res) {
     try {
       const { order_id } = req.params;
-      const { received_status } = req.body;
+      const { received_status, product_id } = req.body;
+      const user_id = req.user.id;
+      
+      // Verify that the user owns this order
+      const [orderCheck] = await db.execute(
+        'SELECT user_id FROM orders WHERE order_id = ?',
+        [order_id]
+      );
+      
+      if (orderCheck.length === 0) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      if (orderCheck[0].user_id !== user_id) {
+        return res.status(403).json({ error: 'Access denied: You can only confirm your own orders' });
+      }
       
       const newStatus = received_status === 'received' ? 'confirmed' : 'disputed';
       
-      await db.execute(
-        'UPDATE orders SET status = ? WHERE order_id = ?',
-        [newStatus, order_id]
-      );
+      if (product_id) {
+        // Update specific item status
+        await db.execute(
+          'UPDATE order_items SET status = ? WHERE order_id = ? AND product_id = ?',
+          [newStatus, order_id, product_id]
+        );
+        
+        // Check if all items in the order have the same status to update main order
+        const [orderItems] = await db.execute(
+          'SELECT DISTINCT status FROM order_items WHERE order_id = ?',
+          [order_id]
+        );
+        
+        if (orderItems.length === 1) {
+          // All items have same status, update main order
+          await db.execute(
+            'UPDATE orders SET status = ? WHERE order_id = ? AND user_id = ?',
+            [orderItems[0].status, order_id, user_id]
+          );
+        } else {
+          // Mixed statuses, set main order to 'mixed'
+          await db.execute(
+            'UPDATE orders SET status = ? WHERE order_id = ? AND user_id = ?',
+            ['mixed', order_id, user_id]
+          );
+        }
+      } else {
+        // Legacy: update entire order
+        await db.execute(
+          'UPDATE orders SET status = ? WHERE order_id = ? AND user_id = ?',
+          [newStatus, order_id, user_id]
+        );
+      }
       
       res.json({ success: true, message: 'Order status updated' });
     } catch (error) {
@@ -183,7 +282,8 @@ const orderController = {
       const user_id = req.user.id;
       
       const [orders] = await db.execute(
-        `SELECT o.*, oi.product_id, oi.quantity, oi.price, p.name as product_name, p.image as product_image
+        `SELECT o.*, oi.product_id, oi.quantity, oi.price, oi.status as item_status, 
+                oi.rejection_reason as item_rejection_reason, p.name as product_name, p.image as product_image
          FROM orders o
          JOIN order_items oi ON o.order_id = oi.order_id
          JOIN products p ON oi.product_id = p.id

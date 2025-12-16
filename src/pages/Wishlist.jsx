@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiHeart, FiTrash2, FiUser, FiArrowLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../config/api';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -56,7 +57,7 @@ const Wishlist = () => {
             <p className="text-gray-600 mb-6">Login terlebih dahulu untuk melihat wishlist</p>
             <Link
               to="/login"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 inline-block"
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 inline-block"
             >
               Login Sekarang
             </Link>
@@ -96,7 +97,7 @@ const Wishlist = () => {
                 
                 <Link to={`/product/${product.id}`}>
                   <img
-                    src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'}
+                    src={getImageUrl(product.image)}
                     alt={product.name}
                     className="w-full h-32 object-cover rounded mb-3"
                     onError={(e) => {
@@ -106,7 +107,7 @@ const Wishlist = () => {
                   <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
                   <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-blue-600 font-bold">{formatRupiah(product.price)}</span>
+                    <span className="text-red-600 font-bold">{formatRupiah(product.price)}</span>
                     <span className="text-xs text-gray-500">{product.category_name}</span>
                   </div>
                 </Link>
@@ -137,7 +138,7 @@ const Wishlist = () => {
                       button.style.backgroundColor = '';
                     }, 1000);
                   }}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded text-sm hover:bg-blue-700 transition-colors"
+                  className="w-full bg-red-600 text-white py-2 px-4 rounded text-sm hover:bg-red-700 transition-colors"
                 >
                   Add to Cart
                 </button>
@@ -151,7 +152,7 @@ const Wishlist = () => {
             <p className="text-gray-600 mb-6">Save items you love to your wishlist</p>
             <Link
               to="/"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
             >
               Browse Products
             </Link>

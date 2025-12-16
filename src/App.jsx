@@ -6,6 +6,9 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Dashboard from './pages/Dashboard';
 import TenantDashboard from './pages/TenantDashboard';
+import TenantDetail from './pages/TenantDetail';
+import StorePage from './pages/StorePage';
+import StoresPage from './pages/StoresPage';
 import UniversalLogin from './pages/UniversalLogin';
 import UniversalRegister from './pages/UniversalRegister';
 import Test from './pages/Test';
@@ -18,15 +21,20 @@ import UserRegister from './pages/UserRegister';
 import TenantRegister from './pages/TenantRegister';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import { NotFound, BadRequest, Unauthorized, Forbidden, ServerError } from './pages/ErrorPages';
 import { useLastVisited } from './hooks/useLastVisited';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 
@@ -49,17 +57,30 @@ function AppContent() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['admin']}>
               <Dashboard />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           } />
+          <Route path="/tenant/:id" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <TenantDetail />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/store/:id" element={<StorePage />} />
+          <Route path="/stores" element={<StoresPage />} />
           <Route path="/tenant-dashboard" element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['tenant']}>
               <TenantDashboard />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           } />
           <Route path="/user-register" element={<UserRegister />} />
           <Route path="/tenant-register" element={<TenantRegister />} />
+          <Route path="/error/400" element={<BadRequest />} />
+          <Route path="/error/401" element={<Unauthorized />} />
+          <Route path="/error/403" element={<Forbidden />} />
+          <Route path="/error/404" element={<NotFound />} />
+          <Route path="/error/500" element={<ServerError />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
   )
 }

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
-const { authenticateToken, requireTenant } = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth');
 
 router.post('/', authenticateToken, orderController.createOrder);
 router.get('/tenant', authenticateToken, orderController.getTenantOrders);

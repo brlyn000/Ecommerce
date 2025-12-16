@@ -12,6 +12,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { getAnalyticsOverview, getProductAnalytics, getContactAnalytics } from '../../../services/api';
@@ -25,7 +26,8 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const Analytics = () => {
@@ -252,7 +254,7 @@ const Analytics = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
@@ -263,7 +265,7 @@ const Analytics = () => {
         <h2 className="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
         <button
           onClick={fetchAnalytics}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           Refresh Data
         </button>
@@ -276,7 +278,7 @@ const Analytics = () => {
             title="Total Produk"
             value={overview.overview.products}
             icon={FiPackage}
-            color="bg-blue-500"
+            color="bg-red-500"
           />
           <StatCard
             title="Total Kategori"
@@ -354,7 +356,7 @@ const Analytics = () => {
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      activity.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                      activity.status === 'new' ? 'bg-red-100 text-red-800' :
                       activity.status === 'read' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-green-100 text-green-800'
                     }`}>

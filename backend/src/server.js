@@ -15,14 +15,33 @@ const likeRoutes = require('./routes/likes');
 const notificationRoutes = require('./routes/notifications');
 const orderRoutes = require('./routes/orders');
 const tenantAnalyticsRoutes = require('./routes/tenantAnalytics');
+const userRoutes = require('./routes/users');
+const profileRoutes = require('./routes/profile');
 
 const app = express();
-const PORT = parseInt(process.env.PORT) || 5002 ;
+const PORT = parseInt(process.env.PORT) || 5002;
+
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET is not defined.');
+  process.exit(1);
+}
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5006'],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -46,6 +65,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/tenant-analytics', tenantAnalyticsRoutes);
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', userRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Root route
 app.get('/', (req, res) => {

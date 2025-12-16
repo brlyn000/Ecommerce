@@ -15,11 +15,43 @@ const Navbar = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    const userData = localStorage.getItem('currentUser');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-    }
+    const fetchUser = async () => {
+      const token = localStorage.getItem('adminToken');
+      console.log('Navbar: Checking token:', token ? 'exists' : 'not found');
+      if (token) {
+        try {
+          const response = await fetch('http://localhost:5006/api/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          console.log('Navbar: Profile response status:', response.status);
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('Navbar: User data loaded:', userData.username);
+            setUser(userData);
+          } else {
+            console.log('Navbar: Failed to fetch user');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Navbar: Error fetching user:', error);
+          setUser(null);
+        }
+      } else {
+        console.log('Navbar: No token, user not logged in');
+        setUser(null);
+      }
+    };
+    
+    fetchUser();
+    
+    // Listen for login events
+    const handleLogin = () => {
+      console.log('Navbar: Login event detected');
+      fetchUser();
+    };
+    window.addEventListener('userLoggedIn', handleLogin);
     
     // Update counts
     updateCounts();
@@ -39,6 +71,7 @@ const Navbar = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('cartUpdated', handleStorageChange);
       window.removeEventListener('wishlistUpdated', handleStorageChange);
+      window.removeEventListener('userLoggedIn', handleLogin);
     };
   }, []);
   
@@ -75,7 +108,7 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className="hidden md:block bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100 transition-all duration-300 hover:shadow-md">
+    <nav className="hidden md:block bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-red-200 transition-all duration-300 hover:shadow-xl">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -129,11 +162,11 @@ const Navbar = () => {
                 {/* Cart */}
                 <Link
                   to="/cart"
-                  className="relative p-2 text-gray-600 hover:text-blue-500 transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-red-500 transition-colors"
                 >
                   <FiShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
@@ -201,7 +234,7 @@ const Navbar = () => {
             ) : (
               <a
                 href="/login"
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-sm"
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-sm"
               >
                 Masuk
               </a>
@@ -212,7 +245,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none transition-colors duration-200"
+              className="text-gray-700 hover:text-red-600 focus:outline-none transition-colors duration-200"
               aria-label="Toggle menu"
             >
               <svg
@@ -285,7 +318,7 @@ const Navbar = () => {
             <div className="border-t border-gray-200 pt-4 mt-4">
               <a
                 href="/login"
-                className="block w-full px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 text-center"
+                className="block w-full px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-300 text-center"
               >
                 Masuk
               </a>
@@ -297,11 +330,23 @@ const Navbar = () => {
       <LoginModal 
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={() => {
+        onLoginSuccess={async () => {
           setShowLoginModal(false);
-          const userData = localStorage.getItem('currentUser');
-          if (userData) {
-            setUser(JSON.parse(userData));
+          const token = localStorage.getItem('adminToken');
+          if (token) {
+            try {
+              const response = await fetch('http://localhost:5006/api/profile', {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+              }
+            } catch (error) {
+              console.error('Error fetching user:', error);
+            }
           }
         }}
       />
@@ -317,14 +362,14 @@ const NavLink = ({ to, children, activeLink, setActiveLink }) => (
     to={to}
     className={`relative px-4 py-2 text-sm font-medium transition-colors duration-300 rounded-full
       ${activeLink === to ? 
-        'text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-sm' : 
-        'text-gray-600 hover:text-blue-600 hover:bg-blue-50'}
+        'text-white bg-gradient-to-r from-red-500 to-red-600 shadow-sm' : 
+        'text-gray-600 hover:text-red-600 hover:bg-red-50'}
     `}
     onClick={() => setActiveLink(to)}
   >
     {children}
     {activeLink === to && (
-      <span className="absolute inset-x-1 -bottom-1 h-0.5 bg-blue-200"></span>
+      <span className="absolute inset-x-1 -bottom-1 h-0.5 bg-red-200"></span>
     )}
   </Link>
 );
@@ -333,7 +378,7 @@ const NavLink = ({ to, children, activeLink, setActiveLink }) => (
 const MobileNavLink = ({ to, children, setIsOpen, setActiveLink }) => (
   <Link
     to={to}
-    className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+    className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
     onClick={() => {
       setIsOpen(false);
       setActiveLink(to);

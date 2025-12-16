@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiUser, FiX, FiSave } from 'react-icons/fi';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
@@ -19,19 +22,21 @@ const UserManager = () => {
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    const savedUsers = localStorage.getItem('systemUsers');
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
-    } else {
-      const defaultUsers = [
-        { id: 1, name: 'Admin User', email: 'admin@naragatra.com', role: 'Admin', status: 'Active', password: 'admin123' },
-        { id: 2, name: 'John Doe', email: 'john@example.com', role: 'User', status: 'Active', password: 'user123' },
-        { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'User', status: 'Inactive', password: 'user123' },
-      ];
-      setUsers(defaultUsers);
-      localStorage.setItem('systemUsers', JSON.stringify(defaultUsers));
-    }
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/users/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      showNotification('Gagal memuat data user', 'error');
+    }
+  };
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -49,24 +54,38 @@ const UserManager = () => {
     setShowPasswordForm(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let updatedUsers;
-    if (editingUser) {
-      const updateData = { ...formData };
-      delete updateData.password; // Don't update password in edit mode
-      updatedUsers = users.map(user => 
-        user.id === editingUser.id ? { ...user, ...updateData } : user
-      );
-      showNotification('User updated successfully!');
-    } else {
-      const newUser = { ...formData, id: Date.now(), password: formData.password || 'user123' };
-      updatedUsers = [...users, newUser];
-      showNotification('User created successfully!');
+    try {
+      const token = localStorage.getItem('adminToken');
+      const userData = {
+        username: formData.name,
+        email: formData.email,
+        role: formData.role.toLowerCase(),
+        status: formData.status.toLowerCase()
+      };
+
+      if (editingUser) {
+        if (formData.password) {
+          userData.password = formData.password;
+        }
+        await axios.put(`${API_URL}/users/${editingUser.id}`, userData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showNotification('User updated successfully!');
+      } else {
+        userData.password = formData.password;
+        await axios.post(`${API_URL}/users`, userData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showNotification('User created successfully!');
+      }
+      fetchUsers();
+      resetForm();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      showNotification(error.response?.data?.message || 'Gagal menyimpan user', 'error');
     }
-    setUsers(updatedUsers);
-    localStorage.setItem('systemUsers', JSON.stringify(updatedUsers));
-    resetForm();
   };
 
   const handleEdit = (user) => {
@@ -97,26 +116,41 @@ const UserManager = () => {
     resetPasswordForm();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      const updatedUsers = users.filter(user => user.id !== id);
-      setUsers(updatedUsers);
-      localStorage.setItem('systemUsers', JSON.stringify(updatedUsers));
-      showNotification('User deleted successfully!');
+      try {
+        const token = localStorage.getItem('adminToken');
+        await axios.delete(`${API_URL}/users/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showNotification('User deleted successfully!');
+        fetchUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Gagal menghapus user', 'error');
+      }
     }
   };
 
-  const toggleStatus = (id) => {
-    const updatedUsers = users.map(user => 
-      user.id === id ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' } : user
-    );
-    setUsers(updatedUsers);
-    localStorage.setItem('systemUsers', JSON.stringify(updatedUsers));
+  const toggleStatus = async (id) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const user = users.find(u => u.id === id);
+      const newStatus = user.status === 'active' ? 'inactive' : 'active';
+      
+      await axios.put(`${API_URL}/users/${id}`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      showNotification('Gagal mengubah status', 'error');
+    }
   };
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (user.username || user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -128,7 +162,7 @@ const UserManager = () => {
             resetForm();
             setShowForm(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           <FiPlus className="mr-2 h-4 w-4" />
           Add User
@@ -143,7 +177,7 @@ const UserManager = () => {
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -171,7 +205,7 @@ const UserManager = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
+            className="fixed inset-0 flex items-center justify-center z-40 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -198,7 +232,7 @@ const UserManager = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -209,7 +243,7 @@ const UserManager = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -219,7 +253,7 @@ const UserManager = () => {
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="User">User</option>
                     <option value="Admin">Admin</option>
@@ -231,7 +265,7 @@ const UserManager = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -245,7 +279,7 @@ const UserManager = () => {
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       placeholder="Enter password"
                       required={!editingUser}
                     />
@@ -262,7 +296,7 @@ const UserManager = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     <FiSave className="mr-2 h-4 w-4" />
                     {editingUser ? 'Update' : 'Create'} User
@@ -281,7 +315,7 @@ const UserManager = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
+            className="fixed inset-0 flex items-center justify-center z-40 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -306,7 +340,7 @@ const UserManager = () => {
                     type="password"
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     placeholder="Enter new password"
                     required
                   />
@@ -355,19 +389,19 @@ const UserManager = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <FiUser className="h-5 w-5 text-blue-600" />
+                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                          <FiUser className="h-5 w-5 text-red-600" />
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{user.username || user.name}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.role === 'Admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                      (user.role || '').toLowerCase() === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
                     }`}>
                       {user.role}
                     </span>
@@ -376,7 +410,7 @@ const UserManager = () => {
                     <button
                       onClick={() => toggleStatus(user.id)}
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                        user.status === 'Active' 
+                        (user.status || '').toLowerCase() === 'active' 
                           ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
                       }`}
@@ -388,7 +422,7 @@ const UserManager = () => {
                     <div className="flex space-x-1">
                       <button 
                         onClick={() => handleEdit(user)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                         title="Edit User"
                       >
                         <FiEdit className="h-4 w-4" />

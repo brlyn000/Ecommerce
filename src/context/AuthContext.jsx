@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [logoutCallback, setLogoutCallback] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -25,7 +27,6 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
         setIsAuthenticated(true);
         return true;
       }
@@ -38,11 +39,20 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('currentUser');
     setIsAuthenticated(false);
+    if (logoutCallback) {
+      logoutCallback();
+    }
+    window.location.href = '/login';
+  };
+
+  const setLogoutHandler = (callback) => {
+    setLogoutCallback(() => callback);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, loading, setLogoutHandler }}>
       {children}
     </AuthContext.Provider>
   );

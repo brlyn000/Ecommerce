@@ -174,7 +174,7 @@ const CardProduct = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
         </div>
       ) : currentProducts.length > 0 ? (
         <>
@@ -186,14 +186,14 @@ const CardProduct = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="group relative bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200"
+                className="group relative bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-red-200"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
               >
                 <div className="relative overflow-hidden h-36 sm:h-44 md:h-48 lg:h-56">
                   <Link to={`/product/${product.id}`}>
                     <img 
-                      src={product.image ? `http://localhost:5006${product.image}?t=${Date.now()}` : '/images/placeholder.svg'} 
+                      src={getImageUrl(product.image)} 
                       alt={product.name} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                       loading="lazy"
@@ -242,15 +242,15 @@ const CardProduct = () => {
                       {[...Array(5)].map((_, i) => (
                         <FiStar 
                           key={i} 
-                          className={`w-3 h-3 sm:w-4 sm:h-4 ${i < product.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                          className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(product.average_rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500 ml-1 font-medium">({product.rating})</span>
+                    <span className="text-xs text-gray-500 ml-1 font-medium">({Number(product.average_rating || 0).toFixed(1)})</span>
                   </div>
                   
                   <Link to={`/product/${product.id}`}>
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-800 group-hover:text-blue-600 mb-1 sm:mb-2 line-clamp-2 leading-tight">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-800 group-hover:text-red-600 mb-1 sm:mb-2 line-clamp-2 leading-tight">
                       {product.name}
                     </h3>
                     <p className="text-gray-500 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2 leading-relaxed">
@@ -266,12 +266,12 @@ const CardProduct = () => {
                             <span className="text-xs text-gray-400 line-through">
                               {formatRupiah(product.price)}
                             </span>
-                            <span className="text-blue-600 font-bold text-sm sm:text-base">
+                            <span className="text-red-600 font-bold text-sm sm:text-base">
                               {formatRupiah(product.price * (1 - product.discount / 100))}
                             </span>
                           </>
                         ) : (
-                          <span className="text-blue-600 font-bold text-sm sm:text-base">
+                          <span className="text-red-600 font-bold text-sm sm:text-base">
                             {formatRupiah(product.price)}
                           </span>
                         )}
@@ -285,7 +285,7 @@ const CardProduct = () => {
                       <div className="flex flex-col">
                         <Link 
                           to={`/product/${product.id}`}
-                          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+                          className="text-xs sm:text-sm text-red-600 hover:text-red-800 font-medium transition-colors duration-200"
                         >
                           Detail →
                         </Link>
@@ -326,7 +326,7 @@ const CardProduct = () => {
                             button.style.backgroundColor = '';
                           }, 1000);
                         }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors duration-200"
+                        className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors duration-200"
                       >
                         +
                       </button>
@@ -351,7 +351,7 @@ const CardProduct = () => {
               <button
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 ${currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-300'}`}
+                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 ${currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-red-300'}`}
               >
                 <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -376,8 +376,8 @@ const CardProduct = () => {
                       onClick={() => paginate(pageNum)}
                       className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
                         currentPage === pageNum 
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
-                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-300'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' 
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-red-300'
                       }`}
                     >
                       {pageNum}
@@ -392,8 +392,8 @@ const CardProduct = () => {
                       onClick={() => paginate(totalPages)}
                       className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
                         currentPage === totalPages 
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
-                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-300'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' 
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-red-300'
                       }`}
                     >
                       {totalPages}
@@ -405,7 +405,7 @@ const CardProduct = () => {
               <button
                 onClick={nextPage}
                 disabled={currentPage === totalPages}
-                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 ${currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-300'}`}
+                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 ${currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-red-300'}`}
               >
                 <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>

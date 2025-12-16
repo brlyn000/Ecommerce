@@ -113,7 +113,7 @@ const CategoryManager = () => {
             resetForm();
             setShowAddForm(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           <FiPlus className="mr-2 h-4 w-4" />
           Add Category
@@ -128,7 +128,7 @@ const CategoryManager = () => {
               <p className="text-sm font-medium text-gray-600">Total Categories</p>
               <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
             </div>
-            <FiGrid className="h-8 w-8 text-blue-500" />
+            <FiGrid className="h-8 w-8 text-red-500" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -174,7 +174,7 @@ const CategoryManager = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
+            className="fixed inset-0 flex items-center justify-center z-40 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -203,7 +203,7 @@ const CategoryManager = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -216,7 +216,7 @@ const CategoryManager = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -229,7 +229,7 @@ const CategoryManager = () => {
                     value={formData.icon}
                     onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                     placeholder="e.g., FaTools"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -242,7 +242,7 @@ const CategoryManager = () => {
                     value={formData.link}
                     onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                     placeholder="e.g., /category/tools"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -256,7 +256,7 @@ const CategoryManager = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     <FiSave className="mr-2 h-4 w-4" />
                     {editingCategory ? 'Update' : 'Create'} Category
@@ -282,8 +282,8 @@ const CategoryManager = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <IconComponent className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <IconComponent className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{category.name}</h3>
@@ -293,7 +293,7 @@ const CategoryManager = () => {
                 <div className="flex space-x-1">
                   <button
                     onClick={() => handleEdit(category)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <FiEdit className="h-4 w-4" />
                   </button>
@@ -307,7 +307,7 @@ const CategoryManager = () => {
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>ID: {category.id}</span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                   Active
                 </span>
               </div>

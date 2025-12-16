@@ -113,7 +113,7 @@ const TenantProductDetail = ({ product, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0  z-[9999] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div 
@@ -136,7 +136,7 @@ const TenantProductDetail = ({ product, onClose }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <img
-                src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'}
+                src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-64 object-cover rounded-lg"
               />
@@ -145,7 +145,7 @@ const TenantProductDetail = ({ product, onClose }) => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h3>
               <p className="text-gray-600 mb-4">{product.description}</p>
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-blue-600">
+                <p className="text-lg font-semibold text-red-600">
                   {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                 </p>
                 {product.discount && (
@@ -164,9 +164,9 @@ const TenantProductDetail = ({ product, onClose }) => {
               <p className="text-2xl font-bold text-red-600">{stats.totalLikes}</p>
               <p className="text-sm text-gray-600">Likes</p>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg text-center">
-              <FiMessageCircle className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-blue-600">{stats.totalComments}</p>
+            <div className="bg-red-50 p-4 rounded-lg text-center">
+              <FiMessageCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-red-600">{stats.totalComments}</p>
               <p className="text-sm text-gray-600">Comments</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg text-center">
@@ -176,7 +176,7 @@ const TenantProductDetail = ({ product, onClose }) => {
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg text-center">
               <FiStar className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-yellow-600">{product.rating || 0}</p>
+              <p className="text-2xl font-bold text-yellow-600">{(product.average_rating || 0).toFixed(1)}</p>
               <p className="text-sm text-gray-600">Rating</p>
             </div>
           </div>
@@ -190,7 +190,7 @@ const TenantProductDetail = ({ product, onClose }) => {
                 <p className="text-sm text-gray-600">Pending</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-blue-600">{stats.orderStats.accepted}</p>
+                <p className="text-xl font-bold text-red-600">{stats.orderStats.accepted}</p>
                 <p className="text-sm text-gray-600">Accepted</p>
               </div>
               <div className="text-center">
@@ -217,7 +217,7 @@ const TenantProductDetail = ({ product, onClose }) => {
             <h4 className="text-lg font-semibold mb-4">Recent Comments & Reviews</h4>
             {loading ? (
               <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
               </div>
             ) : comments.length > 0 ? (
               <div className="space-y-4 max-h-64 overflow-y-auto">
@@ -230,7 +230,7 @@ const TenantProductDetail = ({ product, onClose }) => {
                       <div className="flex items-center space-x-2 mb-1">
                         <h5 className="font-medium text-gray-900 text-sm">{comment.name}</h5>
                         {comment.comment_type === 'review' && (
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
                             Review
                           </span>
                         )}

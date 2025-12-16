@@ -3,11 +3,21 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const router = express.Router();
+require('dotenv').config();
 
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, role = 'user', full_name, phone } = req.body;
+    const { username, email, password, role = 'user', full_name, phone, payment_methods } = req.body;
+    
+    // Validate input
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email, and password are required' });
+    }
+    
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    }
     
     // Check if user exists
     const [existing] = await db.execute(
@@ -24,8 +34,8 @@ router.post('/register', async (req, res) => {
     
     // Insert user
     await db.execute(
-      'INSERT INTO users (username, email, password, role, full_name, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, role, full_name || null, phone || null, req.body.address || null]
+      'INSERT INTO users (username, email, password, role, full_name, phone, address, payment_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [username, email, hashedPassword, role, full_name || null, phone || null, req.body.address || null, payment_methods || null]
     );
     
     res.status(201).json({ message: 'User registered successfully' });
@@ -57,7 +67,7 @@ router.post('/login', async (req, res) => {
     
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
-      'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FiPackage, FiMenu, FiHome, FiBarChart, FiLogOut, FiUser, FiHeart, FiBell, FiCheck, FiX, FiEye, FiRefreshCw } from 'react-icons/fi';
+import { FiPackage, FiMenu, FiHome, FiBarChart, FiLogOut, FiUser, FiHeart, FiBell, FiCheck, FiX, FiEye, FiRefreshCw, FiAlertTriangle } from 'react-icons/fi';
 import { api } from '../services/api';
+import { getApiUrl } from '../config/api';
 import TenantProductManager from '../components/TenantProductManager';
+import PaymentMethodsForm from '../components/PaymentMethodsForm';
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -54,14 +56,49 @@ const TenantDashboard = () => {
   });
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [storeName, setStoreName] = useState('');
+  const [profileData, setProfileData] = useState({
+    full_name: '',
+    email: '',
+    username: ''
+  });
+  
+  // Modal states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [statusType, setStatusType] = useState('success'); // 'success' or 'error'
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-    }
+    fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      
+      const response = await fetch(`${getApiUrl('/profile')}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setStoreName(userData.store_name || '');
+        setProfileData({
+          full_name: userData.full_name || '',
+          email: userData.email || '',
+          username: userData.username || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
   
   useEffect(() => {
     if (user?.id) {
@@ -271,43 +308,114 @@ const TenantDashboard = () => {
     }
   };
 
-  const handleOrderAction = async (orderId, action) => {
+  const handleOrderAction = (orderId, action, productId, productName) => {
+    const actionText = action === 'accept' ? 'menerima' : action === 'reject' ? 'menolak' : 'menyelesaikan';
+    setConfirmAction({
+      type: 'order',
+      action,
+      orderId,
+      productId,
+      message: `Apakah Anda yakin ingin ${actionText} item "${productName}" dari pesanan #${orderId}?`
+    });
+    setShowConfirmModal(true);
+  };
+  
+  const executeOrderAction = async () => {
     try {
-      if (action === 'reject') {
-        setSelectedOrder(orderId);
+      if (confirmAction.action === 'reject') {
+        setSelectedOrder({ orderId: confirmAction.orderId, productId: confirmAction.productId });
         setShowRejectModal(true);
+        setShowConfirmModal(false);
         return;
       }
       
-      const status = action === 'accept' ? 'accepted' : action;
-      await api.updateOrderStatus(orderId, status);
+      const status = confirmAction.action === 'accept' ? 'accepted' : confirmAction.action;
+      
+      // Send product_id along with the status update
+      const response = await fetch(`http://localhost:5006/api/orders/${confirmAction.orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ 
+          status: status,
+          product_id: confirmAction.productId
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update order status');
+      }
+      
+      setStatusMessage(`Item berhasil ${confirmAction.action === 'accept' ? 'diterima' : 'diperbarui'}!`);
+      setStatusType('success');
+      setShowStatusModal(true);
+      
       fetchOrders();
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Error updating order status');
+      setStatusMessage('Gagal memperbarui status pesanan. Silakan coba lagi.');
+      setStatusType('error');
+      setShowStatusModal(true);
+    } finally {
+      setShowConfirmModal(false);
+      setConfirmAction(null);
     }
   };
 
   const handleRejectOrder = async () => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
+      setStatusMessage('Harap berikan alasan penolakan.');
+      setStatusType('error');
+      setShowStatusModal(true);
       return;
     }
     
     try {
-      await api.updateOrderStatus(selectedOrder, 'rejected', rejectionReason);
+      const response = await fetch(`http://localhost:5006/api/orders/${selectedOrder.orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ 
+          status: 'rejected',
+          product_id: selectedOrder.productId,
+          rejection_reason: rejectionReason
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to reject order');
+      }
+      
+      setStatusMessage(`Item berhasil ditolak.`);
+      setStatusType('success');
+      setShowStatusModal(true);
+      
       setShowRejectModal(false);
       setSelectedOrder(null);
       setRejectionReason('');
       fetchOrders();
     } catch (error) {
       console.error('Error rejecting order:', error);
+      setStatusMessage('Gagal menolak pesanan. Silakan coba lagi.');
+      setStatusType('error');
+      setShowStatusModal(true);
     }
   };
 
   const handleLogout = () => {
+    setConfirmAction({
+      type: 'logout',
+      message: 'Apakah Anda yakin ingin keluar dari dashboard?'
+    });
+    setShowConfirmModal(true);
+  };
+  
+  const executeLogout = () => {
     localStorage.removeItem('adminToken');
-    localStorage.removeItem('currentUser');
     window.location.href = '/';
   };
 
@@ -325,57 +433,58 @@ const TenantDashboard = () => {
       case 'overview':
         return (
           <div className="space-y-8">
-            {/* Enhanced Stats Cards */}
+            {/* Enhanced Stats Cards - Red & White Theme */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200">
+              <div className="bg-gradient-to-br from-red-50 to-white p-6 rounded-xl shadow-lg border border-red-200 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-blue-600 mb-1">Total Quantity Sold</p>
-                    <p className="text-3xl font-bold text-blue-900">{stats.totalQuantity}</p>
-                    <p className="text-xs text-blue-500 mt-1">Items delivered</p>
+                    <p className="text-sm font-medium text-red-600 mb-1">Total Quantity Sold</p>
+                    <p className="text-3xl font-bold text-red-800">{stats.totalQuantity}</p>
+                    <p className="text-xs text-red-500 mt-1">Items delivered</p>
                   </div>
-                  <div className="bg-blue-500 p-3 rounded-full">
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-full shadow-lg">
                     <FiPackage className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200">
+              <div className="bg-gradient-to-br from-white to-red-50 p-6 rounded-xl shadow-lg border border-red-200 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-red-600 mb-1">Total Likes</p>
-                    <p className="text-3xl font-bold text-red-900">{stats.totalLikes}</p>
+                    <p className="text-3xl font-bold text-red-800">{stats.totalLikes}</p>
                     <p className="text-xs text-red-500 mt-1">Customer favorites</p>
                   </div>
-                  <div className="bg-red-500 p-3 rounded-full">
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-full shadow-lg">
                     <FiHeart className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200">
+              <div className="bg-gradient-to-br from-red-50 to-white p-6 rounded-xl shadow-lg border border-red-200 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-green-600 mb-1">Total Orders</p>
-                    <p className="text-3xl font-bold text-green-900">{stats.totalViews}</p>
-                    <p className="text-xs text-green-500 mt-1">Successful transactions</p>
+                    <p className="text-sm font-medium text-red-600 mb-1">Total Orders</p>
+                    <p className="text-3xl font-bold text-red-800">{stats.totalViews}</p>
+                    <p className="text-xs text-red-500 mt-1">Successful transactions</p>
                   </div>
-                  <div className="bg-green-500 p-3 rounded-full">
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-full shadow-lg">
                     <FiBarChart className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Welcome Card */}
-            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 rounded-xl shadow-lg text-white">
-              <div className="flex items-center justify-between">
+            {/* Welcome Card - Red & White Theme */}
+            <div className="bg-gradient-to-r from-red-600 via-red-500 to-red-700 p-6 rounded-xl shadow-lg text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+              <div className="relative flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Welcome back, {user?.full_name || user?.username}! 👋</h3>
-                  <p className="text-indigo-100">
-                    Manage your products and track their performance from this dashboard.
+                  <h3 className="text-2xl font-bold mb-2">Selamat datang kembali, {user?.full_name || user?.username}! 👋</h3>
+                  <p className="text-red-100">
+                    Kelola produk Anda dan pantau performa bisnis dari dashboard ini.
                   </p>
                 </div>
                 <div className="hidden md:block">
-                  <div className="bg-white/20 p-4 rounded-full">
+                  <div className="bg-white/20 p-4 rounded-full backdrop-blur-sm">
                     <FiUser className="h-8 w-8 text-white" />
                   </div>
                 </div>
@@ -624,12 +733,12 @@ const TenantDashboard = () => {
                         )}
                       </div>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        (order.item_status || order.status) === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        (order.item_status || order.status) === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                        (order.item_status || order.status) === 'completed' ? 'bg-green-100 text-green-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {order.status}
+                        {order.item_status || order.status}
                       </span>
                     </div>
                     <div className="space-y-2 mb-3">
@@ -638,28 +747,28 @@ const TenantDashboard = () => {
                       <p className="text-sm"><span className="font-medium">Total:</span> {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(order.price * order.quantity)}</p>
                     </div>
                     <div className="flex space-x-2">
-                      {order.status === 'pending' && (
+                      {(order.item_status || order.status) === 'pending' && (
                         <>
                           <button
-                            onClick={() => handleOrderAction(order.order_id, 'accept')}
-                            className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700"
+                            onClick={() => handleOrderAction(order.order_id, 'accept', order.product_id, order.product_name)}
+                            className="flex-1 bg-red-600 text-white py-2 px-3 rounded text-sm hover:bg-red-700 transition-colors"
                           >
-                            Accept
+                            Terima
                           </button>
                           <button
-                            onClick={() => handleOrderAction(order.order_id, 'reject')}
-                            className="flex-1 bg-red-600 text-white py-2 px-3 rounded text-sm hover:bg-red-700"
+                            onClick={() => handleOrderAction(order.order_id, 'reject', order.product_id, order.product_name)}
+                            className="flex-1 bg-white text-red-600 border border-red-600 py-2 px-3 rounded text-sm hover:bg-red-50 transition-colors"
                           >
-                            Reject
+                            Tolak
                           </button>
                         </>
                       )}
-                      {order.status === 'accepted' && (
+                      {(order.item_status || order.status) === 'accepted' && (
                         <button
-                          onClick={() => handleOrderAction(order.order_id, 'completed')}
-                          className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700"
+                          onClick={() => handleOrderAction(order.order_id, 'completed', order.product_id, order.product_name)}
+                          className="w-full bg-red-600 text-white py-2 px-3 rounded text-sm hover:bg-red-700 transition-colors"
                         >
-                          Mark Complete
+                          Selesaikan
                         </button>
                       )}
                     </div>
@@ -715,37 +824,37 @@ const TenantDashboard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            (order.item_status || order.status) === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            (order.item_status || order.status) === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                            (order.item_status || order.status) === 'completed' ? 'bg-green-100 text-green-800' :
                             'bg-red-100 text-red-800'
                           }`}>
-                            {order.status}
+                            {order.item_status || order.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          {order.status === 'pending' && (
+                          {(order.item_status || order.status) === 'pending' && (
                             <>
                               <button
-                                onClick={() => handleOrderAction(order.order_id, 'accept')}
-                                className="text-green-600 hover:text-green-900"
+                                onClick={() => handleOrderAction(order.order_id, 'accept', order.product_id, order.product_name)}
+                                className="text-red-600 hover:text-red-800 font-medium"
                               >
-                                Accept
+                                Terima
                               </button>
                               <button
-                                onClick={() => handleOrderAction(order.order_id, 'reject')}
-                                className="text-red-600 hover:text-red-900"
+                                onClick={() => handleOrderAction(order.order_id, 'reject', order.product_id, order.product_name)}
+                                className="text-gray-600 hover:text-gray-800 font-medium"
                               >
-                                Reject
+                                Tolak
                               </button>
                             </>
                           )}
-                          {order.status === 'accepted' && (
+                          {(order.item_status || order.status) === 'accepted' && (
                             <button
-                              onClick={() => handleOrderAction(order.order_id, 'completed')}
-                              className="text-blue-600 hover:text-blue-900"
+                              onClick={() => handleOrderAction(order.order_id, 'completed', order.product_id, order.product_name)}
+                              className="text-red-600 hover:text-red-800 font-medium"
                             >
-                              Mark Complete
+                              Selesaikan
                             </button>
                           )}
                         </td>
@@ -1037,37 +1146,94 @@ const TenantDashboard = () => {
       
       case 'profile':
         return (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Profile Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                <input 
-                  type="text" 
-                  value={user?.full_name || ''} 
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" 
-                  readOnly
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input 
-                  type="email" 
-                  value={user?.email || ''} 
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" 
-                  readOnly
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Username</label>
-                <input 
-                  type="text" 
-                  value={user?.username || ''} 
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" 
-                  readOnly
-                />
+          <div className="space-y-8">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-4">Profile Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={profileData.full_name} 
+                    onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Store Name</label>
+                  <input 
+                    type="text" 
+                    value={storeName} 
+                    onChange={(e) => setStoreName(e.target.value)}
+                    placeholder="Enter your store name"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This will be displayed on your products</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input 
+                    type="email" 
+                    value={profileData.email} 
+                    onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Username</label>
+                  <input 
+                    type="text" 
+                    value={profileData.username} 
+                    onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                  />
+                </div>
+                <button 
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('adminToken');
+                      const response = await fetch(`${getApiUrl('/profile')}`, {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          full_name: profileData.full_name,
+                          email: profileData.email,
+                          username: profileData.username,
+                          phone: user.phone,
+                          address: user.address,
+                          store_name: storeName
+                        })
+                      });
+                      
+                      if (response.ok) {
+                        await fetchProfile();
+                        window.dispatchEvent(new Event('profileUpdated'));
+                        setStatusMessage('Profile updated successfully!');
+                        setStatusType('success');
+                        setShowStatusModal(true);
+                      } else {
+                        const error = await response.json();
+                        setStatusMessage(error.message || 'Failed to update profile.');
+                        setStatusType('error');
+                        setShowStatusModal(true);
+                      }
+                    } catch (error) {
+                      console.error('Error updating profile:', error);
+                      setStatusMessage('Failed to update profile.');
+                      setStatusType('error');
+                      setShowStatusModal(true);
+                    }
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Update Profile
+                </button>
               </div>
             </div>
+            <PaymentMethodsForm />
           </div>
         );
       
@@ -1082,17 +1248,17 @@ const TenantDashboard = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
       </div>
-      {/* Enhanced Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-transform duration-300`}>
+      {/* Enhanced Sidebar - Red & White Theme */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-red-900 via-red-800 to-red-900 shadow-2xl transition-transform duration-300`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-slate-700">
+          <div className="p-6 border-b border-red-700">
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
-                <FiUser className="h-6 w-6 text-white" />
+              <div className="bg-gradient-to-r from-white to-red-100 p-2 rounded-lg">
+                <FiUser className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Tenant Panel</h2>
-                <p className="text-xs text-slate-400">Business Dashboard</p>
+                <h2 className="text-xl font-bold text-white">Panel Tenant</h2>
+                <p className="text-xs text-red-300">Dashboard Bisnis</p>
               </div>
             </div>
           </div>
@@ -1109,8 +1275,8 @@ const TenantDashboard = () => {
                   }}
                   className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 group ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105'
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white hover:transform hover:scale-105'
+                      ? 'bg-gradient-to-r from-white to-red-100 text-red-600 shadow-lg transform scale-105'
+                      : 'text-red-200 hover:bg-red-700 hover:text-white hover:transform hover:scale-105'
                   }`}
                 >
                   <Icon className={`mr-3 h-5 w-5 transition-transform duration-200 ${
@@ -1118,15 +1284,15 @@ const TenantDashboard = () => {
                   }`} />
                   <span className="font-medium">{item.label}</span>
                   {isActive && (
-                    <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <div className="ml-auto w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
                   )}
                 </button>
               );
             })}
           </nav>
-          <div className="p-4 border-t border-slate-700">
-            <div className="bg-slate-800 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">Logged in as</p>
+          <div className="p-4 border-t border-red-700">
+            <div className="bg-red-800 rounded-lg p-3">
+              <p className="text-xs text-red-300 mb-1">Masuk sebagai</p>
               <p className="text-sm font-medium text-white truncate">{user?.full_name || user?.username}</p>
             </div>
           </div>
@@ -1150,7 +1316,7 @@ const TenantDashboard = () => {
               <div className="flex items-center min-w-0 flex-1">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden mr-3 p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
+                  className="lg:hidden mr-3 p-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all duration-200"
                 >
                   <FiMenu className="h-5 w-5" />
                 </button>
@@ -1159,7 +1325,7 @@ const TenantDashboard = () => {
                     <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent truncate">
                       {menuItems.find(item => item.id === activeMenu)?.label || 'Dashboard'}
                     </h1>
-                    <div className="hidden sm:block bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1 rounded-full">
+                    <div className="hidden sm:block bg-gradient-to-r from-red-500 to-red-600 px-3 py-1 rounded-full">
                       <span className="text-xs font-medium text-white">Tenant</span>
                     </div>
                   </div>
@@ -1209,7 +1375,7 @@ const TenantDashboard = () => {
                     <p className="text-sm font-semibold text-gray-900 truncate max-w-24">{user?.full_name || user?.username}</p>
                     <p className="text-xs text-gray-500">Business Owner</p>
                   </div>
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                     <span className="text-white text-xs sm:text-sm font-bold">
                       {(user?.full_name || user?.username || 'T').charAt(0).toUpperCase()}
                     </span>
@@ -1233,34 +1399,104 @@ const TenantDashboard = () => {
         </div>
       </div>
       
+      {/* Confirm Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <FiAlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Konfirmasi Tindakan</h3>
+            </div>
+            <p className="text-gray-600 mb-6">{confirmAction?.message}</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmAction(null);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmAction?.type === 'logout' ? executeLogout : executeOrderAction}
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Status Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className={`p-2 rounded-full mr-3 ${
+                statusType === 'success' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {statusType === 'success' ? (
+                  <FiCheck className="h-6 w-6 text-green-600" />
+                ) : (
+                  <FiX className="h-6 w-6 text-red-600" />
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {statusType === 'success' ? 'Berhasil!' : 'Gagal!'}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">{statusMessage}</p>
+            <button
+              onClick={() => setShowStatusModal(false)}
+              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                statusType === 'success' 
+                  ? 'bg-green-600 text-white hover:bg-green-700' 
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Reject Order Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Reject Order</h3>
-            <p className="text-gray-600 mb-4">Please provide a reason for rejecting this order:</p>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <FiX className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Tolak Pesanan</h3>
+            </div>
+            <p className="text-gray-600 mb-4">Berikan alasan penolakan pesanan ini:</p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg h-24 resize-none"
-              placeholder="Enter rejection reason..."
+              className="w-full p-3 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder="Masukkan alasan penolakan..."
             />
-            <div className="flex space-x-3 mt-4">
+            <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => {
                   setShowRejectModal(false);
                   setSelectedOrder(null);
                   setRejectionReason('');
                 }}
-                className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200"
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
-                Cancel
+                Batal
               </button>
               <button
                 onClick={handleRejectOrder}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
               >
-                Reject Order
+                Tolak Pesanan
               </button>
             </div>
           </div>

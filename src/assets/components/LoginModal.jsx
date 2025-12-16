@@ -22,7 +22,6 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       if (response.ok) {
         const data = await response.json()
         localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('currentUser', JSON.stringify(data.user))
         if (onLoginSuccess) {
           onLoginSuccess()
         } else {
@@ -76,7 +75,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     type="text"
                     value={credentials.username}
                     onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300"
                     placeholder="Username atau Email"
                     required
                   />
@@ -90,7 +89,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     type="password"
                     value={credentials.password}
                     onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300"
                     placeholder="Password"
                     required
                   />
@@ -106,14 +105,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-red-700 hover:to-indigo-700 disabled:opacity-50 transition-all duration-300"
               >
                 {loading ? 'Masuk...' : 'Masuk'}
               </button>
 
               <div className="text-center text-sm text-gray-600">
                 Belum punya akun?{' '}
-                <a href="/user-register" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="/user-register" className="text-red-600 hover:text-red-700 font-medium">
                   Daftar di sini
                 </a>
               </div>

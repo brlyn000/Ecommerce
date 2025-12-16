@@ -37,7 +37,7 @@ const DashboardStats = () => {
         title: 'Total Produk',
         value: overview.overview.products,
         icon: FiPackage,
-        color: 'bg-blue-500',
+        color: 'bg-red-500',
         change: '+' + Math.floor(Math.random() * 10) + '%'
       },
       {
@@ -86,7 +86,7 @@ const DashboardStats = () => {
         <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
         <button
           onClick={fetchData}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           Refresh
         </button>
@@ -126,7 +126,7 @@ const DashboardStats = () => {
               recentActivity.slice(0, 4).map((activity, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <div className={`w-2 h-2 rounded-full ${
-                    activity.status === 'new' ? 'bg-blue-500' :
+                    activity.status === 'new' ? 'bg-red-500' :
                     activity.status === 'read' ? 'bg-yellow-500' : 'bg-green-500'
                   }`}></div>
                   <div className="flex-1">
@@ -146,10 +146,10 @@ const DashboardStats = () => {
           <div className="space-y-3">
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('switchMenu', { detail: 'products' }))}
-              className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              className="w-full text-left p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
             >
-              <p className="font-medium text-blue-900">Tambah Produk</p>
-              <p className="text-sm text-blue-600">Buat listing produk baru</p>
+              <p className="font-medium text-red-900">Tambah Produk</p>
+              <p className="text-sm text-red-600">Buat listing produk baru</p>
             </button>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('switchMenu', { detail: 'categories' }))}
@@ -183,7 +183,7 @@ const DashboardStats = () => {
             {overview && overview.productsByCategory.map((category, index) => {
               const maxCount = Math.max(...overview.productsByCategory.map(c => c.count));
               const percentage = Math.round((category.count / maxCount) * 100);
-              const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500'];
+              const colors = ['bg-red-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500'];
               
               return (
                 <div key={index} className="flex items-center justify-between">
@@ -205,7 +205,7 @@ const DashboardStats = () => {
           <div className="space-y-3">
             {overview && overview.contactStatus.map((status, index) => {
               const statusLabels = { new: 'Baru', read: 'Dibaca', replied: 'Dibalas' };
-              const colors = ['bg-blue-500', 'bg-yellow-500', 'bg-green-500'];
+              const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500'];
               
               return (
                 <div key={index} className="flex items-center justify-between">

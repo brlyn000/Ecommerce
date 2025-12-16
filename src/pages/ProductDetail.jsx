@@ -2,9 +2,11 @@ import { useParams } from 'react-router-dom';
 import { FaStar, FaRegStar, FaShoppingCart, FaHeart, FaShareAlt, FaChevronLeft, FaPlus, FaMinus } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../services/api';
+import { getImageUrl, getApiUrl } from '../config/api';
 import html2canvas from 'html2canvas';
 import CommentSection from '../assets/components/CommentSection';
 import LoginModal from '../assets/components/LoginModal';
+import PaymentMethodsDropdown from '../components/PaymentMethodsDropdown';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -20,11 +22,34 @@ export default function ProductDetail() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [quantityError, setQuantityError] = useState('');
+  const [tenantPaymentMethods, setTenantPaymentMethods] = useState(null);
+  const [tenantContact, setTenantContact] = useState(null);
   const productCardRef = useRef(null);
   const shareButtonRef = useRef(null);
   const shareDropdownRef = useRef(null);
 
   // Fetch product data
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (product) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        console.log('Profile updated - Current user:', currentUser);
+        console.log('Product created_by:', product.created_by);
+        if (currentUser.id == product.created_by && currentUser.store_name) {
+          console.log('Updating store name to:', currentUser.store_name);
+          setTenantContact(prev => ({
+            ...prev,
+            store_name: currentUser.store_name
+          }));
+        }
+      }
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, [product]);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -44,6 +69,41 @@ export default function ProductDetail() {
         } catch (error) {
           // Ignore error if not authenticated
           setIsLiked(false);
+        }
+        
+        // Get tenant contact info
+        try {
+          const response = await fetch(getApiUrl(`/users/${data.created_by}/payment-methods`));
+          if (response.ok) {
+            const contactData = await response.json();
+            console.log('Contact data:', contactData);
+            
+            // Check if current user is the same tenant
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            console.log('Current user:', currentUser);
+            console.log('Product created_by:', data.created_by);
+            
+            let storeName = '';
+            if (currentUser.id == data.created_by && currentUser.store_name) {
+              storeName = currentUser.store_name;
+              console.log('Using current user store name:', storeName);
+            }
+            
+            setTenantContact({
+              ...contactData.contact_info,
+              store_name: storeName
+            });
+          } else {
+            // If no contact data, still check for store name
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.id == data.created_by && currentUser.store_name) {
+              setTenantContact({
+                store_name: currentUser.store_name
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching tenant contact:', error);
         }
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -206,8 +266,8 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-yellow-50/90">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50/90 to-yellow-50/90">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-4"></div>
         <p className="text-gray-600">Loading product details...</p>
         <p className="text-sm text-gray-500 mt-2">Product ID: {id}</p>
       </div>
@@ -215,14 +275,14 @@ export default function ProductDetail() {
   }
 
   if (!product) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50/90 to-yellow-50/90 p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50/90 to-yellow-50/90 p-8">
       <div className="bg-white/95 rounded-3xl shadow-xl p-8 max-w-md text-center border border-gray-100 backdrop-blur-sm">
         <div className="text-8xl mb-4 text-yellow-400">😕</div>
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Product Not Found</h1>
         <p className="text-gray-600 mb-6">Sorry, the product you are looking for is not available.</p>
         <a 
           href="/" 
-          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
         >
           <FaChevronLeft className="mr-2" />
           Return to Catalog
@@ -244,13 +304,13 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/80 via-white to-yellow-50/80 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-red-50/80 via-white to-yellow-50/80 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
           <a 
             href="/" 
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-all duration-300 group"
+            className="inline-flex items-center text-red-600 hover:text-red-800 font-medium transition-all duration-300 group"
           >
             <FaChevronLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
             Back to Home
@@ -273,7 +333,7 @@ export default function ProductDetail() {
             <div className="space-y-4">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 h-96 border border-gray-200">
                 <img 
-                  src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'} 
+                  src={getImageUrl(product.image)} 
                   alt={product.name} 
                   className="w-full h-full object-contain transition-transform duration-500 hover:scale-105 p-4"
                   onError={(e) => {
@@ -313,13 +373,23 @@ export default function ProductDetail() {
             <div className="flex flex-col">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{product.name}</h1>
               
+              {/* Store Name */}
+              <div className="mb-4">
+                <a 
+                  href={`/store/${product.created_by}`}
+                  className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  🏪 Kunjungi Toko: {product.store_name || (tenantContact?.store_name) || `Store #${product.created_by}`}
+                </a>
+              </div>
+              
               {/* Rating & Likes */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
                   <div className="flex mr-2">
-                    {renderStars(product.rating)}
+                    {renderStars(product.average_rating || 0)}
                   </div>
-                  <span className="text-gray-600 text-sm">({product.reviewCount} reviews)</span>
+                  <span className="text-gray-600 text-sm">({product.review_count || 0} reviews)</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <FaHeart className="w-4 h-4 mr-1 text-red-400" />
@@ -335,7 +405,7 @@ export default function ProductDetail() {
                       {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                     </span>
                     <div className="flex items-center space-x-3">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
+                      <span className="text-3xl font-bold bg-gradient-to-r from-red-600 to-sky-500 bg-clip-text text-transparent">
                         {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price * (1 - product.discount / 100))}
                       </span>
                       <span className="bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded-full">
@@ -344,7 +414,7 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 ) : (
-                  <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
+                  <span className="text-3xl font-bold bg-gradient-to-r from-red-600 to-sky-500 bg-clip-text text-transparent">
                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                   </span>
                 )}
@@ -355,10 +425,15 @@ export default function ProductDetail() {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Product Description</h3>
                 <p className="text-gray-600 leading-relaxed">{product.description}</p>
                 <div className="mt-3">
-                  <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                  <span className="inline-block bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
                     {product.category_name || 'Uncategorized'}
                   </span>
                 </div>
+              </div>
+
+              {/* Payment Methods */}
+              <div className="mb-6">
+                <PaymentMethodsDropdown product={product} />
               </div>
 
               {/* Action Buttons */}
@@ -407,7 +482,7 @@ export default function ProductDetail() {
                       setQuantityError('');
                       setShowCheckoutModal(true);
                     }}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
                   >
                     <FaShoppingCart className="mr-2" />
                     ORDER NOW
@@ -421,7 +496,7 @@ export default function ProductDetail() {
                       }}
                       className="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors duration-300 shadow-sm"
                     >
-                      <FaShareAlt className="text-blue-500" />
+                      <FaShareAlt className="text-red-500" />
                     </button>
                     
                     {/* Share Options Dropdown */}
@@ -472,6 +547,8 @@ export default function ProductDetail() {
                   </div>
                 </div>
 
+
+
                 {/* Additional Info */}
                 <div className="flex items-center gap-3 text-sm text-gray-500 mt-3">
                   <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
@@ -480,8 +557,8 @@ export default function ProductDetail() {
                     </svg>
                     Status: {product.stock_status || 'available'}
                   </div>
-                  <div className="flex items-center bg-blue-100 px-3 py-1 rounded-full">
-                    <span className="text-blue-600 font-medium">
+                  <div className="flex items-center bg-red-100 px-3 py-1 rounded-full">
+                    <span className="text-red-600 font-medium">
                       Stock: {product.stock || 0} pcs
                     </span>
                   </div>
@@ -491,21 +568,25 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Product Tabs */}
-        <div className="mt-12 bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              <button className="py-4 px-6 text-center border-b-2 font-medium text-sm border-blue-500 text-blue-600">
-                Product Details
-              </button>
-            </nav>
-          </div>
-          <div className="p-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Complete Information</h3>
-            <div className="prose max-w-none text-gray-600">
-              {product.long_description || (
-                <p>No additional information available for this product.</p>
-              )}
+
+        
+        {/* Product Details */}
+        <div className="mt-8">
+          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="border-b border-gray-200">
+              <nav className="flex -mb-px">
+                <button className="py-4 px-6 text-center border-b-2 font-medium text-sm border-red-500 text-red-600">
+                  Product Details
+                </button>
+              </nav>
+            </div>
+            <div className="p-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Complete Information</h3>
+              <div className="prose max-w-none text-gray-600">
+                {product.long_description || (
+                  <p>No additional information available for this product.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -549,7 +630,7 @@ export default function ProductDetail() {
                       setShowCartModal(false);
                       window.location.href = '/cart';
                     }}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     View Cart
                   </button>
@@ -564,8 +645,8 @@ export default function ProductDetail() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-auto">
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaShoppingCart className="text-2xl text-blue-600" />
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaShoppingCart className="text-2xl text-red-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Confirm Order</h3>
                 <p className="text-gray-600 mb-4">Are you sure you want to order this product?</p>
@@ -573,7 +654,7 @@ export default function ProductDetail() {
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <div className="flex items-center space-x-3 mb-4">
                     <img
-                      src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'}
+                      src={getImageUrl(product.image)}
                       alt={product.name}
                       className="w-12 h-12 object-cover rounded"
                     />
@@ -584,12 +665,12 @@ export default function ProductDetail() {
                           <span className="text-gray-400 line-through text-sm">
                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                           </span>
-                          <span className="text-blue-600 font-bold">
+                          <span className="text-red-600 font-bold">
                             {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price * (1 - product.discount / 100))}
                           </span>
                         </div>
                       ) : (
-                        <p className="text-blue-600 font-bold">
+                        <p className="text-red-600 font-bold">
                           {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.price)}
                         </p>
                       )}
@@ -627,7 +708,7 @@ export default function ProductDetail() {
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <div className="flex justify-between text-sm">
                         <span>Subtotal:</span>
-                        <span className="font-bold text-blue-600">
+                        <span className="font-bold text-red-600">
                           {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
                             (product.discount ? product.price * (1 - product.discount / 100) : product.price) * orderQuantity
                           )}
@@ -668,7 +749,7 @@ export default function ProductDetail() {
                           customer_name: currentUser.full_name || currentUser.username
                         };
                         
-                        const orderResponse = await fetch('http://localhost:5006/api/orders', {
+                        const orderResponse = await fetch(getApiUrl('/orders'), {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
@@ -682,14 +763,12 @@ export default function ProductDetail() {
                         if (orderResult.success) {
                           setShowCheckoutModal(false);
                           
-                          // Redirect to WhatsApp with validation
-                          const validateWhatsAppURL = (url) => {
-                            return url && (url.startsWith('https://wa.me/') || url.startsWith('https://api.whatsapp.com/'));
-                          };
-                          
-                          if (product.whatsapp && validateWhatsAppURL(product.whatsapp)) {
-                            window.open(product.whatsapp, '_blank');
+                          // Contact seller directly using tenant contact info
+                          if (tenantContact && tenantContact.whatsapp) {
+                            const message = `Hi, I just placed an order #${orderResult.order_id}:\n\n- ${product.name} (${orderQuantity}x)\n\nTotal: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((product.discount ? product.price * (1 - product.discount / 100) : product.price) * orderQuantity)}`;
+                            window.open(`https://wa.me/${tenantContact.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
                           } else {
+                            // Fallback to generic message
                             const message = `Hi, I want to order ${product.name} x${orderQuantity} (Order ID: ${orderResult.order_id}) - ${window.location.href}`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
                           }
@@ -699,7 +778,7 @@ export default function ProductDetail() {
                         alert('Order failed. Please try again.');
                       }
                     }}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Confirm Order
                   </button>

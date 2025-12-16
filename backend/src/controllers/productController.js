@@ -50,6 +50,15 @@ const productController = {
     }
   },
 
+  async getTenantProducts(req, res) {
+    try {
+      const products = await Product.getByUserId(req.params.tenantId);
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   async updateProduct(req, res) {
     try {
       // Check if product belongs to user

@@ -58,7 +58,7 @@ const NotificationPanel = () => {
       case 'review':
         return <FiStar className="w-5 h-5 text-yellow-500" />;
       case 'comment':
-        return <FiMessageCircle className="w-5 h-5 text-blue-500" />;
+        return <FiMessageCircle className="w-5 h-5 text-red-500" />;
       default:
         return <FiBell className="w-5 h-5 text-gray-500" />;
     }
@@ -95,7 +95,7 @@ const NotificationPanel = () => {
         <button
           onClick={loadNotifications}
           disabled={loading}
-          className="text-blue-600 hover:text-blue-800 text-sm"
+          className="text-red-600 hover:text-red-800 text-sm"
         >
           {loading ? 'Loading...' : 'Refresh'}
         </button>
@@ -107,7 +107,7 @@ const NotificationPanel = () => {
             <div
               key={notification.id}
               className={`p-4 rounded-lg border ${
-                notification.is_read ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'
+                notification.is_read ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'
               }`}
             >
               <div className="flex items-start justify-between">

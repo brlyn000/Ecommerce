@@ -4,13 +4,36 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Authentication required');
+      const error = new Error(`HTTP error! status: ${response.status}`);
+      error.response = { status: response.status, statusText: response.statusText };
+      
+      // Handle specific status codes
+      switch (response.status) {
+        case 401:
+          error.message = 'Authentication required';
+          break;
+        case 403:
+          error.message = 'Access forbidden';
+          break;
+        case 404:
+          error.message = 'Resource not found';
+          break;
+        case 500:
+          error.message = 'Internal server error';
+          break;
+        default:
+          error.message = `Request failed with status ${response.status}`;
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+      
+      throw error;
     }
     return response.json();
   } catch (error) {
+    if (!error.response) {
+      // Network error
+      error.response = { status: 500, statusText: 'Network Error' };
+      error.message = 'Network connection failed';
+    }
     console.error('API Error:', error);
     throw error;
   }
@@ -239,16 +262,24 @@ export const api = {
   },
 
   async updateComment(id, commentData) {
+    const token = localStorage.getItem('adminToken');
     return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(commentData)
     });
   },
 
   async deleteComment(id) {
+    const token = localStorage.getItem('adminToken');
     return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
   },
 

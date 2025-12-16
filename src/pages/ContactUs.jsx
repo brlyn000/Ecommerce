@@ -10,6 +10,36 @@ const ContactUs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const { settings } = useSettings();
+  const [user, setUser] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: ''
+  });
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        try {
+          const response = await fetch('http://localhost:5006/api/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            setFormData({
+              name: userData.full_name || userData.username || '',
+              email: userData.email || ''
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Memoized function to clear notification
   const clearNotification = useCallback(() => {
@@ -81,7 +111,7 @@ const ContactUs = () => {
       <Navbar/>
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white min-h-screen">
         {/* Enhanced floating decorative elements */}
-        <div className="absolute top-0 left-0 w-72 h-72 sm:w-96 sm:h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 sm:w-96 sm:h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-72 h-72 sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
         
@@ -97,7 +127,7 @@ const ContactUs = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-xs sm:text-sm font-semibold text-blue-400 tracking-widest uppercase mb-3 sm:mb-4"
+              className="text-xs sm:text-sm font-semibold text-red-400 tracking-widest uppercase mb-3 sm:mb-4"
             >
               Hubungi Kami
             </motion.h2>
@@ -105,7 +135,7 @@ const ContactUs = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 mb-4 sm:mb-6 leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 via-cyan-400 to-indigo-400 mb-4 sm:mb-6 leading-tight"
             >
               Mari Berkolaborasi
             </motion.h1>
@@ -113,7 +143,7 @@ const ContactUs = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-blue-100 leading-relaxed px-4"
+              className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-red-100 leading-relaxed px-4"
             >
               Punya pertanyaan atau ingin bekerja sama? Tim kami siap membantu Anda kapan saja.
             </motion.p>
@@ -128,22 +158,22 @@ const ContactUs = () => {
               className="space-y-4 sm:space-y-6 order-2 xl:order-1"
             >
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Informasi Kontak</h3>
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-cyan-400">Informasi Kontak</h3>
                 
                 <div className="space-y-4 sm:space-y-6">
                   <motion.div 
                     whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent hover:from-blue-500/20 transition-all duration-300 cursor-pointer"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-red-500/10 to-transparent hover:from-red-500/20 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-cyan-500 p-2 sm:p-3 rounded-lg shadow-lg">
+                    <div className="flex-shrink-0 bg-gradient-to-br from-red-500 to-cyan-500 p-2 sm:p-3 rounded-lg shadow-lg">
                       <FaPhoneAlt className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Telepon</h4>
-                      <a href={`tel:${settings.phone}`} className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors">
+                      <a href={`tel:${settings.phone}`} className="mt-1 text-sm sm:text-base text-red-200 font-medium hover:text-red-100 transition-colors">
                         {settings.phone}
                       </a>
-                      <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Senin - Jumat, 08:00 - 17:00</p>
+                      <p className="mt-1 text-xs sm:text-sm text-red-300/80">Senin - Jumat, 08:00 - 17:00</p>
                     </div>
                   </motion.div>
 
@@ -156,10 +186,10 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Email</h4>
-                      <a href={`mailto:${settings.adminEmail}`} className="mt-1 text-sm sm:text-base text-blue-200 font-medium hover:text-blue-100 transition-colors break-all">
+                      <a href={`mailto:${settings.adminEmail}`} className="mt-1 text-sm sm:text-base text-red-200 font-medium hover:text-red-100 transition-colors break-all">
                         {settings.adminEmail}
                       </a>
-                      <p className="mt-1 text-xs sm:text-sm text-blue-300/80">Respon dalam 24 jam kerja</p>
+                      <p className="mt-1 text-xs sm:text-sm text-red-300/80">Respon dalam 24 jam kerja</p>
                     </div>
                   </motion.div>
 
@@ -172,13 +202,13 @@ const ContactUs = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-base sm:text-lg font-semibold text-white">Lokasi</h4>
-                      <p className="mt-1 text-sm sm:text-base text-blue-200 leading-relaxed">{settings.companyAddress}</p>
+                      <p className="mt-1 text-sm sm:text-base text-red-200 leading-relaxed">{settings.companyAddress}</p>
                     </div>
                   </motion.div>
                 </div>
 
                 <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
-                  <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Media Sosial</h4>
+                  <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-cyan-400">Media Sosial</h4>
                   <div className="flex gap-3 sm:gap-4">
                     <motion.a 
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -196,7 +226,7 @@ const ContactUs = () => {
                       href="https://t.me/username" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                      className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
                     >
                       <FaTelegramPlane className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </motion.a>
@@ -304,7 +334,7 @@ const ContactUs = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <label htmlFor="user_name" className="block text-sm font-semibold text-blue-200 mb-2">
+                    <label htmlFor="user_name" className="block text-sm font-semibold text-red-200 mb-2">
                       Nama Lengkap
                     </label>
                     <input
@@ -312,7 +342,9 @@ const ContactUs = () => {
                       name="user_name"
                       id="user_name"
                       required
-                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
                       placeholder="Masukkan nama Anda"
                     />
                   </motion.div>
@@ -321,7 +353,7 @@ const ContactUs = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <label htmlFor="user_email" className="block text-sm font-semibold text-blue-200 mb-2">
+                    <label htmlFor="user_email" className="block text-sm font-semibold text-red-200 mb-2">
                       Email
                     </label>
                     <input
@@ -329,7 +361,9 @@ const ContactUs = () => {
                       name="user_email"
                       id="user_email"
                       required
-                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
                       placeholder="email@contoh.com"
                     />
                   </motion.div>
@@ -340,7 +374,7 @@ const ContactUs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <label htmlFor="subject" className="block text-sm font-semibold text-blue-200 mb-2">
+                  <label htmlFor="subject" className="block text-sm font-semibold text-red-200 mb-2">
                     Subjek
                   </label>
                   <input
@@ -348,7 +382,7 @@ const ContactUs = () => {
                     name="subject"
                     id="subject"
                     required
-                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
                     placeholder="Apa yang bisa kami bantu?"
                   />
                 </motion.div>
@@ -358,7 +392,7 @@ const ContactUs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
                 >
-                  <label htmlFor="message" className="block text-sm font-semibold text-blue-200 mb-2">
+                  <label htmlFor="message" className="block text-sm font-semibold text-red-200 mb-2">
                     Pesan
                   </label>
                   <textarea
@@ -366,7 +400,7 @@ const ContactUs = () => {
                     name="message"
                     rows={5}
                     required
-                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10 resize-none"
+                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10 resize-none"
                     placeholder="Tulis pesan Anda disini..."
                   ></textarea>
                 </motion.div>
@@ -407,7 +441,7 @@ const ContactUs = () => {
           
           {/* Additional decorative elements for mobile */}
           <div className="block sm:hidden absolute bottom-10 left-1/2 transform -translate-x-1/2">
-            <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-50"></div>
+            <div className="w-32 h-1 bg-gradient-to-r from-red-500 to-purple-500 rounded-full opacity-50"></div>
           </div>
         </div>
       </div>

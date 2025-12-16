@@ -7,6 +7,7 @@ import CategoryManager from '../assets/components/dashboard/CategoryManager';
 import ProductManager from '../assets/components/dashboard/ProductManager';
 import CarouselManager from '../assets/components/dashboard/CarouselManager';
 import UserManager from '../assets/components/dashboard/UserManager';
+import TenantManager from '../assets/components/dashboard/TenantManager';
 import ContactManager from '../assets/components/dashboard/ContactManager';
 import Analytics from '../assets/components/dashboard/Analytics';
 
@@ -48,6 +49,7 @@ const Dashboard = () => {
     { id: 'products', label: 'Manage Products', icon: FiPackage },
     { id: 'carousel', label: 'Manage Carousel', icon: FiImage },
     { id: 'contacts', label: 'Kontak Kami', icon: FiMail },
+    { id: 'tenants', label: 'Tenant Management', icon: FiUsers },
     { id: 'users', label: 'User Management', icon: FiUsers },
     { id: 'analytics', label: 'Analytics', icon: FiBarChart },
     { id: 'settings', label: 'Settings', icon: FiSettings },
@@ -63,6 +65,8 @@ const Dashboard = () => {
         return <ProductManager />;
       case 'carousel':
         return <CarouselManager />;
+      case 'tenants':
+        return <TenantManager />;
       case 'users':
         return <UserManager />;
       case 'contacts':
@@ -82,7 +86,7 @@ const Dashboard = () => {
                       type="text" 
                       value={formData.siteName} 
                       onChange={(e) => setFormData({...formData, siteName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
                     />
                   </div>
                   <div>
@@ -91,7 +95,7 @@ const Dashboard = () => {
                       type="email" 
                       value={formData.adminEmail} 
                       onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
                     />
                   </div>
                   <div>
@@ -100,7 +104,7 @@ const Dashboard = () => {
                       value={formData.companyAddress} 
                       onChange={(e) => setFormData({...formData, companyAddress: e.target.value})}
                       rows={3} 
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
                     />
                   </div>
                   <div>
@@ -109,7 +113,7 @@ const Dashboard = () => {
                       type="text" 
                       value={formData.phone} 
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
                     />
                   </div>
                   <div>
@@ -118,12 +122,12 @@ const Dashboard = () => {
                       type="text" 
                       value={formData.whatsapp} 
                       onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" 
                     />
                   </div>
                   <button 
                     onClick={handleSaveSettings}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Save Changes
                   </button>
@@ -138,7 +142,7 @@ const Dashboard = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Login Notifications</span>
-                    <button className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors">Active</button>
+                    <button className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm hover:bg-red-200 transition-colors">Active</button>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Auto Logout</span>
@@ -157,19 +161,19 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Email Notifications</span>
-                  <input type="checkbox" defaultChecked className="h-4 w-4 text-blue-600 rounded" />
+                  <input type="checkbox" defaultChecked className="h-4 w-4 text-red-600 rounded" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Product Updates</span>
-                  <input type="checkbox" defaultChecked className="h-4 w-4 text-blue-600 rounded" />
+                  <input type="checkbox" defaultChecked className="h-4 w-4 text-red-600 rounded" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">Order Notifications</span>
-                  <input type="checkbox" defaultChecked className="h-4 w-4 text-blue-600 rounded" />
+                  <input type="checkbox" defaultChecked className="h-4 w-4 text-red-600 rounded" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">System Alerts</span>
-                  <input type="checkbox" defaultChecked className="h-4 w-4 text-blue-600 rounded" />
+                  <input type="checkbox" defaultChecked className="h-4 w-4 text-red-600 rounded" />
                 </div>
               </div>
             </div>
@@ -182,15 +186,24 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transition-transform duration-300`}>
+      {/* Enhanced Sidebar */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-red-900 via-red-800 to-red-900 shadow-2xl transition-transform duration-300`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
+          <div className="p-6 border-b border-red-700">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-white to-red-100 p-2 rounded-lg">
+                <FiSettings className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Admin Panel</h2>
+                <p className="text-xs text-red-300">Control Center</p>
+              </div>
+            </div>
           </div>
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = activeMenu === item.id;
               return (
                 <button
                   key={item.id}
@@ -198,18 +211,29 @@ const Dashboard = () => {
                     setActiveMenu(item.id);
                     setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                    activeMenu === item.id
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 group ${
+                    isActive
+                      ? 'bg-gradient-to-r from-white to-red-100 text-red-600 shadow-lg transform scale-105'
+                      : 'text-red-200 hover:bg-red-700 hover:text-white hover:transform hover:scale-105'
                   }`}
                 >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.label}
+                  <Icon className={`mr-3 h-5 w-5 transition-transform duration-200 ${
+                    isActive ? 'scale-110' : 'group-hover:scale-110'
+                  }`} />
+                  <span className="font-medium text-sm">{item.label}</span>
+                  {isActive && (
+                    <div className="ml-auto w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+                  )}
                 </button>
               );
             })}
           </nav>
+          <div className="p-4 border-t border-red-700">
+            <div className="bg-red-800 rounded-lg p-3">
+              <p className="text-xs text-red-300 mb-1">Logged in as</p>
+              <p className="text-sm font-medium text-white">Administrator</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -223,22 +247,27 @@ const Dashboard = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        {/* Enhanced Header */}
+        <div className="bg-white shadow-lg border-b border-gray-200">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
+              <div className="flex items-center min-w-0 flex-1">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden mr-4 p-2 rounded-lg hover:bg-gray-100"
+                  className="lg:hidden mr-3 p-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md"
                 >
-                  <FiMenu className="h-6 w-6" />
+                  <FiMenu className="h-5 w-5" />
                 </button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {menuItems.find(item => item.id === activeMenu)?.label || 'Dashboard Overview'}
-                  </h1>
-                  <p className="text-sm text-gray-600">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent truncate">
+                      {menuItems.find(item => item.id === activeMenu)?.label || 'Dashboard Overview'}
+                    </h1>
+                    <div className="hidden sm:block bg-gradient-to-r from-red-500 to-red-600 px-3 py-1 rounded-full">
+                      <span className="text-xs font-medium text-white">Admin</span>
+                    </div>
+                  </div>
+                  <p className="hidden sm:block text-sm text-gray-500 mt-1">
                     {new Date().toLocaleDateString('id-ID', { 
                       weekday: 'long', 
                       year: 'numeric', 
@@ -248,46 +277,48 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 {/* Notifications */}
                 <div className="relative">
                   <button 
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className="p-2 text-gray-400 hover:text-gray-600 relative"
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:scale-105 relative"
                   >
-                    <FiBell className="h-6 w-6" />
+                    <FiBell className="h-5 w-5 text-gray-600" />
                     {notifications.some(n => n.unread) && (
-                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+                        {notifications.filter(n => n.unread).length}
+                      </span>
                     )}
                   </button>
                   
                   {showNotifications && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
-                      <div className="p-4 border-b">
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border z-50">
+                      <div className="p-4 border-b bg-gradient-to-r from-red-50 to-white">
                         <h3 className="font-semibold text-gray-900">Notifications</h3>
                       </div>
                       <div className="max-h-64 overflow-y-auto">
                         {notifications.map(notification => (
-                          <div key={notification.id} className="p-3 border-b hover:bg-gray-50">
+                          <div key={notification.id} className="p-3 border-b hover:bg-red-50 transition-colors">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <p className="text-sm text-gray-900">{notification.message}</p>
+                                <p className="text-sm text-gray-900 font-medium">{notification.message}</p>
                                 <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
                               </div>
                               {notification.unread && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 animate-pulse"></div>
                               )}
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="p-3 border-t">
+                      <div className="p-3 border-t bg-gray-50">
                         <button 
                           onClick={() => {
                             setNotifications(notifications.map(n => ({ ...n, unread: false })));
                             setShowNotifications(false);
                           }}
-                          className="text-sm text-blue-600 hover:text-blue-800"
+                          className="text-sm text-red-600 hover:text-red-800 font-medium"
                         >
                           Mark all as read
                         </button>
@@ -296,9 +327,9 @@ const Dashboard = () => {
                   )}
                 </div>
                 {/* User Menu */}
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">Admin User</p>
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-xl p-1 sm:p-2">
+                  <div className="hidden sm:block text-right">
+                    <p className="text-sm font-semibold text-gray-900">Admin User</p>
                     <p className="text-xs text-gray-500">
                       {new Date().toLocaleTimeString('id-ID', { 
                         hour: '2-digit', 
@@ -306,15 +337,15 @@ const Dashboard = () => {
                       })}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">A</span>
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white text-sm font-bold">A</span>
                   </div>
                   <button 
                     onClick={logout}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-1 sm:p-2 text-gray-400 hover:text-red-500 transition-colors hover:scale-105"
                     title="Logout"
                   >
-                    <FiLogOut className="h-5 w-5" />
+                    <FiLogOut className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               </div>

@@ -3,9 +3,15 @@ const db = require('../config/database');
 class Product {
   static async getAll() {
     const [rows] = await db.execute(`
-      SELECT p.*, c.name as category_name, COALESCE(p.likes_count, 0) as likes_count
+      SELECT p.*, c.name as category_name, u.store_name, 
+             COALESCE(p.likes_count, 0) as likes_count,
+             COALESCE(AVG(CASE WHEN cm.comment_type = 'review' THEN cm.rating END), 0) as average_rating,
+             COUNT(CASE WHEN cm.comment_type = 'review' THEN 1 END) as review_count
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN comments cm ON p.id = cm.product_id
+      GROUP BY p.id
       ORDER BY p.created_at DESC
     `);
     return rows;
@@ -13,20 +19,32 @@ class Product {
 
   static async getById(id) {
     const [rows] = await db.execute(`
-      SELECT p.*, c.name as category_name, COALESCE(p.likes_count, 0) as likes_count
+      SELECT p.*, c.name as category_name, u.store_name, 
+             COALESCE(p.likes_count, 0) as likes_count,
+             COALESCE(AVG(CASE WHEN cm.comment_type = 'review' THEN cm.rating END), 0) as average_rating,
+             COUNT(CASE WHEN cm.comment_type = 'review' THEN 1 END) as review_count
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN comments cm ON p.id = cm.product_id
       WHERE p.id = ?
+      GROUP BY p.id
     `, [id]);
     return rows[0];
   }
 
   static async getByCategory(categoryId) {
     const [rows] = await db.execute(`
-      SELECT p.*, c.name as category_name, COALESCE(p.likes_count, 0) as likes_count
+      SELECT p.*, c.name as category_name, u.store_name, 
+             COALESCE(p.likes_count, 0) as likes_count,
+             COALESCE(AVG(CASE WHEN cm.comment_type = 'review' THEN cm.rating END), 0) as average_rating,
+             COUNT(CASE WHEN cm.comment_type = 'review' THEN 1 END) as review_count
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN comments cm ON p.id = cm.product_id
       WHERE p.category_id = ?
+      GROUP BY p.id
       ORDER BY p.created_at DESC
     `, [categoryId]);
     return rows;
@@ -62,7 +80,7 @@ class Product {
     
     const [result] = await db.execute(`
       UPDATE products 
-      SET name = ?, description = ?, long_description = ?, price = ?, image = ?, rating = ?, stock_status = ?, stock = ?, category_id = ?, discount = ?, whatsapp = ?
+      SET name = ?, description = ?, long_description = ?, price = ?, image = ?, rating = ?, stock_status = ?, stock = ?, category_id = ?, discount = ?, whatsapp = ?, updated_at = NOW()
       WHERE id = ?
     `, [
       name, 
@@ -83,10 +101,18 @@ class Product {
 
   static async getByUserId(userId) {
     const [rows] = await db.execute(`
-      SELECT p.*, c.name as category_name, COALESCE(p.likes_count, 0) as likes_count
+      SELECT p.*, c.name as category_name, u.store_name, 
+             COALESCE(p.likes_count, 0) as likes_count,
+             COALESCE(AVG(CASE WHEN cm.comment_type = 'review' THEN cm.rating END), 0) as average_rating,
+             COUNT(CASE WHEN cm.comment_type = 'review' THEN 1 END) as review_count,
+             COALESCE((SELECT SUM(oi.quantity) FROM order_items oi 
+                       WHERE oi.product_id = p.id AND oi.status IN ('accepted', 'completed', 'confirmed')), 0) as total_sold
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN comments cm ON p.id = cm.product_id
       WHERE p.created_by = ?
+      GROUP BY p.id
       ORDER BY p.created_at DESC
     `, [userId]);
     return rows;

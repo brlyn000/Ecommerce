@@ -53,20 +53,20 @@ export default function CategoryList() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Link 
               to="/" 
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-all duration-300 group mb-2"
+              className="inline-flex items-center text-red-600 hover:text-red-800 font-medium transition-all duration-300 group mb-2"
             >
               <FiArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
               Semua Kategori
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 capitalize">
-              Produk <span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">{categoryName || category}</span>
+              Produk <span className="bg-gradient-to-r from-red-600 to-sky-500 bg-clip-text text-transparent">{categoryName || category}</span>
             </h1>
             <p className="text-gray-500 mt-2">{filteredProducts.length} produk tersedia</p>
           </div>
@@ -127,7 +127,7 @@ export default function CategoryList() {
                   
                   {/* Price */}
                   <div className="mb-4">
-                    <span className="text-lg font-bold text-blue-600">
+                    <span className="text-lg font-bold text-red-600">
                       {formatPrice(item.price)}
                     </span>
                     {item.originalPrice && (
@@ -140,7 +140,7 @@ export default function CategoryList() {
                   {/* See More Button */}
                   <Link 
                     to={`/product/${item.id}`}
-                    className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+                    className="block w-full text-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     Lihat Detail
                   </Link>
@@ -160,7 +160,7 @@ export default function CategoryList() {
             </p>
             <Link 
               to="/categories" 
-              className="inline-flex items-center px-5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-300"
             >
               <FiArrowLeft className="mr-2" />
               Kembali ke Kategori

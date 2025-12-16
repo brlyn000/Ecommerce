@@ -8,20 +8,20 @@ export default function Jumbotron() {
           alt="Background" 
           className="object-cover w-full h-full opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-purple-900/80 mix-blend-multiply"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900/80 to-purple-900/80 mix-blend-multiply"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/30 to-gray-900/0"></div>
       </div>
 
       <div className="relative z-10 px-4 mx-auto max-w-screen-xl text-center py-24 lg:py-56">
         {/* Animated text */}
         <div className="mb-6 animate-fade-in">
-          <span className="text-sm font-semibold tracking-wider text-blue-400 uppercase">
+          <span className="text-sm font-semibold tracking-wider text-red-400 uppercase">
             Platform E-Commerce Mahasiswa
           </span>
         </div>
         
         <h1 className="mb-6 text-4xl font-extrabold tracking-tight leading-tight text-white md:text-5xl lg:text-6xl animate-slide-up">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-300">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-purple-300">
             Ekraf Market
           </span>
           <br className="hidden md:block" />
@@ -38,10 +38,10 @@ export default function Jumbotron() {
         <div className="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4 animate-fade-in delay-200">
           <a 
             href="/" 
-            className="relative inline-flex justify-center items-center py-4 px-8 text-base font-medium text-center text-white rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl group"
+            className="relative inline-flex justify-center items-center py-4 px-8 text-base font-medium text-center text-white rounded-lg bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl group"
           >
             <span className="relative z-10">Get Started</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-purple-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <svg className="w-4 h-4 ms-2 rtl:rotate-180 group-hover:translate-x-1 transition-transform" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
             </svg>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FiUser, FiLock, FiShoppingBag, FiHeart, FiClock, FiEdit, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiLock, FiShoppingBag, FiHeart, FiClock, FiEdit, FiLogOut, FiGrid, FiHome } from 'react-icons/fi';
 import Navbar from '../assets/components/Navbar';
+import { API_BASE_URL } from '../config/api';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -14,21 +16,43 @@ const Profile = () => {
     phone: '',
     address: ''
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setFormData({
-        full_name: parsedUser.full_name || '',
-        email: parsedUser.email || '',
-        phone: parsedUser.phone || '',
-        address: parsedUser.address || ''
-      });
-    }
+    fetchProfile();
     loadCartAndWishlist();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setFormData({
+          full_name: userData.full_name || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          address: userData.address || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const loadCartAndWishlist = () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -62,16 +86,67 @@ const Profile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
-    localStorage.removeItem('currentUser');
     window.location.href = '/';
   };
 
-  const handleSave = () => {
-    const updatedUser = { ...user, ...formData };
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    setEditMode(false);
-    alert('Profile updated successfully!');
+  const confirmSave = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        // Fetch updated profile from server
+        await fetchProfile();
+        setEditMode(false);
+        alert('Profile updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile');
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('New passwords do not match');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/profile/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      if (response.ok) {
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        alert('Password updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      alert('Failed to update password');
+    }
   };
 
   const menuItems = [
@@ -91,7 +166,7 @@ const Profile = () => {
               <h3 className="text-lg font-semibold">Profile Information</h3>
               <button
                 onClick={() => setEditMode(!editMode)}
-                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                className="text-red-600 hover:text-red-800 flex items-center space-x-1"
               >
                 <FiEdit className="w-4 h-4" />
                 <span>{editMode ? 'Cancel' : 'Edit'}</span>
@@ -109,6 +184,8 @@ const Profile = () => {
                   className="w-full p-3 border border-gray-300 rounded-lg disabled:bg-gray-50"
                 />
               </div>
+              
+
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -145,8 +222,8 @@ const Profile = () => {
               
               {editMode && (
                 <button
-                  onClick={handleSave}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+                  onClick={() => setShowConfirm(true)}
+                  className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
                 >
                   Save Changes
                 </button>
@@ -163,19 +240,28 @@ const Profile = () => {
               <input
                 type="password"
                 placeholder="Current Password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded-lg"
               />
               <input
                 type="password"
                 placeholder="New Password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded-lg"
               />
               <input
                 type="password"
                 placeholder="Confirm New Password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded-lg"
               />
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">
+              <button 
+                onClick={handlePasswordChange}
+                className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
+              >
                 Update Password
               </button>
             </div>
@@ -193,7 +279,7 @@ const Profile = () => {
                   <div key={item.id} className="border rounded-lg p-3">
                     <div className="flex items-center space-x-3">
                       <img
-                        src={item.image ? `http://localhost:5006${item.image}` : '/images/placeholder.svg'}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         className="w-12 h-12 object-cover rounded flex-shrink-0"
                         onError={(e) => { e.target.src = '/images/placeholder.svg'; }}
@@ -201,7 +287,7 @@ const Profile = () => {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{item.name}</h4>
                         <p className="text-xs text-gray-600">{item.category_name}</p>
-                        <p className="text-blue-600 font-bold text-sm">
+                        <p className="text-red-600 font-bold text-sm">
                           {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}
                         </p>
                       </div>
@@ -283,7 +369,7 @@ const Profile = () => {
                         
                         alert('Order placed successfully!');
                       }}
-                      className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                      className="w-full bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
                     >
                       Checkout
                     </button>
@@ -308,7 +394,7 @@ const Profile = () => {
                 {wishlistItems.map((item) => (
                   <div key={item.id} className="border rounded-lg p-3 flex space-x-3">
                     <img
-                      src={item.image ? `http://localhost:5006${item.image}` : '/images/placeholder.svg'}
+                      src={getImageUrl(item.image)}
                       alt={item.name}
                       className="w-12 h-12 object-cover rounded flex-shrink-0"
                       onError={(e) => { e.target.src = '/images/placeholder.svg'; }}
@@ -316,7 +402,7 @@ const Profile = () => {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm truncate">{item.name}</h4>
                       <p className="text-xs text-gray-600">{item.category_name}</p>
-                      <p className="text-blue-600 font-bold text-sm">
+                      <p className="text-red-600 font-bold text-sm">
                         {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}
                       </p>
                     </div>
@@ -396,7 +482,7 @@ const Profile = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Please login to view profile</p>
-          <a href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+          <a href="/login" className="bg-red-600 text-white px-6 py-2 rounded-lg">
             Login
           </a>
         </div>
@@ -407,18 +493,49 @@ const Profile = () => {
   return (
     <>
       <Navbar />
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmSave}
+        title="Save Changes"
+        message="Are you sure you want to save these changes to your profile?"
+        type="info"
+        confirmText="Save"
+        cancelText="Cancel"
+      />
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
         <div className="bg-white shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-6">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xl font-bold">
                   {(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-xl font-bold">{user.full_name || user.username}</h1>
                 <p className="text-gray-600">{user.email}</p>
+                <span className="inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                  {user.role === 'tenant' ? 'Tenant' : user.role === 'admin' ? 'Admin' : 'User'}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                {(user.role === 'tenant' || user.role === 'admin') && (
+                  <a
+                    href={user.role === 'tenant' ? '/tenant-dashboard' : '/dashboard'}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <FiGrid className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </a>
+                )}
+                <a
+                  href="/"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <FiHome className="w-4 h-4" />
+                  <span>Home</span>
+                </a>
               </div>
             </div>
           </div>
@@ -435,7 +552,7 @@ const Profile = () => {
                     onClick={() => setActiveTab(item.id)}
                     className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-lg transition-colors min-w-[80px] ${
                       activeTab === item.id
-                        ? 'bg-blue-50 text-blue-600'
+                        ? 'bg-red-50 text-red-600'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -459,7 +576,7 @@ const Profile = () => {
                         onClick={() => setActiveTab(item.id)}
                         className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
                           activeTab === item.id
-                            ? 'bg-blue-50 text-blue-600'
+                            ? 'bg-red-50 text-red-600'
                             : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
@@ -469,6 +586,22 @@ const Profile = () => {
                     );
                   })}
                   
+                  {(user.role === 'tenant' || user.role === 'admin') && (
+                    <a
+                      href={user.role === 'tenant' ? '/tenant-dashboard' : '/dashboard'}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <FiGrid className="w-5 h-5" />
+                      <span>Dashboard</span>
+                    </a>
+                  )}
+                  <a
+                    href="/"
+                    className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FiHome className="w-5 h-5" />
+                    <span>Home</span>
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"

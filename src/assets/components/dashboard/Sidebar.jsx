@@ -22,7 +22,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, isOpen, setIsOpen }) => {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          className="lg:hidden fixed inset-0 z-30"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -55,7 +55,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, isOpen, setIsOpen }) => {
                   }}
                   className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
                     activeMenu === item.id
-                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                      ? 'bg-red-50 text-red-600 border-r-2 border-red-600'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >

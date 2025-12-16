@@ -17,23 +17,41 @@ const commentController = {
     try {
       const { product_id, name, email, comment, rating, comment_type, user_id } = req.body;
       
+      // If this is a review, validate that user actually purchased this product
+      if (comment_type === 'review' && user_id) {
+        const [purchaseCheck] = await db.execute(
+          `SELECT COUNT(*) as purchase_count 
+           FROM orders o 
+           JOIN order_items oi ON o.order_id = oi.order_id 
+           WHERE o.user_id = ? AND oi.product_id = ? AND oi.status = 'confirmed'`,
+          [user_id, product_id]
+        );
+        
+        if (purchaseCheck[0].purchase_count === 0) {
+          return res.status(403).json({ 
+            error: 'You can only review products you have purchased and received' 
+          });
+        }
+        
+        // Check if user already reviewed this product
+        const [existingReview] = await db.execute(
+          'SELECT id FROM comments WHERE product_id = ? AND user_id = ? AND comment_type = "review"',
+          [product_id, user_id]
+        );
+        
+        if (existingReview.length > 0) {
+          return res.status(400).json({ 
+            error: 'You have already reviewed this product' 
+          });
+        }
+      }
+      
       const [result] = await db.execute(
         'INSERT INTO comments (product_id, name, email, comment, rating, comment_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [product_id, name, email, comment, rating || 5, comment_type || 'comment', user_id || null]
       );
       
-      // Update product rating if this is a review
-      if (comment_type === 'review' && rating) {
-        const [avgRating] = await db.execute(
-          'SELECT AVG(rating) as avg_rating FROM comments WHERE product_id = ? AND comment_type = "review"',
-          [product_id]
-        );
-        
-        await db.execute(
-          'UPDATE products SET rating = ? WHERE id = ?',
-          [Math.round(avgRating[0].avg_rating * 10) / 10, product_id]
-        );
-      }
+      // Rating is now calculated dynamically in Product model
       
       // Send notification to tenant
       try {
@@ -77,25 +95,66 @@ const commentController = {
   async update(req, res) {
     try {
       const { comment, rating } = req.body;
-      const [result] = await db.execute(
-        'UPDATE comments SET comment = ?, rating = ? WHERE id = ?',
-        [comment, rating, req.params.id]
+      const user_id = req.user?.id;
+      
+      if (!user_id) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      // Check if comment exists and belongs to user
+      const [commentCheck] = await db.execute(
+        'SELECT user_id, product_id, comment_type FROM comments WHERE id = ?',
+        [req.params.id]
       );
-      if (result.affectedRows === 0) {
+      
+      if (commentCheck.length === 0) {
         return res.status(404).json({ error: 'Comment not found' });
       }
+      
+      if (commentCheck[0].user_id !== user_id) {
+        return res.status(403).json({ error: 'You can only edit your own comments' });
+      }
+      
+      // Update comment
+      await db.execute(
+        'UPDATE comments SET comment = ?, rating = ? WHERE id = ? AND user_id = ?',
+        [comment, rating || null, req.params.id, user_id]
+      );
+      
+      // Rating is now calculated dynamically in Product model
+      
       res.json({ message: 'Comment updated successfully' });
     } catch (error) {
+      console.error('Comment update error:', error);
       res.status(500).json({ error: error.message });
     }
   },
 
   async delete(req, res) {
     try {
-      const [result] = await db.execute('DELETE FROM comments WHERE id = ?', [req.params.id]);
-      if (result.affectedRows === 0) {
+      const user_id = req.user.id;
+      
+      // Check if comment exists and belongs to user
+      const [commentCheck] = await db.execute(
+        'SELECT user_id, product_id, comment_type FROM comments WHERE id = ?',
+        [req.params.id]
+      );
+      
+      if (commentCheck.length === 0) {
         return res.status(404).json({ error: 'Comment not found' });
       }
+      
+      if (commentCheck[0].user_id !== user_id) {
+        return res.status(403).json({ error: 'You can only delete your own comments' });
+      }
+      
+      const [result] = await db.execute(
+        'DELETE FROM comments WHERE id = ? AND user_id = ?', 
+        [req.params.id, user_id]
+      );
+      
+      // Rating is now calculated dynamically in Product model
+      
       res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
       res.status(500).json({ error: error.message });

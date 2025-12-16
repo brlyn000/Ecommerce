@@ -37,8 +37,8 @@ const SearchBar = ({ searchTerm, onSearchChange }) => {
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="block w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-full shadow-sm 
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                      transition-all duration-300 hover:border-blue-300 text-gray-700
+                      focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
+                      transition-all duration-300 hover:border-red-300 text-gray-700
                       bg-white/90 backdrop-blur-sm"
           />
           

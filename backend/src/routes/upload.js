@@ -3,141 +3,152 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
+const authenticateToken = require('../middleware/auth');
 
-// Optional auth middleware
-const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (token) {
-    const jwt = require('jsonwebtoken');
-    try {
-      const user = jwt.verify(token, 'your-secret-key');
-      req.user = user;
-    } catch (err) {
-      // Continue without user if token invalid
-    }
-  }
-  next();
-};
+// Ensure uploads directories exist
+const qrisUploadsDir = path.join(__dirname, '../../public/uploads/qris');
+const productUploadsDir = path.join(__dirname, '../../public/uploads/products');
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../../public/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(qrisUploadsDir)) {
+  fs.mkdirSync(qrisUploadsDir, { recursive: true });
+}
+if (!fs.existsSync(productUploadsDir)) {
+  fs.mkdirSync(productUploadsDir, { recursive: true });
 }
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
+// Configure multer for QRIS upload
+const qrisStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(uploadsDir, req.body.type || 'general');
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
+    cb(null, qrisUploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    cb(null, 'qris-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+// Configure multer for product upload
+const productStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, productUploadsDir);
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-// Upload single file
-router.post('/single', optionalAuth, (req, res) => {
-  // Create dynamic storage based on URL parameter or default to products
-  const uploadType = req.query.type || req.body.type || 'products';
-  
-  const dynamicStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadPath = path.join(uploadsDir, uploadType);
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-      }
-      cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'));
+  }
+};
+
+const qrisUpload = multer({
+  storage: qrisStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: fileFilter
+});
+
+const productUpload = multer({
+  storage: productStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for products
+  fileFilter: fileFilter
+});
+
+// Upload QRIS image
+router.post('/qris', authenticateToken, qrisUpload.single('qrisImage'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-  });
-  
-  const dynamicUpload = multer({
-    storage: dynamicStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-      const allowedTypes = /jpeg|jpg|png|gif|webp/;
-      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-      const mimetype = allowedTypes.test(file.mimetype);
-      
-      if (mimetype && extname) {
-        return cb(null, true);
-      } else {
-        cb(new Error('Only image files are allowed'));
-      }
+
+    const imageUrl = `/uploads/qris/${req.file.filename}`;
+    res.json({ 
+      success: true, 
+      imageUrl: imageUrl,
+      message: 'QRIS image uploaded successfully' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload product images
+router.post('/products', authenticateToken, productUpload.array('images', 5), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
     }
-  }).single('image');
+
+    const imageUrls = req.files.map(file => `/uploads/products/${file.filename}`);
+    res.json({ 
+      success: true, 
+      imageUrls: imageUrls,
+      message: 'Product images uploaded successfully' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload single product image
+router.post('/product', authenticateToken, productUpload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    res.json({ 
+      success: true, 
+      imageUrl: imageUrl,
+      message: 'Product image uploaded successfully' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload single file (legacy endpoint)
+router.post('/single', authenticateToken, (req, res) => {
+  const type = req.query.type || 'products';
+  const upload = type === 'qris' ? qrisUpload : productUpload;
   
-  dynamicUpload(req, res, (err) => {
+  upload.single('image')(req, res, (err) => {
     if (err) {
-      console.error('Upload error:', err);
       return res.status(400).json({ error: err.message });
     }
     
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    const folder = type === 'qris' ? 'qris' : 'products';
+    const imageUrl = `/uploads/${folder}/${req.file.filename}`;
     
-    const fileUrl = `/uploads/${uploadType}/${req.file.filename}`;
-    console.log('File uploaded:', fileUrl);
-    
-    res.json({
-      message: 'File uploaded successfully',
-      filename: req.file.filename,
-      url: fileUrl,
-      imageUrl: fileUrl,
-      size: req.file.size
+    res.json({ 
+      success: true, 
+      imageUrl: imageUrl,
+      message: 'File uploaded successfully' 
     });
   });
 });
 
-// Upload multiple files
-router.post('/multiple', upload.array('images', 5), (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
+// Error handling middleware
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large' });
     }
-    
-    const files = req.files.map(file => ({
-      filename: file.filename,
-      url: `/uploads/${req.body.type || 'general'}/${file.filename}`,
-      size: file.size
-    }));
-    
-    res.json({
-      message: 'Files uploaded successfully',
-      files: files
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
+  res.status(500).json({ error: error.message });
 });
 
 module.exports = router;

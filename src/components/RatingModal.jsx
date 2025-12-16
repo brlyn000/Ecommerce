@@ -14,7 +14,7 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser'));
       
-      await fetch('http://localhost:5006/api/comments', {
+      const response = await fetch('http://localhost:5006/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -28,18 +28,23 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit rating');
+      }
+
       onRatingSubmitted();
       onClose();
     } catch (error) {
       console.error('Error submitting rating:', error);
-      alert('Failed to submit rating');
+      alert(error.message || 'Failed to submit rating');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Rate Product</h3>
@@ -50,7 +55,7 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
 
         <div className="mb-4">
           <img
-            src={order.product_image ? `http://localhost:5006${order.product_image}` : '/images/placeholder.svg'}
+            src={getImageUrl(order.product_image)}
             alt={order.product_name}
             className="w-16 h-16 object-cover rounded mx-auto mb-2"
           />
@@ -101,7 +106,7 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
               {loading ? 'Submitting...' : 'Submit Rating'}
             </button>

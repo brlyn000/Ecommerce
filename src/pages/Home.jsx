@@ -3,6 +3,7 @@ import Carousel from '../assets/components/Carousel';
 import HeadingTypography from "../assets/components/HeadingTypography";
 import CardProduct from "../assets/components/CardProduct";
 import CategoryCard from "../assets/components/CategoryCard";
+import StoreCards from "../assets/components/StoreCards";
 import { api } from '../services/api';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -31,8 +32,8 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen pb-20 md:pb-0">
-      {/* Enhanced Background Ornaments */}
+    <div className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-red-100 min-h-screen">
+      {/* Enhanced Background Ornaments - Red & White Theme */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         {/* Animated floating circles */}
         <motion.div 
@@ -42,7 +43,7 @@ export const Home = () => {
             scale: [1, 1.1, 1]
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-10 sm:top-20 -left-10 sm:-left-20 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/20 blur-3xl"
+          className="absolute top-10 sm:top-20 -left-10 sm:-left-20 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-gradient-to-br from-red-200/30 to-red-300/20 blur-3xl"
         ></motion.div>
         <motion.div 
           animate={{ 
@@ -51,7 +52,7 @@ export const Home = () => {
             scale: [1, 0.9, 1]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-1/4 -right-10 sm:-right-20 w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-purple-200/25 to-pink-200/20 blur-3xl"
+          className="absolute bottom-1/4 -right-10 sm:-right-20 w-56 h-56 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-red-100/25 to-white/20 blur-3xl"
         ></motion.div>
         <motion.div 
           animate={{ 
@@ -59,10 +60,10 @@ export const Home = () => {
             scale: [1, 1.2, 1]
           }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-gradient-to-br from-indigo-200/20 to-blue-200/15 blur-3xl"
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-gradient-to-br from-red-200/20 to-red-100/15 blur-3xl"
         ></motion.div>
         {/* Enhanced grid pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1)_1px,transparent_1px)] [background-size:24px_24px] opacity-30"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(239,68,68,0.1)_1px,transparent_1px)] [background-size:24px_24px] opacity-30"></div>
       </div>
 
       <Navbar />
@@ -76,9 +77,9 @@ export const Home = () => {
         >
           <div className="relative">
             {/* Decorative elements around carousel */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full opacity-60 animate-pulse"></div>
-            <div className="absolute -top-2 -right-6 w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-50 animate-pulse delay-1000"></div>
-            <div className="absolute -bottom-6 left-1/4 w-4 h-4 bg-gradient-to-br from-indigo-400 to-blue-400 rounded-full opacity-40 animate-pulse delay-500"></div>
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-red-400 to-red-500 rounded-full opacity-60 animate-pulse"></div>
+            <div className="absolute -top-2 -right-6 w-6 h-6 bg-gradient-to-br from-red-300 to-red-400 rounded-full opacity-50 animate-pulse delay-1000"></div>
+            <div className="absolute -bottom-6 left-1/4 w-4 h-4 bg-gradient-to-br from-red-500 to-red-600 rounded-full opacity-40 animate-pulse delay-500"></div>
             
             <Carousel />
           </div>
@@ -97,7 +98,7 @@ export const Home = () => {
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-full blur-3xl"
+              className="w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-r from-red-500/10 via-red-400/10 to-red-300/10 rounded-full blur-3xl"
             ></motion.div>
           </div>
           
@@ -110,7 +111,7 @@ export const Home = () => {
               transition={{ duration: 0.6 }}
             >
               <HeadingTypography text='Kategori Produk'/>
-              <p className="mt-2 sm:mt-4 text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
+              <p className="mt-2 sm:mt-4 text-sm sm:text-base text-gray-700 max-w-2xl mx-auto px-4">
                 Temukan berbagai kategori produk berkualitas yang sesuai dengan kebutuhan Anda
               </p>
             </motion.div>
@@ -144,7 +145,7 @@ export const Home = () => {
                 >
                   <CategoryCard 
                     category={category} 
-                    className="transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 group-hover:bg-white/80 backdrop-blur-sm"
+                    className="transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 group-hover:bg-white/80 backdrop-blur-sm"
                   />
                 </motion.div>
               ))
@@ -172,11 +173,35 @@ export const Home = () => {
                 opacity: [0.1, 0.2, 0.1]
               }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-sky-500/10 to-blue-500/10 rounded-full blur-3xl"
+              className="w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-red-500/10 to-red-600/10 rounded-full blur-3xl"
             ></motion.div>
           </div>
           
           <CardProduct />
+        </motion.section>
+
+        {/* Store Section */}
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="relative py-6 sm:py-8 lg:py-12"
+        >
+          <div className="text-center mb-8 sm:mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <HeadingTypography text='Toko Terpercaya'/>
+              <p className="mt-2 sm:mt-4 text-sm sm:text-base text-gray-700 max-w-2xl mx-auto px-4">
+                Jelajahi berbagai toko terpercaya dengan produk berkualitas
+              </p>
+            </motion.div>
+          </div>
+          <StoreCards />
         </motion.section>
       </div>
 
@@ -187,7 +212,7 @@ export const Home = () => {
           y: [0, -30, 0]
         }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="fixed -bottom-20 -right-20 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-blue-400/15 to-cyan-400/10 rounded-full blur-3xl -z-10"
+        className="fixed -bottom-20 -right-20 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-red-400/15 to-red-500/10 rounded-full blur-3xl -z-10"
       ></motion.div>
       <motion.div 
         animate={{ 
@@ -195,12 +220,67 @@ export const Home = () => {
           y: [0, 25, 0]
         }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-        className="fixed top-1/3 -left-20 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-sky-400/15 to-indigo-400/10 rounded-full blur-3xl -z-10"
+        className="fixed top-1/3 -left-20 w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-red-300/15 to-red-400/10 rounded-full blur-3xl -z-10"
       ></motion.div>
       
       {/* Additional mobile-specific decorations */}
-      <div className="block sm:hidden fixed bottom-4 left-4 w-2 h-2 bg-blue-400/60 rounded-full animate-pulse"></div>
-      <div className="block sm:hidden fixed top-1/4 right-4 w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-pulse delay-1000"></div>
+      <div className="block sm:hidden fixed bottom-4 left-4 w-2 h-2 bg-red-400/60 rounded-full animate-pulse"></div>
+      <div className="block sm:hidden fixed top-1/4 right-4 w-1.5 h-1.5 bg-red-500/60 rounded-full animate-pulse delay-1000"></div>
+      
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-bold mb-4">E-Commerce</h3>
+              <p className="text-red-100 mb-4 leading-relaxed">
+                Platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas dengan harga terjangkau. 
+                Berbelanja mudah, aman, dan nyaman bersama kami.
+              </p>
+              <div className="flex space-x-4">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">f</span>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">t</span>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">i</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Links */}
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Tautan Cepat</h4>
+              <ul className="space-y-2 text-red-100">
+                <li><a href="/" className="hover:text-white transition-colors">Beranda</a></li>
+                <li><a href="/about-us" className="hover:text-white transition-colors">Tentang Kami</a></li>
+                <li><a href="/contact-us" className="hover:text-white transition-colors">Kontak</a></li>
+                <li><a href="/login" className="hover:text-white transition-colors">Masuk</a></li>
+              </ul>
+            </div>
+            
+            {/* Contact Info */}
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Kontak Kami</h4>
+              <div className="space-y-2 text-red-100">
+                <p>📧 info@ecommerce.com</p>
+                <p>📞 +62 812-3456-7890</p>
+                <p>📍 Jakarta, Indonesia</p>
+                <p>🕒 24/7 Customer Support</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-red-500/30 mt-8 pt-8 text-center">
+            <p className="text-red-100">
+              © 2024 E-Commerce Platform. All rights reserved. Made with ❤️ in Indonesia
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

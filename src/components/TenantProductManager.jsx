@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiImage, FiMessageCircle, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiImage, FiMessageCircle, FiEye, FiAlertTriangle, FiCheck, FiX } from 'react-icons/fi';
 import { api } from '../services/api';
 import TenantProductDetail from './TenantProductDetail';
 
@@ -24,6 +24,13 @@ const TenantProductManager = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [statusType, setStatusType] = useState('success'); // 'success' or 'error'
 
   useEffect(() => {
     fetchProducts();
@@ -51,9 +58,19 @@ const TenantProductManager = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    const actionText = editingProduct ? 'memperbarui' : 'menambahkan';
+    setConfirmAction({
+      type: 'save',
+      message: `Apakah Anda yakin ingin ${actionText} produk "${formData.name}"?`
+    });
+    setShowConfirmModal(true);
+  };
+  
+  const executeSave = async () => {
     setUploading(true);
+    setShowConfirmModal(false);
     
     try {
       let imageUrl = formData.image;
@@ -65,7 +82,9 @@ const TenantProductManager = () => {
           imageUrl = uploadResult.imageUrl || uploadResult.url;
         } catch (uploadError) {
           console.error('Upload error:', uploadError);
-          alert('Error uploading image: ' + uploadError.message);
+          setStatusMessage('Gagal mengunggah gambar: ' + uploadError.message);
+          setStatusType('error');
+          setShowStatusModal(true);
           return;
         }
       }
@@ -74,9 +93,14 @@ const TenantProductManager = () => {
       
       if (editingProduct) {
         await api.updateProduct(editingProduct.id, productData);
+        setStatusMessage(`Produk "${formData.name}" berhasil diperbarui!`);
       } else {
         await api.createProduct(productData);
+        setStatusMessage(`Produk "${formData.name}" berhasil ditambahkan!`);
       }
+      
+      setStatusType('success');
+      setShowStatusModal(true);
       
       setShowModal(false);
       setEditingProduct(null);
@@ -97,7 +121,9 @@ const TenantProductManager = () => {
       window.dispatchEvent(new Event('productUpdated'));
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Error saving product: ' + error.message);
+      setStatusMessage('Gagal menyimpan produk: ' + error.message);
+      setStatusType('error');
+      setShowStatusModal(true);
     } finally {
       setUploading(false);
     }
@@ -121,16 +147,33 @@ const TenantProductManager = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      try {
-        await api.deleteProduct(id);
-        fetchProducts();
-        window.dispatchEvent(new Event('productUpdated'));
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        alert('Error deleting product');
-      }
+  const handleDelete = (product) => {
+    setConfirmAction({
+      type: 'delete',
+      productId: product.id,
+      productName: product.name,
+      message: `Apakah Anda yakin ingin menghapus produk "${product.name}"? Tindakan ini tidak dapat dibatalkan.`
+    });
+    setShowConfirmModal(true);
+  };
+  
+  const executeDelete = async () => {
+    setShowConfirmModal(false);
+    
+    try {
+      await api.deleteProduct(confirmAction.productId);
+      
+      setStatusMessage(`Produk "${confirmAction.productName}" berhasil dihapus!`);
+      setStatusType('success');
+      setShowStatusModal(true);
+      
+      fetchProducts();
+      window.dispatchEvent(new Event('productUpdated'));
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      setStatusMessage('Gagal menghapus produk: ' + error.message);
+      setStatusType('error');
+      setShowStatusModal(true);
     }
   };
 
@@ -148,16 +191,16 @@ const TenantProductManager = () => {
         <h2 className="text-2xl font-bold">My Products</h2>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center space-x-2 transition-colors"
         >
           <FiPlus className="w-4 h-4" />
-          <span>Add Product</span>
+          <span>Tambah Produk</span>
         </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-12">
@@ -167,7 +210,7 @@ const TenantProductManager = () => {
           <div className="mt-6">
             <button
               onClick={() => setShowModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto"
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center space-x-2 mx-auto transition-colors"
             >
               <FiPlus className="w-4 h-4" />
               <span>Tambah Produk</span>
@@ -177,10 +220,10 @@ const TenantProductManager = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group">
+          <div key={product.id} className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-red-200 group">
             <div className="relative overflow-hidden">
               <img
-                src={product.image ? `http://localhost:5006${product.image}` : '/images/placeholder.svg'}
+                src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
@@ -207,7 +250,7 @@ const TenantProductManager = () => {
             </div>
             
             <div className="p-5">
-              <h3 className="font-bold text-xl mb-3 text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">{product.name}</h3>
+              <h3 className="font-bold text-xl mb-3 text-gray-900 line-clamp-1 group-hover:text-red-600 transition-colors">{product.name}</h3>
               
               <div className="space-y-3 mb-4">
                 <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">{product.description}</p>
@@ -218,12 +261,12 @@ const TenantProductManager = () => {
                   </p>
                 )}
                 
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg">
+                <div className="bg-gradient-to-r from-red-50 to-indigo-50 p-3 rounded-lg">
                   {product.discount ? (
                     <div className="space-y-1">
                       <span className="text-gray-500 line-through text-sm">{formatRupiah(product.price)}</span>
                       <div className="flex items-center justify-between">
-                        <span className="text-blue-600 font-bold text-xl">
+                        <span className="text-red-600 font-bold text-xl">
                           {formatRupiah(product.price * (1 - product.discount / 100))}
                         </span>
                         <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
@@ -232,7 +275,7 @@ const TenantProductManager = () => {
                       </div>
                     </div>
                   ) : (
-                    <span className="text-blue-600 font-bold text-xl">{formatRupiah(product.price)}</span>
+                    <span className="text-red-600 font-bold text-xl">{formatRupiah(product.price)}</span>
                   )}
                 </div>
                 
@@ -274,30 +317,20 @@ const TenantProductManager = () => {
                   </button>
                   <button
                     onClick={() => handleEdit(product)}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <FiEdit className="w-4 h-4" />
                     <span>Edit</span>
                   </button>
                   <button
-                    onClick={() => handleDelete(product.id)}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition-all duration-200 shadow-sm hover:shadow-md"
+                    onClick={() => handleDelete(product)}
+                    className="flex-1 bg-white text-red-600 border border-red-600 hover:bg-red-50 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <FiTrash2 className="w-4 h-4" />
                     <span>Hapus</span>
                   </button>
                 </div>
-                
-                {product.whatsapp && (
-                  <a
-                    href={product.whatsapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                  >
-                    WhatsApp
-                  </a>
-                )}
+
               </div>
             </div>
           </div>
@@ -326,7 +359,7 @@ const TenantProductManager = () => {
                   placeholder="Masukkan nama produk"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   required
                 />
               </div>
@@ -337,7 +370,7 @@ const TenantProductManager = () => {
                   placeholder="Deskripsi produk (maksimal 2 baris)"
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 h-20 resize-none"
                   required
                 />
               </div>
@@ -348,7 +381,7 @@ const TenantProductManager = () => {
                   placeholder="Deskripsi lengkap produk"
                   value={formData.long_description}
                   onChange={(e) => setFormData({...formData, long_description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24 resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 h-24 resize-none"
                 />
               </div>
               
@@ -360,7 +393,7 @@ const TenantProductManager = () => {
                     placeholder="0"
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: e.target.value})}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     required
                     min="0"
                   />
@@ -372,7 +405,7 @@ const TenantProductManager = () => {
                     placeholder="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     min="0"
                   />
                 </div>
@@ -385,20 +418,20 @@ const TenantProductManager = () => {
                   placeholder="0"
                   value={formData.discount}
                   onChange={(e) => setFormData({...formData, discount: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   min="0"
                   max="100"
                 />
               </div>
               
               {formData.price && formData.discount && (
-                <div className="bg-blue-50 p-3 rounded-lg">
+                <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                   <p className="text-sm text-gray-600">Preview Harga:</p>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500 line-through text-sm">
                       {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(formData.price)}
                     </span>
-                    <span className="text-blue-600 font-bold">
+                    <span className="text-red-600 font-bold">
                       {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(formData.price * (1 - formData.discount / 100))}
                     </span>
                     <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
@@ -413,7 +446,7 @@ const TenantProductManager = () => {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files[0])}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
                 {formData.image && (
                   <div className="mt-3 flex items-center space-x-3">
@@ -435,7 +468,7 @@ const TenantProductManager = () => {
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   required
                 >
                   <option value="">Pilih Kategori</option>
@@ -452,7 +485,7 @@ const TenantProductManager = () => {
                   placeholder="https://wa.me/628123456789"
                   value={formData.whatsapp}
                   onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
               
@@ -461,7 +494,7 @@ const TenantProductManager = () => {
                 <select
                   value={formData.stock_status}
                   onChange={(e) => setFormData({...formData, stock_status: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 >
                   <option value="available">Tersedia</option>
                   <option value="limited">Terbatas</option>
@@ -495,13 +528,78 @@ const TenantProductManager = () => {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {uploading ? 'Menyimpan...' : (editingProduct ? 'Update Produk' : 'Tambah Produk')}
                 </button>
               </div>
             </form>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Confirm Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0  flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <FiAlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Konfirmasi Tindakan</h3>
+            </div>
+            <p className="text-gray-600 mb-6">{confirmAction?.message}</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmAction(null);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmAction?.type === 'delete' ? executeDelete : executeSave}
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Status Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className={`p-2 rounded-full mr-3 ${
+                statusType === 'success' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {statusType === 'success' ? (
+                  <FiCheck className="h-6 w-6 text-green-600" />
+                ) : (
+                  <FiX className="h-6 w-6 text-red-600" />
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {statusType === 'success' ? 'Berhasil!' : 'Gagal!'}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">{statusMessage}</p>
+            <button
+              onClick={() => setShowStatusModal(false)}
+              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                statusType === 'success' 
+                  ? 'bg-green-600 text-white hover:bg-green-700' 
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

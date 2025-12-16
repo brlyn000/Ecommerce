@@ -205,7 +205,7 @@ const CarouselManager = () => {
             resetForm();
             setShowForm(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           <FiPlus className="mr-2 h-4 w-4" />
           Add Carousel Item
@@ -220,7 +220,7 @@ const CarouselManager = () => {
               <p className="text-sm font-medium text-gray-600">Total Slides</p>
               <p className="text-2xl font-bold text-gray-900">{carouselItems.length}</p>
             </div>
-            <FiImage className="h-8 w-8 text-blue-500" />
+            <FiImage className="h-8 w-8 text-red-500" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
@@ -293,7 +293,7 @@ const CarouselManager = () => {
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -304,7 +304,7 @@ const CarouselManager = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -317,7 +317,7 @@ const CarouselManager = () => {
                         value={formData.image}
                         onChange={handleImageChange}
                         placeholder="Image URL or upload file below"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       />
                       <label className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors">
                         <FiUpload className="mr-2 h-4 w-4" />
@@ -355,7 +355,7 @@ const CarouselManager = () => {
                       value={formData.buttonText}
                       onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
                       placeholder="Shop Now"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -365,7 +365,7 @@ const CarouselManager = () => {
                       value={formData.buttonLink}
                       onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
                       placeholder="/products"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -378,7 +378,7 @@ const CarouselManager = () => {
                       value={formData.order}
                       onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
                       min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
                   <div className="flex items-center pt-6">
@@ -387,7 +387,7 @@ const CarouselManager = () => {
                       id="active"
                       checked={formData.active}
                       onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                     />
                     <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
                       Active (Show on homepage)
@@ -405,7 +405,7 @@ const CarouselManager = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     <FiSave className="mr-2 h-4 w-4" />
                     {editingItem ? 'Update' : 'Create'}
@@ -447,7 +447,7 @@ const CarouselManager = () => {
                 )}
               </div>
               <div className="absolute top-2 left-2">
-                <span className="bg-blue-500 text-white px-2 py-1 text-xs font-semibold rounded">
+                <span className="bg-red-500 text-white px-2 py-1 text-xs font-semibold rounded">
                   #{item.order || index + 1}
                 </span>
               </div>
@@ -464,7 +464,7 @@ const CarouselManager = () => {
                 <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
                 <p className="text-sm text-gray-600 mb-2">{item.description}</p>
                 {item.buttonText && (
-                  <div className="text-xs text-blue-600">
+                  <div className="text-xs text-red-600">
                     Button: "{item.buttonText}" → {item.buttonLink}
                   </div>
                 )}
@@ -504,7 +504,7 @@ const CarouselManager = () => {
                   </button>
                   <button
                     onClick={() => handleEdit(item)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Edit"
                   >
                     <FiEdit className="h-4 w-4" />
