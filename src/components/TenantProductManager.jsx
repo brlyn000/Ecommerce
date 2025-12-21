@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiImage, FiMessageCircle, FiEye, FiAlertTriangle, FiCheck, FiX } from 'react-icons/fi';
 import { api } from '../services/api';
+import { getImageUrl } from '../config/api';
 import TenantProductDetail from './TenantProductDetail';
 
 const TenantProductManager = () => {

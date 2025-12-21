@@ -8,12 +8,16 @@ const authenticateToken = require('../middleware/auth');
 // Ensure uploads directories exist
 const qrisUploadsDir = path.join(__dirname, '../../public/uploads/qris');
 const productUploadsDir = path.join(__dirname, '../../public/uploads/products');
+const carouselUploadsDir = path.join(__dirname, '../../public/uploads/carousel');
 
 if (!fs.existsSync(qrisUploadsDir)) {
   fs.mkdirSync(qrisUploadsDir, { recursive: true });
 }
 if (!fs.existsSync(productUploadsDir)) {
   fs.mkdirSync(productUploadsDir, { recursive: true });
+}
+if (!fs.existsSync(carouselUploadsDir)) {
+  fs.mkdirSync(carouselUploadsDir, { recursive: true });
 }
 
 // Configure multer for QRIS upload
@@ -38,6 +42,17 @@ const productStorage = multer.diskStorage({
   }
 });
 
+// Configure multer for carousel upload
+const carouselStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, carouselUploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'carousel-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -59,6 +74,12 @@ const qrisUpload = multer({
 const productUpload = multer({
   storage: productStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for products
+  fileFilter: fileFilter
+});
+
+const carouselUpload = multer({
+  storage: carouselStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for carousel
   fileFilter: fileFilter
 });
 
@@ -119,7 +140,15 @@ router.post('/product', authenticateToken, productUpload.single('image'), (req, 
 // Upload single file (legacy endpoint)
 router.post('/single', authenticateToken, (req, res) => {
   const type = req.query.type || 'products';
-  const upload = type === 'qris' ? qrisUpload : productUpload;
+  let upload;
+  
+  if (type === 'qris') {
+    upload = qrisUpload;
+  } else if (type === 'carousel') {
+    upload = carouselUpload;
+  } else {
+    upload = productUpload;
+  }
   
   upload.single('image')(req, res, (err) => {
     if (err) {
@@ -130,15 +159,35 @@ router.post('/single', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const folder = type === 'qris' ? 'qris' : 'products';
+    const folder = type === 'qris' ? 'qris' : type === 'carousel' ? 'carousel' : 'products';
     const imageUrl = `/uploads/${folder}/${req.file.filename}`;
     
     res.json({ 
       success: true, 
       imageUrl: imageUrl,
+      url: imageUrl,
       message: 'File uploaded successfully' 
     });
   });
+});
+
+// Upload carousel image
+router.post('/carousel', authenticateToken, carouselUpload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const imageUrl = `/uploads/carousel/${req.file.filename}`;
+    res.json({ 
+      success: true, 
+      imageUrl: imageUrl,
+      url: imageUrl,
+      message: 'Carousel image uploaded successfully' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Error handling middleware

@@ -1,4 +1,6 @@
 const Category = require('../models/Category');
+const fs = require('fs');
+const path = require('path');
 
 const categoryController = {
   async getAllCategories(req, res) {
@@ -33,6 +35,15 @@ const categoryController = {
 
   async updateCategory(req, res) {
     try {
+      // Get current category to check for old icon
+      const currentCategory = await Category.getById(req.params.id);
+      if (currentCategory && req.body.icon && req.body.icon !== currentCategory.icon && currentCategory.icon && !currentCategory.icon.startsWith('http')) {
+        const oldIconPath = path.join(__dirname, '../../uploads', path.basename(currentCategory.icon));
+        if (fs.existsSync(oldIconPath)) {
+          fs.unlinkSync(oldIconPath);
+        }
+      }
+      
       const updated = await Category.update(req.params.id, req.body);
       if (!updated) {
         return res.status(404).json({ error: 'Category not found' });

@@ -1,4 +1,6 @@
 const db = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 const carouselController = {
   // Get all carousel items
@@ -53,6 +55,15 @@ const carouselController = {
     try {
       const { title, description, image, active, display_order, button_text, button_link } = req.body;
       
+      // Get current item to check for old image
+      const [current] = await db.execute('SELECT image FROM carousel_items WHERE id = ?', [req.params.id]);
+      if (current.length > 0 && image && image !== current[0].image && current[0].image && !current[0].image.startsWith('http')) {
+        const oldImagePath = path.join(__dirname, '../../uploads', path.basename(current[0].image));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      
       const [result] = await db.execute(
         'UPDATE carousel_items SET title = ?, description = ?, image = ?, active = ?, display_order = ?, button_text = ?, button_link = ? WHERE id = ?',
         [title, description, image, active, display_order, button_text, button_link, req.params.id]
@@ -71,6 +82,15 @@ const carouselController = {
   // Delete carousel item
   async delete(req, res) {
     try {
+      // Get item to delete image
+      const [item] = await db.execute('SELECT image FROM carousel_items WHERE id = ?', [req.params.id]);
+      if (item.length > 0 && item[0].image && !item[0].image.startsWith('http')) {
+        const imagePath = path.join(__dirname, '../../uploads', path.basename(item[0].image));
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      }
+      
       const [result] = await db.execute(
         'DELETE FROM carousel_items WHERE id = ?',
         [req.params.id]

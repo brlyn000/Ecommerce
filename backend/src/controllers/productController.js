@@ -1,4 +1,6 @@
 const Product = require('../models/Product');
+const fs = require('fs');
+const path = require('path');
 
 const productController = {
   async getAllProducts(req, res) {
@@ -70,6 +72,14 @@ const productController = {
         return res.status(403).json({ error: 'Access denied' });
       }
       
+      // Delete old image if new image is uploaded
+      if (req.body.image && req.body.image !== product.image && product.image && !product.image.startsWith('http')) {
+        const oldImagePath = path.join(__dirname, '../../uploads', path.basename(product.image));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      
       const updated = await Product.update(req.params.id, req.body);
       if (!updated) {
         return res.status(404).json({ error: 'Product not found' });
@@ -90,6 +100,14 @@ const productController = {
       }
       if (req.user.role !== 'admin' && product.created_by !== req.user.id) {
         return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      // Delete image file if exists
+      if (product.image && !product.image.startsWith('http')) {
+        const imagePath = path.join(__dirname, '../../uploads', path.basename(product.image));
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
       }
       
       const deleted = await Product.delete(req.params.id);

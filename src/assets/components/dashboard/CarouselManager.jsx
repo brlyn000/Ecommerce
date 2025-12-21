@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiImage, FiX, FiSave, FiEye, FiEyeOff, FiUpload } from 'react-icons/fi';
 import { api } from '../../../services/api';
+import { getImageUrl } from '../../../config/api';
 
 const CarouselManager = () => {
   const [carouselItems, setCarouselItems] = useState([]);
@@ -41,6 +42,8 @@ const CarouselManager = () => {
   const [notification, setNotification] = useState(null);
   const [previewImage, setPreviewImage] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -96,15 +99,21 @@ const CarouselManager = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this carousel item?')) {
-      try {
-        await api.deleteCarousel(id);
-        showNotification('Carousel item deleted successfully!');
-        fetchCarouselItems();
-      } catch (error) {
-        showNotification('Error deleting carousel item: ' + error.message, 'error');
-      }
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await api.deleteCarousel(itemToDelete.id);
+      showNotification('Carousel item deleted successfully!');
+      fetchCarouselItems();
+    } catch (error) {
+      showNotification('Error deleting carousel item: ' + error.message, 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     }
   };
 
@@ -143,7 +152,7 @@ const CarouselManager = () => {
     try {
       const result = await api.uploadFile(file, 'carousel');
       console.log('Upload result:', result);
-      const imageUrl = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5005'}${result.url}`;
+      const imageUrl = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}${result.url}`;
       setFormData({ ...formData, image: imageUrl });
       setPreviewImage(imageUrl);
       showNotification('Image uploaded successfully!');
@@ -335,7 +344,7 @@ const CarouselManager = () => {
                       <div className="mt-2">
                         <p className="text-sm text-gray-600 mb-1">Preview:</p>
                         <img
-                          src={previewImage?.startsWith('http') ? previewImage : `http://localhost:5002${previewImage}`}
+                          src={getImageUrl(previewImage).replace(':5005', ':5006')}
                           alt="Preview"
                           className="w-full h-32 object-cover rounded-lg border"
                           onError={(e) => {
@@ -433,7 +442,7 @@ const CarouselManager = () => {
               <div className="aspect-w-16 aspect-h-9 bg-gray-200">
                 {item.image ? (
                   <img
-                    src={item.image?.startsWith('http') ? item.image : `http://localhost:5002${item.image}`}
+                    src={getImageUrl(item.image).replace(':5005', ':5006')}
                     alt={item.title}
                     className="w-full h-48 object-cover"
                     onError={(e) => {
@@ -510,7 +519,7 @@ const CarouselManager = () => {
                     <FiEdit className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => handleDelete(item)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete"
                   >
@@ -529,6 +538,52 @@ const CarouselManager = () => {
           <p className="text-gray-500">No carousel items found</p>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+            >
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-2 rounded-full mr-3">
+                  <FiTrash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Carousel Item</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete "{itemToDelete?.title}"? This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

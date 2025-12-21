@@ -1,4 +1,6 @@
 const db = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 class Category {
   static async getAll() {
@@ -31,6 +33,15 @@ class Category {
   }
 
   static async delete(id) {
+    // Get category to delete icon
+    const category = await this.getById(id);
+    if (category && category.icon && !category.icon.startsWith('http')) {
+      const iconPath = path.join(__dirname, '../../uploads', path.basename(category.icon));
+      if (fs.existsSync(iconPath)) {
+        fs.unlinkSync(iconPath);
+      }
+    }
+    
     const [result] = await db.execute('DELETE FROM categories WHERE id = ?', [id]);
     return result.affectedRows > 0;
   }

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiFilter, FiPackage, FiX, FiSave, FiUpload, FiRefreshCw, FiEye, FiStar, FiTag, FiDollarSign, FiBox } from 'react-icons/fi';
 import { api } from '../../../services/api';
-import { imageMapper } from '../../../utils/imageMapper';
-import { getImageUrl } from '../../../utils/imageUtils';
+import { getImageUrl } from '../../../config/api';
 import RefreshIndicator from './RefreshIndicator';
 
 
@@ -463,7 +462,7 @@ const ProductManager = () => {
                         <div className="w-full h-48 border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                           <img
                             key={`${formData.image}-${imageKey}`}
-                            src={getImageUrl(formData.image)}
+                            src={getImageUrl(formData.image).replace(':5005', ':5006')}
                             alt="Preview"
                             className="w-full h-full object-cover"
                             onLoad={(e) => {
@@ -564,7 +563,7 @@ const ProductManager = () => {
           >
             <div className="aspect-w-16 aspect-h-9">
               <img
-                src={product.image ? getImageUrl(product.image) : '/images/placeholder.svg'}
+                src={product.image ? getImageUrl(product.image).replace(':5005', ':5006') : '/images/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-48 object-cover"
                 onError={(e) => {
@@ -652,7 +651,7 @@ const ProductManager = () => {
                   <div className="space-y-4">
                     <div className="aspect-w-1 aspect-h-1 bg-gray-100 rounded-lg overflow-hidden">
                       <img
-                        src={viewingProduct.image ? getImageUrl(viewingProduct.image) : '/images/placeholder.svg'}
+                        src={viewingProduct.image ? getImageUrl(viewingProduct.image).replace(':5005', ':5006') : '/images/placeholder.svg'}
                         alt={viewingProduct.name}
                         className="w-full h-80 object-cover"
                         onError={(e) => e.target.src = '/images/placeholder.svg'}
