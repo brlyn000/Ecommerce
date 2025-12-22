@@ -267,11 +267,11 @@ erDiagram
 ## 🚀 Quick Start
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Get+Started+in+5+Minutes!;Easy+Setup+Process" alt="Quick Start" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Get+Started+in+2+Minutes!;Docker+Ready+Setup" alt="Quick Start" />
   
   <br><br>
   
-  <img src="https://img.shields.io/badge/Setup_Time-⏱️_5_minutes-success?style=for-the-badge&labelColor=000000" alt="Setup Time">
+  <img src="https://img.shields.io/badge/Setup_Time-⏱️_2_minutes-success?style=for-the-badge&labelColor=000000" alt="Setup Time">
 </div>
 
 <br>
@@ -281,7 +281,7 @@ erDiagram
 <div align="center">
 
 ```bash
-✅ Node.js (v16+)    ✅ MySQL/MariaDB    ✅ npm or yarn
+✅ Docker & Docker Compose    ✅ Git
 ```
 
 </div>
@@ -289,7 +289,7 @@ erDiagram
 ### 🛠️ Installation Steps
 
 <details>
-<summary><strong>📁 Step 1: Clone & Setup (Click to expand)</strong></summary>
+<summary><strong>📁 Step 1: Clone Repository (Click to expand)</strong></summary>
 
 <br>
 
@@ -297,39 +297,46 @@ erDiagram
 # 🔄 Clone the repository
 git clone https://github.com/your-username/ecommerce-platform.git
 cd ecommerce-platform
-
-# 📦 Install frontend dependencies
-cd frontend
-npm install
-
-# 🚀 Install backend dependencies
-cd ../backend
-npm install
 ```
 
 </details>
 
 <details>
-<summary><strong>🗄️ Step 2: Database Configuration (Click to expand)</strong></summary>
+<summary><strong>🗄️ Step 2: Import Database (Click to expand)</strong></summary>
 
 <br>
 
 ```bash
-# 🗄️ Create database
-mysql -u root -p < database.sql
+# 🚀 Start all services with Docker
+./start-all.sh
 
-# 🔧 Run migrations
-npm run setup-db
-npm run migrate-db
-
-# ✅ Verify database connection
-npm run test-db
+# 📥 Import database (if you have ecommerce.sql)
+./import-db.sh
 ```
 
 </details>
 
 <details>
-<summary><strong>⚙️ Step 3: Environment Setup (Click to expand)</strong></summary>
+<summary><strong>🚀 Step 3: Access Applications (Click to expand)</strong></summary>
+
+<br>
+
+**All services will be available at:**
+- 🎨 **Frontend**: http://localhost:3000
+- 🔧 **Backend API**: http://localhost:5006
+- 🗄️ **phpMyAdmin**: http://localhost:8080
+- 📊 **MySQL**: localhost:3306
+
+**Default Login Credentials:**
+- **phpMyAdmin**: root / rootpassword
+- **Admin Panel**: admin@ekraft.com / admin123
+- **Tenant**: tenant@ekraf.com / tenant123
+- **User**: user@ekraft.com / user123
+
+</details>
+
+<details>
+<summary><strong>⚙️ Manual Setup (Without Docker)</strong></summary>
 
 <br>
 
@@ -343,34 +350,21 @@ VITE_SERVER_URL=http://localhost:5006
 ```env
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password
+DB_PASSWORD=admin123
 DB_NAME=e-commerce
-JWT_SECRET=your_super_secret_key
+JWT_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
 PORT=5006
 ```
 
-</details>
-
-<details>
-<summary><strong>🚀 Step 4: Start Development (Click to expand)</strong></summary>
-
-<br>
-
 ```bash
-# 🖥️ Terminal 1: Start Backend
-cd backend
-npm run dev
-# 🟢 Backend running on http://localhost:5006
+# Install dependencies
+cd frontend && npm install
+cd ../backend && npm install
 
-# 🎨 Terminal 2: Start Frontend
-cd frontend
-npm run dev
-# 🟢 Frontend running on http://localhost:5173
+# Start services
+cd backend && npm run dev
+cd ../frontend && npm run dev
 ```
-
-<div align="center">
-  <img src="https://img.shields.io/badge/🎉_Success!-Open_http://localhost:5173-success?style=for-the-badge&labelColor=000000" alt="Success">
-</div>
 
 </details>
 
@@ -539,52 +533,61 @@ npm run dev
 ## 🚀 Deployment Guide
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Ready+for+Production!;Deploy+Anywhere" alt="Deployment" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Ready+for+Production!;Docker+Deployment" alt="Deployment" />
 </div>
 
 <br>
 
+### 🐳 Docker Deployment (Recommended)
+
+```bash
+# Production deployment
+docker compose up -d
+
+# Scale services
+docker compose up -d --scale backend=3
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+### 🔧 Available Scripts
+
+| Script | Description | Usage |
+|--------|-------------|-------|
+| `./start-all.sh` | Start all services | `./start-all.sh` |
+| `./stop-phpmyadmin.sh` | Stop phpMyAdmin only | `./stop-phpmyadmin.sh` |
+| `./import-db.sh` | Import database | `./import-db.sh` |
+
+### 🌐 Service URLs
+
 <table>
 <tr>
-<td align="center" width="33%">
-  <img src="https://img.icons8.com/color/80/000000/domain.png"><br>
-  <h3>🌐 Frontend</h3>
-  <code>npm run build</code><br>
-  Deploy to Vercel/Netlify<br>
-  <img src="https://img.shields.io/badge/Vercel-Ready-success?style=flat-square">
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/60/000000/react-native.png"><br>
+  <strong>Frontend</strong><br>
+  <code>:3000</code>
 </td>
-<td align="center" width="33%">
-  <img src="https://img.icons8.com/color/80/000000/server.png"><br>
-  <h3>⚙️ Backend</h3>
-  <code>npm start</code><br>
-  Deploy to Railway/Heroku<br>
-  <img src="https://img.shields.io/badge/Railway-Ready-success?style=flat-square">
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/60/000000/nodejs.png"><br>
+  <strong>Backend API</strong><br>
+  <code>:5006</code>
 </td>
-<td align="center" width="33%">
-  <img src="https://img.icons8.com/color/80/000000/database.png"><br>
-  <h3>🗄️ Database</h3>
-  <code>npm run migrate-db</code><br>
-  MySQL/PostgreSQL<br>
-  <img src="https://img.shields.io/badge/Cloud-Ready-success?style=flat-square">
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/60/000000/database.png"><br>
+  <strong>phpMyAdmin</strong><br>
+  <code>:8080</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/60/000000/mysql-logo.png"><br>
+  <strong>MySQL</strong><br>
+  <code>:3306</code>
 </td>
 </tr>
 </table>
-
-### 🔧 Production Environment
-
-```bash
-# Frontend Build
-cd frontend
-npm run build
-# Deploy dist/ folder
-
-# Backend Production
-cd backend
-NODE_ENV=production npm start
-
-# Database Migration
-npm run migrate-db
-```
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
@@ -663,6 +666,8 @@ We welcome contributions! Here's how you can help:
 - 🤖 AI-powered recommendations
 - 🌍 Multi-language support
 - 📊 Advanced analytics dashboard
+- 🐳 Kubernetes deployment
+- 🔄 CI/CD pipeline
 
 <div align="center">
   <img src="https://img.shields.io/badge/Status-🚧_In_Progress-yellow?style=flat-square">
