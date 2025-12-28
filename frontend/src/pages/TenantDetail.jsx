@@ -38,15 +38,16 @@ const TenantDetail = () => {
       ]);
 
       setTenant(tenantRes.data);
-      setProducts(productsRes.data);
+      const productsData = Array.isArray(productsRes.data) ? productsRes.data : [];
+      setProducts(productsData);
 
       // Calculate stats
-      const totalSold = productsRes.data.reduce((sum, p) => sum + (p.total_sold || 0), 0);
-      const totalRevenue = productsRes.data.reduce((sum, p) => sum + ((p.total_sold || 0) * p.price), 0);
-      const activeProducts = productsRes.data.filter(p => p.stock === 'available').length;
+      const totalSold = productsData.reduce((sum, p) => sum + (p.total_sold || 0), 0);
+      const totalRevenue = productsData.reduce((sum, p) => sum + ((p.total_sold || 0) * p.price), 0);
+      const activeProducts = productsData.filter(p => p.stock === 'available').length;
 
       setStats({
-        totalProducts: productsRes.data.length,
+        totalProducts: productsData.length,
         totalSold,
         totalRevenue,
         activeProducts

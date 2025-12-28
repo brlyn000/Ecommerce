@@ -6,62 +6,84 @@ const orderController = {
       const { items, total, customer_name } = req.body;
       const user_id = req.user.id;
       
+      console.log('Order request:', { items, total, customer_name, user_id });
+      
+      // Validate required fields
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'Items are required' });
+      }
+      if (!total || isNaN(total) || total <= 0) {
+        return res.status(400).json({ error: 'Valid total is required' });
+      }
+      if (!user_id) {
+        return res.status(400).json({ error: 'User authentication required' });
+      }
+      
       const order_id = 'ORD' + Date.now();
+      const finalCustomerName = String(customer_name || 'Guest Customer');
+      const finalTotal = parseFloat(total) || 0;
+      const userId = parseInt(user_id) || null;
+      
+      if (!userId) {
+        return res.status(400).json({ error: 'Invalid user authentication' });
+      }
       
       // Insert order
       await db.execute(
         'INSERT INTO orders (order_id, user_id, customer_name, total, status) VALUES (?, ?, ?, ?, ?)',
-        [order_id, user_id, customer_name, total, 'pending']
+        [order_id, userId, finalCustomerName, finalTotal, 'pending']
       );
       
-      // Insert order items and create notifications
+      // Insert order items
       for (const item of items) {
-        // Calculate final price with discount
-        let finalPrice = item.price;
-        if (item.discount) {
-          finalPrice = item.price * (1 - item.discount / 100);
+        const itemId = parseInt(item.id);
+        const itemQuantity = parseInt(item.quantity) || 1;
+        const itemPrice = parseFloat(item.price) || 0;
+        let finalPrice = itemPrice;
+        
+        if (item.discount && !isNaN(parseFloat(item.discount))) {
+          finalPrice = itemPrice * (1 - parseFloat(item.discount) / 100);
+        }
+        
+        if (!itemId || itemId <= 0) {
+          throw new Error(`Invalid product ID: ${item.id}`);
         }
         
         await db.execute(
           'INSERT INTO order_items (order_id, product_id, quantity, price, status) VALUES (?, ?, ?, ?, ?)',
-          [order_id, item.id, item.quantity, finalPrice, 'pending']
+          [order_id, itemId, itemQuantity, finalPrice, 'pending']
         );
-        
-        // Get product info and update stock
+        // Update stock and create notifications
         const [productRows] = await db.execute(
           'SELECT name, created_by, stock FROM products WHERE id = ?',
-          [item.id]
+          [itemId]
         );
-        
-        if (productRows.length > 0) {
-          const currentStock = productRows[0].stock;
-          const newStock = Math.max(0, currentStock - item.quantity);
-          const newStatus = newStock <= 0 ? 'sold-out' : 'available';
-          
-          // Update stock and status
-          await db.execute(
-            'UPDATE products SET stock = ?, stock_status = ? WHERE id = ?',
-            [newStock, newStatus, item.id]
-          );
-        }
         
         if (productRows.length > 0) {
           const product = productRows[0];
+          const currentStock = parseInt(product.stock) || 0;
+          const newStock = Math.max(0, currentStock - itemQuantity);
+          const newStatus = newStock <= 0 ? 'sold-out' : 'available';
           
-          // Create notification for tenant
+          await db.execute(
+            'UPDATE products SET stock = ?, stock_status = ? WHERE id = ?',
+            [newStock, newStatus, itemId]
+          );
+          
+          // Create notification
           await db.execute(
             'INSERT INTO notifications (type, tenant_id, product_id, order_id, message, data) VALUES (?, ?, ?, ?, ?, ?)',
             [
               'checkout',
               product.created_by,
-              item.id,
+              itemId,
               order_id,
-              `New order from ${customer_name}`,
+              `New order from ${finalCustomerName}`,
               JSON.stringify({
-                customer_name: customer_name,
+                customer_name: finalCustomerName,
                 product_name: product.name,
-                quantity: item.quantity,
-                total_amount: finalPrice * item.quantity
+                quantity: itemQuantity,
+                total_amount: finalPrice * itemQuantity
               })
             ]
           );

@@ -13,6 +13,10 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token' });
     }
+    // Ensure user has required fields
+    if (!user || !user.id) {
+      return res.status(403).json({ message: 'Invalid token payload' });
+    }
     req.user = user;
     next();
   });

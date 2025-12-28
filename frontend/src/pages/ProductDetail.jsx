@@ -20,6 +20,10 @@ export default function ProductDetail() {
   const [showCartModal, setShowCartModal] = useState(false);
   const [cartMessage, setCartMessage] = useState('');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showOrderSuccessModal, setShowOrderSuccessModal] = useState(false);
+  const [showOrderErrorModal, setShowOrderErrorModal] = useState(false);
+  const [orderErrorMessage, setOrderErrorMessage] = useState('');
+  const [orderSuccessData, setOrderSuccessData] = useState(null);
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [quantityError, setQuantityError] = useState('');
   const [tenantPaymentMethods, setTenantPaymentMethods] = useState(null);
@@ -762,25 +766,123 @@ export default function ProductDetail() {
                         
                         if (orderResult.success) {
                           setShowCheckoutModal(false);
+                          setOrderSuccessData({
+                            order_id: orderResult.order_id,
+                            product_name: product.name,
+                            quantity: orderQuantity,
+                            total: finalPrice * orderQuantity
+                          });
+                          setShowOrderSuccessModal(true);
                           
                           // Contact seller directly using tenant contact info
-                          if (tenantContact && tenantContact.whatsapp) {
-                            const message = `Hi, I just placed an order #${orderResult.order_id}:\n\n- ${product.name} (${orderQuantity}x)\n\nTotal: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((product.discount ? product.price * (1 - product.discount / 100) : product.price) * orderQuantity)}`;
-                            window.open(`https://wa.me/${tenantContact.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
-                          } else {
-                            // Fallback to generic message
-                            const message = `Hi, I want to order ${product.name} x${orderQuantity} (Order ID: ${orderResult.order_id}) - ${window.location.href}`;
-                            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-                          }
+                          setTimeout(() => {
+                            if (tenantContact && tenantContact.whatsapp) {
+                              const message = `Hi, I just placed an order #${orderResult.order_id}:\n\n- ${product.name} (${orderQuantity}x)\n\nTotal: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((product.discount ? product.price * (1 - product.discount / 100) : product.price) * orderQuantity)}`;
+                              window.open(`https://wa.me/${tenantContact.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+                            } else {
+                              // Fallback to generic message
+                              const message = `Hi, I want to order ${product.name} x${orderQuantity} (Order ID: ${orderResult.order_id}) - ${window.location.href}`;
+                              window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                            }
+                          }, 1000);
+                        } else {
+                          setShowCheckoutModal(false);
+                          setOrderErrorMessage(orderResult.error || 'Order failed. Please try again.');
+                          setShowOrderErrorModal(true);
                         }
                       } catch (error) {
                         console.error('Order failed:', error);
-                        alert('Order failed. Please try again.');
+                        setShowCheckoutModal(false);
+                        setOrderErrorMessage('Network error. Please check your connection and try again.');
+                        setShowOrderErrorModal(true);
                       }
                     }}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Confirm Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Order Success Modal */}
+        {showOrderSuccessModal && orderSuccessData && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-auto">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Order Berhasil!</h3>
+                <p className="text-gray-600 mb-4">Pesanan Anda telah berhasil dibuat</p>
+                
+                <div className="bg-green-50 rounded-lg p-4 mb-6">
+                  <div className="text-sm text-gray-700">
+                    <p><strong>Order ID:</strong> {orderSuccessData.order_id}</p>
+                    <p><strong>Produk:</strong> {orderSuccessData.product_name}</p>
+                    <p><strong>Jumlah:</strong> {orderSuccessData.quantity}x</p>
+                    <p><strong>Total:</strong> {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(orderSuccessData.total)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowOrderSuccessModal(false);
+                      window.location.href = '/orders';
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Lihat Pesanan
+                  </button>
+                  <button
+                    onClick={() => setShowOrderSuccessModal(false)}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Order Error Modal */}
+        {showOrderErrorModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-auto">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Order Gagal!</h3>
+                <p className="text-gray-600 mb-4">Maaf, pesanan Anda tidak dapat diproses</p>
+                
+                <div className="bg-red-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-red-700">{orderErrorMessage}</p>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowOrderErrorModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowOrderErrorModal(false);
+                      setShowCheckoutModal(true);
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Coba Lagi
                   </button>
                 </div>
               </div>
