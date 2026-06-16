@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 const productController = {
   async getAllProducts(req, res) {
@@ -86,7 +87,18 @@ const productController = {
       }
       res.json({ message: 'Product updated successfully' });
     } catch (error) {
-      console.error('Product update error:', error);
+      logger.error('Product update error:', error.message);
+      res.status(500).json({ error: 'Failed to update product' });
+    }
+  },
+
+  async searchProducts(req, res) {
+    try {
+      const { q } = req.query;
+      if (!q || !q.trim()) return res.json([]);
+      const products = await Product.search(q.trim());
+      res.json(products);
+    } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },

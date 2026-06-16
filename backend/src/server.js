@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const logger = require('./utils/logger');
 require('dotenv').config();
 const { createCommentsTable } = require('./migrations/create_comments_table');
 const { createNotificationsTable } = require('./migrations/create_notifications_table');
@@ -22,16 +24,17 @@ const app = express();
 const PORT = parseInt(process.env.PORT) || 5002;
 
 if (!process.env.JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET is not defined.');
+  logger.error('FATAL ERROR: JWT_SECRET is not defined.');
   process.exit(1);
 }
 
-// Middleware
+// CORS harus didaftarkan PERTAMA sebelum rate limiter
+// agar response 429 tetap menyertakan CORS header
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173'];
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -41,8 +44,29 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+// Rate limiting (setelah CORS)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again later.' },
+});
+
+app.use(globalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
@@ -51,6 +75,9 @@ app.use('/uploads', express.static('public/uploads', {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }
 }));
+
+// Auth routes with stricter rate limit
+app.use('/api/auth', authLimiter);
 
 // Routes
 app.use('/api/products', productRoutes);
@@ -64,7 +91,7 @@ app.use('/api/likes', likeRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/tenant-analytics', tenantAnalyticsRoutes);
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth')); // authLimiter already applied above
 app.use('/api/users', userRoutes);
 app.use('/api/profile', profileRoutes);
 
@@ -87,10 +114,10 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on http://localhost:${PORT}`);
   await createCommentsTable();
   await createNotificationsTable();
 }).on('error', (err) => {
-  console.error('Server error:', err);
+  logger.error('Server error:', err);
   process.exit(1);
 });

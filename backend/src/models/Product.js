@@ -118,6 +118,25 @@ class Product {
     return rows;
   }
 
+  static async search(query) {
+    const q = `%${query}%`;
+    const [rows] = await db.execute(`
+      SELECT p.*, c.name as category_name, u.store_name,
+             COALESCE(p.likes_count, 0) as likes_count,
+             COALESCE(AVG(CASE WHEN cm.comment_type = 'review' THEN cm.rating END), 0) as average_rating,
+             COUNT(CASE WHEN cm.comment_type = 'review' THEN 1 END) as review_count
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN users u ON p.created_by = u.id
+      LEFT JOIN comments cm ON p.id = cm.product_id
+      WHERE p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ?
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+      LIMIT 50
+    `, [q, q, q]);
+    return rows;
+  }
+
   static async delete(id) {
     const [result] = await db.execute('DELETE FROM products WHERE id = ?', [id]);
     return result.affectedRows > 0;

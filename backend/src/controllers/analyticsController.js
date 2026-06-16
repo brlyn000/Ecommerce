@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 const analyticsController = {
   async getOverview(req, res) {
@@ -46,8 +47,8 @@ const analyticsController = {
         contactStatus
       });
     } catch (error) {
-      console.error('Analytics error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Analytics error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
     }
   },
 
@@ -77,8 +78,8 @@ const analyticsController = {
         topCategories
       });
     } catch (error) {
-      console.error('Product analytics error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Product analytics error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch product analytics' });
     }
   },
 
@@ -114,8 +115,8 @@ const analyticsController = {
         recentActivity
       });
     } catch (error) {
-      console.error('Contact analytics error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Contact analytics error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch contact analytics' });
     }
   }
 };

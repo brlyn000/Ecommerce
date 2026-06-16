@@ -1,6 +1,26 @@
 CREATE DATABASE IF NOT EXISTS `e-commerce`;
 USE `e-commerce`;
 
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin','tenant','user') DEFAULT 'user',
+  full_name VARCHAR(100),
+  store_name VARCHAR(255),
+  phone VARCHAR(20),
+  nim VARCHAR(20),
+  student_card_image VARCHAR(255),
+  address TEXT,
+  status ENUM('active','inactive') DEFAULT 'active',
+  payment_methods LONGTEXT,
+  contact_info LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Categories table
 CREATE TABLE categories (
   id INT PRIMARY KEY AUTO_INCREMENT,

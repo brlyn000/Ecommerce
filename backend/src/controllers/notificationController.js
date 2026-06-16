@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 const createNotification = async (req, res) => {
   try {
@@ -34,7 +35,7 @@ const createNotification = async (req, res) => {
       notification_id: result.insertId
     });
   } catch (error) {
-    console.error('Error creating notification:', error);
+    logger.error('Error creating notification:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to create notification'
@@ -64,7 +65,7 @@ const getTenantNotifications = async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch notifications'
@@ -87,7 +88,7 @@ const markAsRead = async (req, res) => {
       message: 'Notification marked as read'
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logger.error('Error marking notification as read:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to mark notification as read'

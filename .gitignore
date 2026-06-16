@@ -1,0 +1,5 @@
+.env
+backend/public/uploads/ktm/
+backend/public/uploads/products/
+backend/public/uploads/carousel/
+backend/public/uploads/qris/

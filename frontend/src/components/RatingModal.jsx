@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { FiStar, FiX } from 'react-icons/fi';
 import { api } from '../services/api';
+import { getImageUrl } from '../config/api';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
 
 const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
   const [rating, setRating] = useState(5);
@@ -12,9 +15,10 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
     setLoading(true);
 
     try {
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      
-      const response = await fetch('http://localhost:5006/api/comments', {
+      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      if (!user) throw new Error('Silakan login ulang untuk memberikan rating');
+
+      const response = await fetch(`${API_BASE}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -36,7 +40,6 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
       onRatingSubmitted();
       onClose();
     } catch (error) {
-      console.error('Error submitting rating:', error);
       alert(error.message || 'Failed to submit rating');
     } finally {
       setLoading(false);

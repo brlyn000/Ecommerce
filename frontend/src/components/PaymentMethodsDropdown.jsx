@@ -20,13 +20,10 @@ const PaymentMethodsDropdown = ({ product }) => {
       const response = await fetch(getApiUrl(`/users/${product.created_by}/payment-methods`));
       if (response.ok) {
         const data = await response.json();
-        console.log('Payment methods data:', data);
         setPaymentMethods(data.payment_methods);
-      } else {
-        console.error('Failed to fetch payment methods:', response.status);
       }
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      // ignore
     } finally {
       setLoading(false);
     }

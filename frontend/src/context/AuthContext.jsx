@@ -1,58 +1,78 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+const TOKEN_KEY = 'adminToken';
+
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Add 10s buffer to avoid edge cases
+    return payload.exp * 1000 < Date.now() + 10000;
+  } catch {
+    return true;
+  }
+};
+
+const clearStorage = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem('currentUser');
+};
+
+export const getValidToken = () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token || isTokenExpired(token)) {
+    if (token) clearStorage();
+    return null;
+  }
+  return token;
+};
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [logoutCallback, setLogoutCallback] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token && !isTokenExpired(token)) {
       setIsAuthenticated(true);
+    } else if (token) {
+      clearStorage();
+      setIsAuthenticated(false);
     }
     setLoading(false);
   }, []);
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:5006/api/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('adminToken', data.token);
+        if (!data.token || isTokenExpired(data.token)) return false;
+        localStorage.setItem(TOKEN_KEY, data.token);
         setIsAuthenticated(true);
         return true;
       }
       return false;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch {
       return false;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('currentUser');
+  const logout = useCallback(() => {
+    clearStorage();
     setIsAuthenticated(false);
-    if (logoutCallback) {
-      logoutCallback();
-    }
     window.location.href = '/login';
-  };
-
-  const setLogoutHandler = (callback) => {
-    setLogoutCallback(() => callback);
-  };
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, loading, setLogoutHandler }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -60,8 +80,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

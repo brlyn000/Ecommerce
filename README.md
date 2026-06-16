@@ -328,10 +328,10 @@ cd ecommerce-platform
 - 📊 **MySQL**: localhost:3306
 
 **Default Login Credentials:**
-- **phpMyAdmin**: root / rootpassword
-- **Admin Panel**: admin@ekraft.com / admin123
-- **Tenant**: tenant@ekraf.com / tenant123
-- **User**: user@ekraft.com / user123
+- **phpMyAdmin**: root / *(set via docker-compose env)*
+- **Admin Panel**: admin@ekraft.com / *(set in database seed)*
+- **Tenant**: tenant@ekraf.com / *(set in database seed)*
+- **User**: user@ekraft.com / *(set in database seed)*
 
 </details>
 
@@ -349,10 +349,10 @@ VITE_SERVER_URL=http://localhost:5006
 **Backend (.env)**
 ```env
 DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=admin123
+DB_USER=your_db_user
+DB_PASSWORD=your_secure_password
 DB_NAME=e-commerce
-JWT_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+JWT_SECRET=your_jwt_secret_min_32_characters
 PORT=5006
 ```
 

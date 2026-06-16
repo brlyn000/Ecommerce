@@ -15,8 +15,6 @@ export default function UniversalLogin() {
     setLoading(true)
     setError('')
 
-    console.log('Attempting login with:', credentials.username)
-
     try {
       const response = await fetch('http://localhost:5006/api/auth/login', {
         method: 'POST',
@@ -24,32 +22,24 @@ export default function UniversalLogin() {
         body: JSON.stringify(credentials)
       })
 
-      console.log('Response status:', response.status)
       const data = await response.json()
-      console.log('Response data:', data)
 
       if (response.ok) {
         localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
         window.dispatchEvent(new Event('userLoggedIn'))
         
-        console.log('Login successful, user role:', data.user.role)
-        
-        // Redirect based on role with delay
         setTimeout(() => {
           switch (data.user.role) {
             case 'admin':
-              console.log('Redirecting admin to dashboard')
               window.location.href = '/dashboard'
               break
             case 'tenant':
-              console.log('Redirecting tenant to tenant-dashboard')
               window.location.href = '/tenant-dashboard'
               break
             case 'user':
             default:
-              // Redirect to last visited page or home
               const lastPage = localStorage.getItem('lastVisitedPage') || '/'
-              console.log('User login - redirecting to:', lastPage)
               window.location.href = lastPage
               break
           }
@@ -186,16 +176,12 @@ export default function UniversalLogin() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <div className="mt-6 flex justify-center">
+              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full">
                 <img src="https://www.google.com/favicon.ico" className="w-5 h-5 mr-2" alt="Google" />
                 <span className="text-sm font-medium text-gray-700">Google</span>
               </button>
-              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://www.facebook.com/favicon.ico" className="w-5 h-5 mr-2" alt="Facebook" />
-                <span className="text-sm font-medium text-gray-700">Facebook</span>
-              </button>
-            </div>
+          </div>
           </div>
 
           <div className="text-center mt-6 space-y-3">
@@ -205,17 +191,6 @@ export default function UniversalLogin() {
                 Signup
               </a>
             </p>
-            
-            <div className="flex justify-center gap-3 text-xs">
-              <a href="/user-register" className="text-blue-500 hover:text-blue-600 font-medium">
-                Register as User
-              </a>
-              <span className="text-gray-300">|</span>
-              <a href="/tenant-register" className="text-red-600 hover:text-red-700 font-medium">
-                Register as Tenant
-              </a>
-            </div>
-            
             <a href="/" className="block text-xs text-gray-400 hover:text-gray-600 mt-4">
               ← Back to Home
             </a>

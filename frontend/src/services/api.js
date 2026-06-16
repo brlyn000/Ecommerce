@@ -1,526 +1,296 @@
+import { getValidToken } from '../context/AuthContext';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
 
-const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
+const authHeader = () => {
+  const token = getValidToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const requireAuth = () => {
+  const token = getValidToken();
+  if (!token) throw new Error('Authentication required');
+  return token;
+};
+
+const fetchWithTimeout = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
-      const error = new Error(`HTTP error! status: ${response.status}`);
+      const error = new Error();
       error.response = { status: response.status, statusText: response.statusText };
-      
-      // Handle specific status codes
       switch (response.status) {
-        case 401:
-          error.message = 'Authentication required';
-          break;
-        case 403:
-          error.message = 'Access forbidden';
-          break;
-        case 404:
-          error.message = 'Resource not found';
-          break;
-        case 500:
-          error.message = 'Internal server error';
-          break;
-        default:
-          error.message = `Request failed with status ${response.status}`;
+        case 401: error.message = 'Authentication required'; break;
+        case 403: error.message = 'Access forbidden'; break;
+        case 404: error.message = 'Resource not found'; break;
+        case 500: error.message = 'Internal server error'; break;
+        default:  error.message = `Request failed with status ${response.status}`;
       }
-      
       throw error;
     }
     return response.json();
   } catch (error) {
     if (!error.response) {
-      // Network error
       error.response = { status: 500, statusText: 'Network Error' };
       error.message = 'Network connection failed';
     }
-    console.error('API Error:', error);
     throw error;
   }
 };
 
 export const api = {
   // Products
-  async getProducts() {
-    return fetchWithTimeout(`${API_BASE_URL}/products`);
-  },
+  getProducts: () => fetchWithTimeout(`${API_BASE_URL}/products`),
+  searchProducts: (q) => fetchWithTimeout(`${API_BASE_URL}/products/search?q=${encodeURIComponent(q)}`),
+  getProductById: (id) => fetchWithTimeout(`${API_BASE_URL}/products/${id}`),
+  getProductsByCategory: (categoryId) => fetchWithTimeout(`${API_BASE_URL}/products/category/${categoryId}`),
 
-  async getProductById(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/products/${id}`);
-  },
-
-  async getProductsByCategory(categoryId) {
-    return fetchWithTimeout(`${API_BASE_URL}/products/category/${categoryId}`);
-  },
-
-  async createProduct(productData) {
-    const token = localStorage.getItem('adminToken');
+  createProduct: (productData) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/products`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(productData)
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify(productData),
     });
   },
 
-  async updateProduct(id, productData) {
-    const token = localStorage.getItem('adminToken');
+  updateProduct: (id, productData) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(productData)
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify(productData),
     });
   },
 
-  async deleteProduct(id) {
-    const token = localStorage.getItem('adminToken');
+  deleteProduct: (id) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: authHeader(),
     });
   },
 
-  async getUserProducts() {
-    const token = localStorage.getItem('adminToken');
-    return fetchWithTimeout(`${API_BASE_URL}/products/user/my-products`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  getUserProducts: () => {
+    requireAuth();
+    return fetchWithTimeout(`${API_BASE_URL}/products/user/my-products`, { headers: authHeader() });
   },
 
   // Categories
-  async getCategories() {
-    return fetchWithTimeout(`${API_BASE_URL}/categories`);
-  },
+  getCategories: () => fetchWithTimeout(`${API_BASE_URL}/categories`),
+  getCategoryById: (id) => fetchWithTimeout(`${API_BASE_URL}/categories/${id}`),
 
-  async getCategoryById(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/categories/${id}`);
-  },
+  createCategory: (data) => fetchWithTimeout(`${API_BASE_URL}/categories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async createCategory(categoryData) {
-    return fetchWithTimeout(`${API_BASE_URL}/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(categoryData)
-    });
-  },
+  updateCategory: (id, data) => fetchWithTimeout(`${API_BASE_URL}/categories/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async updateCategory(id, categoryData) {
-    return fetchWithTimeout(`${API_BASE_URL}/categories/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(categoryData)
-    });
-  },
-
-  async deleteCategory(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/categories/${id}`, {
-      method: 'DELETE'
-    });
-  },
+  deleteCategory: (id) => fetchWithTimeout(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' }),
 
   // Carousel
-  async getCarousel() {
-    return fetchWithTimeout(`${API_BASE_URL}/carousel`);
-  },
+  getCarousel: () => fetchWithTimeout(`${API_BASE_URL}/carousel`),
+  getCarouselById: (id) => fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`),
 
-  async getCarouselById(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`);
-  },
+  createCarousel: (data) => fetchWithTimeout(`${API_BASE_URL}/carousel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async createCarousel(carouselData) {
-    return fetchWithTimeout(`${API_BASE_URL}/carousel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(carouselData)
-    });
-  },
+  updateCarousel: (id, data) => fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async updateCarousel(id, carouselData) {
-    return fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(carouselData)
-    });
-  },
-
-  async deleteCarousel(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`, {
-      method: 'DELETE'
-    });
-  },
+  deleteCarousel: (id) => fetchWithTimeout(`${API_BASE_URL}/carousel/${id}`, { method: 'DELETE' }),
 
   // File Upload
-  async uploadFile(file, type = 'products') {
-    console.log('API uploadFile called with:', file.name, type);
+  uploadFile: async (file, type = 'products') => {
+    requireAuth();
     const formData = new FormData();
     formData.append('image', file);
-    const token = localStorage.getItem('adminToken');
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/upload/single?type=${type}`, {
-        method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        body: formData
-      });
-      
-      console.log('Upload response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
-      }
-      
-      const result = await response.json();
-      console.log('Upload success:', result);
-      return result;
-    } catch (error) {
-      console.error('Upload API error:', error);
-      throw error;
+    const response = await fetch(`${API_BASE_URL}/upload/single?type=${type}`, {
+      method: 'POST',
+      headers: authHeader(),
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Upload failed: ${response.status} - ${errorText}`);
     }
+    return response.json();
   },
 
-  async uploadMultipleFiles(files, type = 'general') {
+  uploadMultipleFiles: async (files, type = 'general') => {
     const formData = new FormData();
-    files.forEach(file => {
-      formData.append('images', file);
-    });
+    files.forEach(file => formData.append('images', file));
     formData.append('type', type);
-    
-    const response = await fetch(`${API_BASE_URL}/upload/multiple`, {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.status}`);
-    }
-    
+    const response = await fetch(`${API_BASE_URL}/upload/multiple`, { method: 'POST', body: formData });
+    if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
     return response.json();
   },
 
   // Contacts
-  async getContacts() {
-    return fetchWithTimeout(`${API_BASE_URL}/contacts`);
-  },
+  getContacts: () => fetchWithTimeout(`${API_BASE_URL}/contacts`),
 
-  async createContact(contactData) {
-    return fetchWithTimeout(`${API_BASE_URL}/contacts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(contactData)
-    });
-  },
+  createContact: (data) => fetchWithTimeout(`${API_BASE_URL}/contacts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async updateContactStatus(id, status) {
-    return fetchWithTimeout(`${API_BASE_URL}/contacts/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-  },
+  updateContactStatus: (id, status) => fetchWithTimeout(`${API_BASE_URL}/contacts/${id}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  }),
 
-  async deleteContact(id) {
-    return fetchWithTimeout(`${API_BASE_URL}/contacts/${id}`, {
-      method: 'DELETE'
-    });
-  },
+  deleteContact: (id) => fetchWithTimeout(`${API_BASE_URL}/contacts/${id}`, { method: 'DELETE' }),
 
   // Analytics
-  async getAnalyticsOverview() {
-    return fetchWithTimeout(`${API_BASE_URL}/analytics/overview`);
-  },
-
-  async getProductAnalytics() {
-    return fetchWithTimeout(`${API_BASE_URL}/analytics/products`);
-  },
-
-  async getContactAnalytics() {
-    return fetchWithTimeout(`${API_BASE_URL}/analytics/contacts`);
-  },
+  getAnalyticsOverview: () => fetchWithTimeout(`${API_BASE_URL}/analytics/overview`),
+  getProductAnalytics: () => fetchWithTimeout(`${API_BASE_URL}/analytics/products`),
+  getContactAnalytics: () => fetchWithTimeout(`${API_BASE_URL}/analytics/contacts`),
 
   // Comments
-  async getCommentsByProductId(productId) {
-    return fetchWithTimeout(`${API_BASE_URL}/comments/product/${productId}`);
-  },
+  getCommentsByProductId: (productId) => fetchWithTimeout(`${API_BASE_URL}/comments/product/${productId}`),
 
-  async createComment(commentData) {
-    return fetchWithTimeout(`${API_BASE_URL}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(commentData)
-    });
-  },
+  createComment: (data) => fetchWithTimeout(`${API_BASE_URL}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }),
 
-  async updateComment(id, commentData) {
-    const token = localStorage.getItem('adminToken');
+  updateComment: (id, data) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(commentData)
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify(data),
     });
   },
 
-  async deleteComment(id) {
-    const token = localStorage.getItem('adminToken');
+  deleteComment: (id) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/comments/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: authHeader(),
     });
   },
 
   // Likes
-  async toggleLike(productId) {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  toggleLike: (productId) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/likes/products/${productId}/toggle`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
     });
   },
 
-  async getLikeStatus(productId) {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
-    if (!token) {
-      return { liked: false, likesCount: 0 };
-    }
-    
-    return fetchWithTimeout(`${API_BASE_URL}/likes/products/${productId}/status`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  },
+  // Like status is public — send token only if available (no throw)
+  getLikeStatus: (productId) => fetchWithTimeout(`${API_BASE_URL}/likes/products/${productId}/status`, {
+    headers: authHeader(),
+  }),
 
   // Notifications
-  async createNotification(notificationData) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  createNotification: (data) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/notifications`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(notificationData)
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify(data),
     });
   },
 
-  async getTenantNotifications(type = null) {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('tenantToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  getTenantNotifications: async (type = null) => {
+    requireAuth();
     const url = type ? `${API_BASE_URL}/notifications/tenant?type=${type}` : `${API_BASE_URL}/notifications/tenant`;
-    
     try {
-      const response = await fetchWithTimeout(url, {
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
+      const response = await fetchWithTimeout(url, { headers: authHeader() });
       return response.notifications || [];
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+    } catch {
       return [];
     }
   },
 
-  async markAllNotificationsAsRead(type = null) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  markAllNotificationsAsRead: (type = null) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/notifications/mark-all-read`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ type })
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({ type }),
     });
   },
 
-  async markNotificationAsRead(notificationId) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  markNotificationAsRead: (notificationId) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/notifications/${notificationId}/read`, {
       method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
+      headers: authHeader(),
     });
   },
 
   // Tenant Analytics
-  async getTenantProductAnalytics() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
-    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/products`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  getTenantProductAnalytics: () => {
+    requireAuth();
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/products`, { headers: authHeader() });
   },
 
-  async getTenantOverviewStats() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
-    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/overview`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  getTenantOverviewStats: () => {
+    requireAuth();
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/overview`, { headers: authHeader() });
   },
 
-  async getTenantChartData(year, month) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  getTenantChartData: (year, month) => {
+    requireAuth();
     const params = new URLSearchParams();
     if (year) params.append('year', year);
     if (month && month !== 'all') params.append('month', month);
-    
-    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/charts?${params}`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    return fetchWithTimeout(`${API_BASE_URL}/tenant-analytics/charts?${params}`, { headers: authHeader() });
   },
 
   // Orders
-  async getTenantOrders() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
-    return fetchWithTimeout(`${API_BASE_URL}/orders/tenant`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  getTenantOrders: () => {
+    requireAuth();
+    return fetchWithTimeout(`${API_BASE_URL}/orders/tenant`, { headers: authHeader() });
   },
 
-  async updateOrderStatus(orderId, status, rejectionReason = null) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  updateOrderStatus: (orderId, status, rejectionReason = null) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}/status`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ status, rejection_reason: rejectionReason })
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({ status, rejection_reason: rejectionReason }),
     });
   },
 
-  async getUserOrders() {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
-    return fetchWithTimeout(`${API_BASE_URL}/orders/user`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
-      }
-    });
+  getUserOrders: () => {
+    requireAuth();
+    return fetchWithTimeout(`${API_BASE_URL}/orders/user`, { headers: authHeader() });
   },
 
-  async confirmOrderReceived(orderId, status) {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error('Authentication required');
-    }
-    
+  confirmOrderReceived: (orderId, status) => {
+    requireAuth();
     return fetchWithTimeout(`${API_BASE_URL}/orders/${orderId}/received`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ received_status: status })
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({ received_status: status }),
     });
-  }
+  },
 };
 
-// Individual exports for easier imports
-export const getProducts = api.getProducts;
-export const getProductById = api.getProductById;
-export const getProductsByCategory = api.getProductsByCategory;
-export const createProduct = api.createProduct;
-export const updateProduct = api.updateProduct;
-export const deleteProduct = api.deleteProduct;
-export const getUserProducts = api.getUserProducts;
-
-export const getCategories = api.getCategories;
-export const getCategoryById = api.getCategoryById;
-export const createCategory = api.createCategory;
-export const updateCategory = api.updateCategory;
-export const deleteCategory = api.deleteCategory;
-
-export const getCarousel = api.getCarousel;
-export const getCarouselById = api.getCarouselById;
-export const createCarousel = api.createCarousel;
-export const updateCarousel = api.updateCarousel;
-export const deleteCarousel = api.deleteCarousel;
-
-export const uploadFile = api.uploadFile;
-export const uploadMultipleFiles = api.uploadMultipleFiles;
-
-export const getContacts = api.getContacts;
-export const createContact = api.createContact;
-export const updateContactStatus = api.updateContactStatus;
-export const deleteContact = api.deleteContact;
-
-export const getAnalyticsOverview = api.getAnalyticsOverview;
-export const getProductAnalytics = api.getProductAnalytics;
-export const getContactAnalytics = api.getContactAnalytics;
-
-export const getCommentsByProductId = api.getCommentsByProductId;
-export const createComment = api.createComment;
-export const deleteComment = api.deleteComment;
-
-export const toggleLike = api.toggleLike;
-export const getLikeStatus = api.getLikeStatus;
+// Individual exports
+export const { getProducts, getProductById, getProductsByCategory, createProduct, updateProduct,
+  deleteProduct, getUserProducts, getCategories, getCategoryById, createCategory, updateCategory,
+  deleteCategory, getCarousel, getCarouselById, createCarousel, updateCarousel, deleteCarousel,
+  uploadFile, uploadMultipleFiles, getContacts, createContact, updateContactStatus, deleteContact,
+  getAnalyticsOverview, getProductAnalytics, getContactAnalytics, getCommentsByProductId,
+  createComment, deleteComment, toggleLike, getLikeStatus } = api;

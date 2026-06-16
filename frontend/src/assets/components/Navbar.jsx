@@ -17,40 +17,27 @@ const Navbar = () => {
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('adminToken');
-      console.log('Navbar: Checking token:', token ? 'exists' : 'not found');
       if (token) {
         try {
-          const response = await fetch('http://localhost:5006/api/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}/api/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log('Navbar: Profile response status:', response.status);
           if (response.ok) {
-            const userData = await response.json();
-            console.log('Navbar: User data loaded:', userData.username);
-            setUser(userData);
+            setUser(await response.json());
           } else {
-            console.log('Navbar: Failed to fetch user');
             setUser(null);
           }
-        } catch (error) {
-          console.error('Navbar: Error fetching user:', error);
+        } catch {
           setUser(null);
         }
       } else {
-        console.log('Navbar: No token, user not logged in');
         setUser(null);
       }
     };
     
     fetchUser();
     
-    // Listen for login events
-    const handleLogin = () => {
-      console.log('Navbar: Login event detected');
-      fetchUser();
-    };
+    const handleLogin = () => fetchUser();
     window.addEventListener('userLoggedIn', handleLogin);
     
     // Update counts
@@ -335,18 +322,11 @@ const Navbar = () => {
           const token = localStorage.getItem('adminToken');
           if (token) {
             try {
-              const response = await fetch('http://localhost:5006/api/profile', {
-                headers: {
-                  'Authorization': `Bearer ${token}`
-                }
+              const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}/api/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
               });
-              if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
-              }
-            } catch (error) {
-              console.error('Error fetching user:', error);
-            }
+              if (response.ok) setUser(await response.json());
+            } catch { /* silent */ }
           }
         }}
       />

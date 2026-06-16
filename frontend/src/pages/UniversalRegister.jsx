@@ -11,6 +11,8 @@ export default function UniversalRegister() {
     full_name: '',
     store_name: '',
     phone: '',
+    nim: '',
+    student_card_image: '',
     address: '',
     role: 'user'
   })
@@ -18,7 +20,12 @@ export default function UniversalRegister() {
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [ktmFile, setKtmFile] = useState(null)
+  const [ktmPreview, setKtmPreview] = useState('')
+  const [ktmUploading, setKtmUploading] = useState(false)
   const navigate = useNavigate()
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api'
 
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: '', color: '' }
@@ -36,13 +43,32 @@ export default function UniversalRegister() {
 
   const passwordStrength = getPasswordStrength(formData.password)
 
+  const handleKtmChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setKtmFile(file)
+    setKtmPreview(URL.createObjectURL(file))
+    setKtmUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('ktm', file)
+      const res = await fetch(`${API_BASE}/upload/ktm`, { method: 'POST', body: fd })
+      const data = await res.json()
+      if (data.imageUrl) setFormData(prev => ({ ...prev, student_card_image: data.imageUrl }))
+    } catch {
+      setError('Gagal upload KTM, coba lagi')
+    } finally {
+      setKtmUploading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      const response = await fetch('http://localhost:5006/api/auth/register', {
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -243,6 +269,50 @@ export default function UniversalRegister() {
               />
             </div>
 
+            {formData.role === 'tenant' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">NIM <span className="text-gray-400 font-normal">(Nomor Induk Mahasiswa)</span></label>
+                  <input
+                    type="text"
+                    value={formData.nim}
+                    onChange={(e) => setFormData({...formData, nim: e.target.value})}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+                    placeholder="Masukkan NIM"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Kartu Tanda Mahasiswa (KTM)</label>
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center hover:border-red-400 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleKtmChange}
+                      className="hidden"
+                      id="ktm-upload"
+                    />
+                    {ktmPreview ? (
+                      <div className="relative">
+                        <img src={ktmPreview} alt="KTM Preview" className="w-full max-h-40 object-contain rounded-lg mb-2" />
+                        <label htmlFor="ktm-upload" className="text-xs text-red-600 cursor-pointer hover:underline">
+                          {ktmUploading ? 'Mengupload...' : 'Ganti foto'}
+                        </label>
+                      </div>
+                    ) : (
+                      <label htmlFor="ktm-upload" className="cursor-pointer block">
+                        <svg className="mx-auto h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm text-gray-500">Klik untuk upload foto KTM</span>
+                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP maks 10MB</p>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
                 {error}
@@ -268,16 +338,12 @@ export default function UniversalRegister() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <div className="mt-6 flex justify-center">
+              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full">
                 <img src="https://www.google.com/favicon.ico" className="w-5 h-5 mr-2" alt="Google" />
                 <span className="text-sm font-medium text-gray-700">Google</span>
               </button>
-              <button className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://www.facebook.com/favicon.ico" className="w-5 h-5 mr-2" alt="Facebook" />
-                <span className="text-sm font-medium text-gray-700">Facebook</span>
-              </button>
-            </div>
+          </div>
           </div>
 
           <div className="text-center mt-6">

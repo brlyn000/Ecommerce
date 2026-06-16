@@ -2,202 +2,94 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { Jimp, JimpMime } = require('jimp');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
+const logger = require('../utils/logger');
 
-// Ensure uploads directories exist
-const qrisUploadsDir = path.join(__dirname, '../../public/uploads/qris');
-const productUploadsDir = path.join(__dirname, '../../public/uploads/products');
-const carouselUploadsDir = path.join(__dirname, '../../public/uploads/carousel');
+const UPLOAD_DIRS = {
+  qris: path.join(__dirname, '../../public/uploads/qris'),
+  products: path.join(__dirname, '../../public/uploads/products'),
+  carousel: path.join(__dirname, '../../public/uploads/carousel'),
+  ktm: path.join(__dirname, '../../public/uploads/ktm'),
+};
 
-if (!fs.existsSync(qrisUploadsDir)) {
-  fs.mkdirSync(qrisUploadsDir, { recursive: true });
-}
-if (!fs.existsSync(productUploadsDir)) {
-  fs.mkdirSync(productUploadsDir, { recursive: true });
-}
-if (!fs.existsSync(carouselUploadsDir)) {
-  fs.mkdirSync(carouselUploadsDir, { recursive: true });
-}
-
-// Configure multer for QRIS upload
-const qrisStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, qrisUploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'qris-' + uniqueSuffix + path.extname(file.originalname));
-  }
+Object.values(UPLOAD_DIRS).forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// Configure multer for product upload
-const productStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productUploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// Configure multer for carousel upload
-const carouselStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, carouselUploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'carousel-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const memoryStorage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
+  const allowed = /jpeg|jpg|png|gif|webp/;
+  if (allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype)) {
     return cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed'));
+  }
+  cb(new Error('Only image files are allowed'));
+};
+
+const upload = multer({ storage: memoryStorage, limits: { fileSize: 10 * 1024 * 1024 }, fileFilter });
+
+const compressAndSave = async (buffer, outputPath, type) => {
+  const MAX_WIDTH = type === 'qris' ? 500 : 1200;
+  const QUALITY = type === 'qris' ? 90 : 80;
+
+  const image = await Jimp.fromBuffer(buffer);
+  if (image.bitmap.width > MAX_WIDTH) {
+    image.resize({ w: MAX_WIDTH });
+  }
+  const compressed = await image.getBuffer(JimpMime.jpeg, { quality: QUALITY });
+  fs.writeFileSync(outputPath, compressed);
+};
+
+const handleUpload = (type) => async (req, res) => {
+  try {
+    if (!req.file && (!req.files || req.files.length === 0)) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const dir = UPLOAD_DIRS[type] || UPLOAD_DIRS.products;
+    const files = req.file ? [req.file] : req.files;
+    const urls = [];
+
+    for (const file of files) {
+      const filename = `${type}-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+      const outputPath = path.join(dir, filename);
+      await compressAndSave(file.buffer, outputPath, type);
+      urls.push(`/uploads/${type}/${filename}`);
+    }
+
+    const imageUrl = urls[0];
+    res.json({
+      success: true,
+      imageUrl,
+      url: imageUrl,
+      imageUrls: urls,
+      message: 'File uploaded successfully',
+    });
+  } catch (error) {
+    logger.error('Upload error:', error.message);
+    res.status(500).json({ error: 'Upload failed' });
   }
 };
 
-const qrisUpload = multer({
-  storage: qrisStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: fileFilter
+router.post('/qris', authenticateToken, upload.single('qrisImage'), handleUpload('qris'));
+router.post('/products', authenticateToken, upload.array('images', 5), handleUpload('products'));
+router.post('/product', authenticateToken, upload.single('image'), handleUpload('products'));
+router.post('/carousel', authenticateToken, upload.single('image'), handleUpload('carousel'));
+router.post('/ktm', upload.single('ktm'), handleUpload('ktm'));
+
+router.post('/single', authenticateToken, upload.single('image'), (req, res) => {
+  req.params.type = req.query.type || 'products';
+  return handleUpload(req.params.type)(req, res);
 });
 
-const productUpload = multer({
-  storage: productStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for products
-  fileFilter: fileFilter
-});
-
-const carouselUpload = multer({
-  storage: carouselStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for carousel
-  fileFilter: fileFilter
-});
-
-// Upload QRIS image
-router.post('/qris', authenticateToken, qrisUpload.single('qrisImage'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const imageUrl = `/uploads/qris/${req.file.filename}`;
-    res.json({ 
-      success: true, 
-      imageUrl: imageUrl,
-      message: 'QRIS image uploaded successfully' 
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Upload product images
-router.post('/products', authenticateToken, productUpload.array('images', 5), (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
-    }
-
-    const imageUrls = req.files.map(file => `/uploads/products/${file.filename}`);
-    res.json({ 
-      success: true, 
-      imageUrls: imageUrls,
-      message: 'Product images uploaded successfully' 
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Upload single product image
-router.post('/product', authenticateToken, productUpload.single('image'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const imageUrl = `/uploads/products/${req.file.filename}`;
-    res.json({ 
-      success: true, 
-      imageUrl: imageUrl,
-      message: 'Product image uploaded successfully' 
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Upload single file (legacy endpoint)
-router.post('/single', authenticateToken, (req, res) => {
-  const type = req.query.type || 'products';
-  let upload;
-  
-  if (type === 'qris') {
-    upload = qrisUpload;
-  } else if (type === 'carousel') {
-    upload = carouselUpload;
-  } else {
-    upload = productUpload;
-  }
-  
-  upload.single('image')(req, res, (err) => {
-    if (err) {
-      return res.status(400).json({ error: err.message });
-    }
-    
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const folder = type === 'qris' ? 'qris' : type === 'carousel' ? 'carousel' : 'products';
-    const imageUrl = `/uploads/${folder}/${req.file.filename}`;
-    
-    res.json({ 
-      success: true, 
-      imageUrl: imageUrl,
-      url: imageUrl,
-      message: 'File uploaded successfully' 
-    });
-  });
-});
-
-// Upload carousel image
-router.post('/carousel', authenticateToken, carouselUpload.single('image'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const imageUrl = `/uploads/carousel/${req.file.filename}`;
-    res.json({ 
-      success: true, 
-      imageUrl: imageUrl,
-      url: imageUrl,
-      message: 'Carousel image uploaded successfully' 
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Error handling middleware
 router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large' });
-    }
+  if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'File too large (max 10MB)' });
   }
-  res.status(500).json({ error: error.message });
+  logger.error('Upload middleware error:', error.message);
+  res.status(400).json({ error: error.message });
 });
 
 module.exports = router;

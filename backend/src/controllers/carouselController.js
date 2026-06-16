@@ -1,110 +1,94 @@
 const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 const carouselController = {
-  // Get all carousel items
   async getAll(req, res) {
     try {
-      const [rows] = await db.execute(
-        'SELECT * FROM carousel_items ORDER BY display_order ASC'
-      );
+      const [rows] = await db.execute('SELECT * FROM carousel_items ORDER BY display_order ASC');
       res.json(rows);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error('Get carousel error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch carousel items' });
     }
   },
 
-  // Get carousel item by ID
   async getById(req, res) {
     try {
-      const [rows] = await db.execute(
-        'SELECT * FROM carousel_items WHERE id = ?',
-        [req.params.id]
-      );
-      if (rows.length === 0) {
-        return res.status(404).json({ error: 'Carousel item not found' });
-      }
+      const [rows] = await db.execute('SELECT * FROM carousel_items WHERE id = ?', [req.params.id]);
+      if (rows.length === 0) return res.status(404).json({ error: 'Carousel item not found' });
       res.json(rows[0]);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error('Get carousel by id error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch carousel item' });
     }
   },
 
-  // Create new carousel item
   async create(req, res) {
     try {
       const { title, description, image, active, display_order, button_text, button_link } = req.body;
-      
+
+      if (!title || !image) {
+        return res.status(400).json({ error: 'Title and image are required' });
+      }
+
       const [result] = await db.execute(
         'INSERT INTO carousel_items (title, description, image, active, display_order, button_text, button_link) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [title, description, image, active || 1, display_order || 1, button_text, button_link]
+        [title, description || null, image, active ?? 1, display_order || 1, button_text || null, button_link || null]
       );
-      
-      res.status(201).json({ 
-        id: result.insertId, 
-        message: 'Carousel item created successfully' 
-      });
+
+      res.status(201).json({ id: result.insertId, message: 'Carousel item created successfully' });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error('Create carousel error:', error.message);
+      res.status(500).json({ error: 'Failed to create carousel item' });
     }
   },
 
-  // Update carousel item
   async update(req, res) {
     try {
       const { title, description, image, active, display_order, button_text, button_link } = req.body;
-      
-      // Get current item to check for old image
+
       const [current] = await db.execute('SELECT image FROM carousel_items WHERE id = ?', [req.params.id]);
-      if (current.length > 0 && image && image !== current[0].image && current[0].image && !current[0].image.startsWith('http')) {
-        const oldImagePath = path.join(__dirname, '../../uploads', path.basename(current[0].image));
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
+      if (current.length === 0) return res.status(404).json({ error: 'Carousel item not found' });
+
+      if (image && image !== current[0].image && current[0].image && !current[0].image.startsWith('http')) {
+        const oldPath = path.join(__dirname, '../../public/uploads/carousel', path.basename(current[0].image));
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
-      
+
       const [result] = await db.execute(
         'UPDATE carousel_items SET title = ?, description = ?, image = ?, active = ?, display_order = ?, button_text = ?, button_link = ? WHERE id = ?',
-        [title, description, image, active, display_order, button_text, button_link, req.params.id]
+        [title, description || null, image, active, display_order, button_text || null, button_link || null, req.params.id]
       );
-      
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Carousel item not found' });
-      }
-      
+
+      if (result.affectedRows === 0) return res.status(404).json({ error: 'Carousel item not found' });
+
       res.json({ message: 'Carousel item updated successfully' });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error('Update carousel error:', error.message);
+      res.status(500).json({ error: 'Failed to update carousel item' });
     }
   },
 
-  // Delete carousel item
   async delete(req, res) {
     try {
-      // Get item to delete image
       const [item] = await db.execute('SELECT image FROM carousel_items WHERE id = ?', [req.params.id]);
+
       if (item.length > 0 && item[0].image && !item[0].image.startsWith('http')) {
-        const imagePath = path.join(__dirname, '../../uploads', path.basename(item[0].image));
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
-        }
+        const imgPath = path.join(__dirname, '../../public/uploads/carousel', path.basename(item[0].image));
+        if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
       }
-      
-      const [result] = await db.execute(
-        'DELETE FROM carousel_items WHERE id = ?',
-        [req.params.id]
-      );
-      
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Carousel item not found' });
-      }
-      
+
+      const [result] = await db.execute('DELETE FROM carousel_items WHERE id = ?', [req.params.id]);
+      if (result.affectedRows === 0) return res.status(404).json({ error: 'Carousel item not found' });
+
       res.json({ message: 'Carousel item deleted successfully' });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      logger.error('Delete carousel error:', error.message);
+      res.status(500).json({ error: 'Failed to delete carousel item' });
     }
-  }
+  },
 };
 
 module.exports = carouselController;

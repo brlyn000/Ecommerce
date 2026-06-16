@@ -16,8 +16,6 @@ import Search from './pages/Search';
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
-import UserRegister from './pages/UserRegister';
-import TenantRegister from './pages/TenantRegister';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
@@ -71,8 +69,6 @@ function AppContent() {
               <TenantDashboard />
             </RoleProtectedRoute>
           } />
-          <Route path="/user-register" element={<UserRegister />} />
-          <Route path="/tenant-register" element={<TenantRegister />} />
           <Route path="/error/400" element={<BadRequest />} />
           <Route path="/error/401" element={<Unauthorized />} />
           <Route path="/error/403" element={<Forbidden />} />

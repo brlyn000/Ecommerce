@@ -44,8 +44,6 @@ const TenantProductManager = () => {
       const data = await api.getUserProducts();
       setProducts(data);
     } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
       setLoading(false);
     }
   };
@@ -55,7 +53,7 @@ const TenantProductManager = () => {
       const data = await api.getCategories();
       setCategories(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      // categories silently fail
     }
   };
 
@@ -82,7 +80,6 @@ const TenantProductManager = () => {
           const uploadResult = await api.uploadFile(imageFile, 'products');
           imageUrl = uploadResult.imageUrl || uploadResult.url;
         } catch (uploadError) {
-          console.error('Upload error:', uploadError);
           setStatusMessage('Gagal mengunggah gambar: ' + uploadError.message);
           setStatusType('error');
           setShowStatusModal(true);
@@ -121,7 +118,6 @@ const TenantProductManager = () => {
       fetchProducts();
       window.dispatchEvent(new Event('productUpdated'));
     } catch (error) {
-      console.error('Error saving product:', error);
       setStatusMessage('Gagal menyimpan produk: ' + error.message);
       setStatusType('error');
       setShowStatusModal(true);
@@ -171,7 +167,6 @@ const TenantProductManager = () => {
       fetchProducts();
       window.dispatchEvent(new Event('productUpdated'));
     } catch (error) {
-      console.error('Error deleting product:', error);
       setStatusMessage('Gagal menghapus produk: ' + error.message);
       setStatusType('error');
       setShowStatusModal(true);

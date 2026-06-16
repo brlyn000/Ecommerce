@@ -1,12 +1,11 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 const orderController = {
   async createOrder(req, res) {
     try {
       const { items, total, customer_name } = req.body;
       const user_id = req.user.id;
-      
-      console.log('Order request:', { items, total, customer_name, user_id });
       
       // Validate required fields
       if (!items || !Array.isArray(items) || items.length === 0) {
@@ -34,43 +33,44 @@ const orderController = {
         [order_id, userId, finalCustomerName, finalTotal, 'pending']
       );
       
-      // Insert order items
-      for (const item of items) {
+      // Validate all item IDs first
+      const parsedItems = items.map(item => {
         const itemId = parseInt(item.id);
+        if (!itemId || itemId <= 0) throw new Error(`Invalid product ID: ${item.id}`);
         const itemQuantity = parseInt(item.quantity) || 1;
         const itemPrice = parseFloat(item.price) || 0;
-        let finalPrice = itemPrice;
-        
-        if (item.discount && !isNaN(parseFloat(item.discount))) {
-          finalPrice = itemPrice * (1 - parseFloat(item.discount) / 100);
-        }
-        
-        if (!itemId || itemId <= 0) {
-          throw new Error(`Invalid product ID: ${item.id}`);
-        }
-        
+        const finalPrice = (item.discount && !isNaN(parseFloat(item.discount)))
+          ? itemPrice * (1 - parseFloat(item.discount) / 100)
+          : itemPrice;
+        return { itemId, itemQuantity, finalPrice };
+      });
+
+      // Batch fetch all products in one query
+      const productIds = parsedItems.map(i => i.itemId);
+      const placeholders = productIds.map(() => '?').join(',');
+      const [productRows] = await db.execute(
+        `SELECT id, name, created_by, stock FROM products WHERE id IN (${placeholders})`,
+        productIds
+      );
+      const productMap = Object.fromEntries(productRows.map(p => [p.id, p]));
+
+      // Insert order items + update stock + notifications
+      for (const { itemId, itemQuantity, finalPrice } of parsedItems) {
         await db.execute(
           'INSERT INTO order_items (order_id, product_id, quantity, price, status) VALUES (?, ?, ?, ?, ?)',
           [order_id, itemId, itemQuantity, finalPrice, 'pending']
         );
-        // Update stock and create notifications
-        const [productRows] = await db.execute(
-          'SELECT name, created_by, stock FROM products WHERE id = ?',
-          [itemId]
-        );
-        
-        if (productRows.length > 0) {
-          const product = productRows[0];
-          const currentStock = parseInt(product.stock) || 0;
-          const newStock = Math.max(0, currentStock - itemQuantity);
+
+        const product = productMap[itemId];
+        if (product) {
+          const newStock = Math.max(0, (parseInt(product.stock) || 0) - itemQuantity);
           const newStatus = newStock <= 0 ? 'sold-out' : 'available';
-          
+
           await db.execute(
             'UPDATE products SET stock = ?, stock_status = ? WHERE id = ?',
             [newStock, newStatus, itemId]
           );
-          
-          // Create notification
+
           await db.execute(
             'INSERT INTO notifications (type, tenant_id, product_id, order_id, message, data) VALUES (?, ?, ?, ?, ?, ?)',
             [
@@ -83,8 +83,8 @@ const orderController = {
                 customer_name: finalCustomerName,
                 product_name: product.name,
                 quantity: itemQuantity,
-                total_amount: finalPrice * itemQuantity
-              })
+                total_amount: finalPrice * itemQuantity,
+              }),
             ]
           );
         }
@@ -92,8 +92,8 @@ const orderController = {
       
       res.json({ success: true, order_id });
     } catch (error) {
-      console.error('Create order error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Create order error:', error.message);
+      res.status(500).json({ error: 'Failed to create order' });
     }
   },
 
@@ -116,8 +116,8 @@ const orderController = {
       
       res.json(orders);
     } catch (error) {
-      console.error('Get tenant orders error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Get tenant orders error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch orders' });
     }
   },
 
@@ -187,8 +187,8 @@ const orderController = {
       
       res.json({ success: true, message: 'Order status updated' });
     } catch (error) {
-      console.error('Update order status error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Update order status error:', error.message);
+      res.status(500).json({ error: 'Failed to update order status' });
     }
   },
 
@@ -250,8 +250,8 @@ const orderController = {
       
       res.json({ success: true, message: 'Order status updated' });
     } catch (error) {
-      console.error('Confirm order received error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Confirm order received error:', error.message);
+      res.status(500).json({ error: 'Failed to confirm order' });
     }
   },
 
@@ -294,8 +294,8 @@ const orderController = {
       
       res.json({ success: true, message: `${ordersToComplete.length} orders auto-completed` });
     } catch (error) {
-      console.error('Auto complete orders error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Auto complete orders error:', error.message);
+      res.status(500).json({ error: 'Failed to auto complete orders' });
     }
   },
 
@@ -316,8 +316,8 @@ const orderController = {
       
       res.json(orders);
     } catch (error) {
-      console.error('Get user orders error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Get user orders error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch orders' });
     }
   }
 };

@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const logger = require('../utils/logger');
 
 const commentController = {
   async getByProductId(req, res) {
@@ -83,7 +84,7 @@ const commentController = {
           );
         }
       } catch (notifError) {
-        console.error('Failed to send notification:', notifError);
+        logger.error('Failed to send notification:', notifError.message);
       }
       
       res.status(201).json({ id: result.insertId, message: 'Comment added successfully' });
@@ -125,8 +126,8 @@ const commentController = {
       
       res.json({ message: 'Comment updated successfully' });
     } catch (error) {
-      console.error('Comment update error:', error);
-      res.status(500).json({ error: error.message });
+      logger.error('Comment update error:', error.message);
+      res.status(500).json({ error: 'Failed to update comment' });
     }
   },
 

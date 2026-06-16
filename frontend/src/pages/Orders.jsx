@@ -47,7 +47,7 @@ const Orders = () => {
                 }
               }
             } catch (error) {
-              console.error('Error checking rating status:', error);
+              // ignore
             }
           }
           
@@ -61,7 +61,7 @@ const Orders = () => {
               }
             }
           } catch (error) {
-            console.error('Error fetching tenant contact:', error);
+            // ignore
           }
         }
         
@@ -69,7 +69,7 @@ const Orders = () => {
         setTenantContacts(contacts);
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -242,7 +242,6 @@ const Orders = () => {
                             if (!response.ok) throw new Error('Failed to confirm order');
                             fetchOrders();
                           } catch (error) {
-                            console.error('Error confirming order:', error);
                             alert(error.message || 'Failed to confirm order');
                           }
                         }}
@@ -267,7 +266,6 @@ const Orders = () => {
                             if (!response.ok) throw new Error('Failed to report order');
                             fetchOrders();
                           } catch (error) {
-                            console.error('Error reporting order:', error);
                             alert(error.message || 'Failed to report order');
                           }
                         }}

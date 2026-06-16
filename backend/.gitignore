@@ -1,0 +1,9 @@
+node_modules/
+.env
+public/uploads/products/*
+public/uploads/qris/*
+public/uploads/carousel/*
+!public/uploads/products/.gitkeep
+!public/uploads/qris/.gitkeep
+!public/uploads/carousel/.gitkeep
+*.log

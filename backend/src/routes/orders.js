@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const authenticateToken = require('../middleware/auth');
+const { validate, rules } = require('../middleware/validate');
 
-router.post('/', authenticateToken, orderController.createOrder);
+router.post('/', authenticateToken, rules.createOrder, validate, orderController.createOrder);
 router.get('/tenant', authenticateToken, orderController.getTenantOrders);
 router.put('/:order_id/status', authenticateToken, orderController.updateOrderStatus);
 router.put('/:order_id/received', authenticateToken, orderController.confirmOrderReceived);

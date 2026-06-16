@@ -3,19 +3,28 @@ const router = express.Router();
 const likeController = require('../controllers/likeController');
 const authenticateToken = require('../middleware/auth');
 
-// Toggle like/unlike for a product
-router.post('/products/:productId/toggle', authenticateToken, likeController.toggleLike);
-
-// Get like status for a product (public for count, auth for user status)
-router.get('/products/:productId/status', (req, res, next) => {
-  // Try to authenticate, but don't fail if no token
+const optionalAuth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  if (authHeader) {
-    authenticateToken(req, res, next);
-  } else {
+  if (!authHeader) {
     req.user = null;
-    next();
+    return next();
   }
-}, likeController.getLikeStatus);
+  // If token exists but invalid/expired, treat as guest (don't return 403)
+  const jwt = require('jsonwebtoken');
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    req.user = null;
+  }
+  next();
+};
+
+router.post('/products/:productId/toggle', authenticateToken, likeController.toggleLike);
+router.get('/products/:productId/status', optionalAuth, likeController.getLikeStatus);
 
 module.exports = router;
