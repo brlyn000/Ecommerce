@@ -109,11 +109,13 @@ const ContactUs = () => {
   return (
     <>
       <Navbar/>
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white min-h-screen">
-        {/* Enhanced floating decorative elements */}
-        <div className="absolute top-0 left-0 w-72 h-72 sm:w-96 sm:h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-72 h-72 sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-red-100 text-gray-900 min-h-screen">
+        {/* Background ornaments - sama dengan Home */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute top-10 -left-20 w-96 h-96 rounded-full bg-gradient-to-br from-red-200/30 to-red-300/20 blur-3xl"></div>
+          <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-red-100/25 to-white/20 blur-3xl"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(239,68,68,0.08)_1px,transparent_1px)] [background-size:24px_24px] opacity-30"></div>
+        </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative z-10">
           {/* Enhanced Header Section */}
@@ -127,7 +129,7 @@ const ContactUs = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-xs sm:text-sm font-semibold text-red-400 tracking-widest uppercase mb-3 sm:mb-4"
+              className="text-xs sm:text-sm font-semibold text-red-500 tracking-widest uppercase mb-3 sm:mb-4"
             >
               Hubungi Kami
             </motion.h2>
@@ -135,7 +137,7 @@ const ContactUs = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 via-cyan-400 to-indigo-400 mb-4 sm:mb-6 leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-red-500 to-red-400 mb-4 sm:mb-6 leading-tight"
             >
               Mari Berkolaborasi
             </motion.h1>
@@ -143,7 +145,7 @@ const ContactUs = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-red-100 leading-relaxed px-4"
+              className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed px-4"
             >
               Punya pertanyaan atau ingin bekerja sama? Tim kami siap membantu Anda kapan saja.
             </motion.p>
@@ -157,58 +159,58 @@ const ContactUs = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="space-y-4 sm:space-y-6 order-2 xl:order-1"
             >
-              <div className="bg-white/5 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-cyan-400">Informasi Kontak</h3>
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-red-100 shadow-lg hover:shadow-red-500/10 transition-all duration-300">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">Informasi Kontak</h3>
                 
                 <div className="space-y-4 sm:space-y-6">
                   <motion.div 
                     whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-red-500/10 to-transparent hover:from-red-500/20 transition-all duration-300 cursor-pointer"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-red-50 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex-shrink-0 bg-gradient-to-br from-red-500 to-cyan-500 p-2 sm:p-3 rounded-lg shadow-lg">
+                    <div className="flex-shrink-0 bg-gradient-to-br from-red-500 to-red-600 p-2 sm:p-3 rounded-lg shadow-lg">
                       <FaPhoneAlt className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-base sm:text-lg font-semibold text-white">Telepon</h4>
-                      <a href={`tel:${settings.phone}`} className="mt-1 text-sm sm:text-base text-red-200 font-medium hover:text-red-100 transition-colors">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Telepon</h4>
+                      <a href={`tel:${settings.phone}`} className="mt-1 text-sm sm:text-base text-red-600 font-medium hover:text-red-700 transition-colors">
                         {settings.phone}
                       </a>
-                      <p className="mt-1 text-xs sm:text-sm text-red-300/80">Senin - Jumat, 08:00 - 17:00</p>
+                      <p className="mt-1 text-xs sm:text-sm text-gray-500">Senin - Jumat, 08:00 - 17:00</p>
                     </div>
                   </motion.div>
 
                   <motion.div 
                     whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-transparent hover:from-purple-500/20 transition-all duration-300 cursor-pointer"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-red-50 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-pink-500 p-2 sm:p-3 rounded-lg shadow-lg">
+                    <div className="flex-shrink-0 bg-gradient-to-br from-red-500 to-red-600 p-2 sm:p-3 rounded-lg shadow-lg">
                       <FaEnvelope className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-base sm:text-lg font-semibold text-white">Email</h4>
-                      <a href={`mailto:${settings.adminEmail}`} className="mt-1 text-sm sm:text-base text-red-200 font-medium hover:text-red-100 transition-colors break-all">
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Email</h4>
+                      <a href={`mailto:${settings.adminEmail}`} className="mt-1 text-sm sm:text-base text-red-600 font-medium hover:text-red-700 transition-colors break-all">
                         {settings.adminEmail}
                       </a>
-                      <p className="mt-1 text-xs sm:text-sm text-red-300/80">Respon dalam 24 jam kerja</p>
+                      <p className="mt-1 text-xs sm:text-sm text-gray-500">Respon dalam 24 jam kerja</p>
                     </div>
                   </motion.div>
 
                   <motion.div 
                     whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-transparent hover:from-green-500/20 transition-all duration-300 cursor-pointer"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-red-50 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-500 p-2 sm:p-3 rounded-lg shadow-lg">
+                    <div className="flex-shrink-0 bg-gradient-to-br from-red-500 to-red-600 p-2 sm:p-3 rounded-lg shadow-lg">
                       <FaMapMarkerAlt className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-base sm:text-lg font-semibold text-white">Lokasi</h4>
-                      <p className="mt-1 text-sm sm:text-base text-red-200 leading-relaxed">{settings.companyAddress}</p>
+                      <h4 className="text-base sm:text-lg font-semibold text-gray-900">Lokasi</h4>
+                      <p className="mt-1 text-sm sm:text-base text-gray-600 leading-relaxed">{settings.companyAddress}</p>
                     </div>
                   </motion.div>
                 </div>
 
-                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
-                  <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-cyan-400">Media Sosial</h4>
+                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-red-100">
+                  <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">Media Sosial</h4>
                   <div className="flex gap-3 sm:gap-4">
                     <motion.a 
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -238,7 +240,7 @@ const ContactUs = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-white/5 backdrop-blur-lg rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 aspect-video"
+                className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-red-100 shadow-lg transition-all duration-300 aspect-video"
               >
                 <iframe 
                   title="Peta Lokasi Kantor"
@@ -260,9 +262,9 @@ const ContactUs = () => {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="bg-white/5 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 order-1 xl:order-2"
+              className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-red-100 shadow-lg hover:shadow-red-500/10 transition-all duration-300 order-1 xl:order-2"
             >
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Kirim Pesan</h3>
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">Kirim Pesan</h3>
               
               <AnimatePresence>
                 {submitStatus && (
@@ -273,8 +275,8 @@ const ContactUs = () => {
                     transition={{ duration: 0.3 }}
                     className={`mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl border backdrop-blur-sm relative overflow-hidden ${
                       submitStatus.success 
-                        ? 'bg-green-500/15 border-green-400/40 text-green-200' 
-                        : 'bg-red-500/15 border-red-400/40 text-red-200'
+                        ? 'bg-green-50 border-green-300 text-green-800' 
+                        : 'bg-red-50 border-red-300 text-red-800'
                     }`}
                   >
                     {/* Background glow effect */}
@@ -295,7 +297,7 @@ const ContactUs = () => {
                       
                       <div className="flex-1">
                         <h4 className={`font-semibold text-sm sm:text-base mb-1 ${
-                          submitStatus.success ? 'text-green-300' : 'text-red-300'
+                          submitStatus.success ? 'text-green-700' : 'text-red-700'
                         }`}>
                           {submitStatus.success ? 'Berhasil Dikirim!' : 'Gagal Mengirim'}
                         </h4>
@@ -306,7 +308,7 @@ const ContactUs = () => {
                       
                       <button
                         onClick={() => setSubmitStatus(null)}
-                        className="flex-shrink-0 text-gray-400 hover:text-white transition-colors p-1"
+                        className="flex-shrink-0 text-gray-400 hover:text-gray-700 transition-colors p-1"
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -334,7 +336,7 @@ const ContactUs = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                   >
-                    <label htmlFor="user_name" className="block text-sm font-semibold text-red-200 mb-2">
+                    <label htmlFor="user_name" className="block text-sm font-semibold text-gray-700 mb-2">
                       Nama Lengkap
                     </label>
                     <input
@@ -344,7 +346,7 @@ const ContactUs = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      className="w-full px-4 py-3 sm:py-4 bg-gray-50 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-red-300"
                       placeholder="Masukkan nama Anda"
                     />
                   </motion.div>
@@ -353,7 +355,7 @@ const ContactUs = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <label htmlFor="user_email" className="block text-sm font-semibold text-red-200 mb-2">
+                    <label htmlFor="user_email" className="block text-sm font-semibold text-gray-700 mb-2">
                       Email
                     </label>
                     <input
@@ -363,7 +365,7 @@ const ContactUs = () => {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                      className="w-full px-4 py-3 sm:py-4 bg-gray-50 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-red-300"
                       placeholder="email@contoh.com"
                     />
                   </motion.div>
@@ -374,7 +376,7 @@ const ContactUs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <label htmlFor="subject" className="block text-sm font-semibold text-red-200 mb-2">
+                  <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
                     Subjek
                   </label>
                   <input
@@ -382,7 +384,7 @@ const ContactUs = () => {
                     name="subject"
                     id="subject"
                     required
-                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10"
+                    className="w-full px-4 py-3 sm:py-4 bg-gray-50 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-red-300"
                     placeholder="Apa yang bisa kami bantu?"
                   />
                 </motion.div>
@@ -392,7 +394,7 @@ const ContactUs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
                 >
-                  <label htmlFor="message" className="block text-sm font-semibold text-red-200 mb-2">
+                  <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
                     Pesan
                   </label>
                   <textarea
@@ -400,7 +402,7 @@ const ContactUs = () => {
                     name="message"
                     rows={5}
                     required
-                    className="w-full px-4 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 text-white placeholder-blue-300/60 transition-all duration-300 backdrop-blur-sm hover:bg-white/10 resize-none"
+                    className="w-full px-4 py-3 sm:py-4 bg-gray-50 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-red-300 resize-none"
                     placeholder="Tulis pesan Anda disini..."
                   ></textarea>
                 </motion.div>
@@ -415,8 +417,8 @@ const ContactUs = () => {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-400 text-white font-bold py-3 sm:py-4 px-6 rounded-xl shadow-2xl transition-all duration-300 flex items-center justify-center text-sm sm:text-base ${
-                      isSubmitting ? 'opacity-70 cursor-not-allowed scale-95' : 'hover:shadow-purple-500/25 hover:shadow-2xl hover:scale-[1.02]'
+                    className={`w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 sm:py-4 px-6 rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center text-sm sm:text-base ${
+                      isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-red-500/25'
                     }`}
                   >
                     {isSubmitting ? (
