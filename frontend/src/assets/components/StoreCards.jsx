@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiShoppingBag, FiPackage, FiArrowRight, FiStar, FiMapPin } from 'react-icons/fi';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API_URL } from '../../config/api';
 
 const StoreCards = () => {
   const [stores, setStores] = useState([]);

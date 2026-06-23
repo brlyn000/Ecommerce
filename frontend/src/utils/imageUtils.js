@@ -1,4 +1,4 @@
-// Utility functions for image handling
+import { API_CONFIG } from '../config/api';
 
 export const addCacheBuster = (imageUrl) => {
   if (!imageUrl) return '';
@@ -20,6 +20,6 @@ export const getImageUrl = (imagePath) => {
   }
   
   // If it's a relative path, construct full URL with cache buster
-  const baseUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5006';
+  const baseUrl = API_CONFIG.SERVER_URL;
   return addCacheBuster(`${baseUrl}${imagePath}`);
 };

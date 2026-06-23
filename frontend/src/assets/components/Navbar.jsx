@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import HeadingTypography from './HeadingTypography';
+import Logo from '../image/Logo.png';
+import TextLogo from '../image/TextLogo.png'
 import LoginModal from './LoginModal';
 import BottomNavbar from './BottomNavbar';
 import { FiUser, FiLogOut, FiHeart, FiShoppingCart } from 'react-icons/fi';
+import { API_CONFIG } from '../../config/api';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,54 +16,26 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem('adminToken');
-      if (token) {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}/api/profile`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (response.ok) {
-            setUser(await response.json());
-          } else {
-            setUser(null);
-          }
-        } catch {
+  const fetchUser = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      try {
+        const response = await fetch(`${API_CONFIG.SERVER_URL}/api/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          setUser(await response.json());
+        } else {
           setUser(null);
         }
-      } else {
+      } catch {
         setUser(null);
       }
-    };
-    
-    fetchUser();
-    
-    const handleLogin = () => fetchUser();
-    window.addEventListener('userLoggedIn', handleLogin);
-    
-    // Update counts
-    updateCounts();
-    
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      updateCounts();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events
-    window.addEventListener('cartUpdated', handleStorageChange);
-    window.addEventListener('wishlistUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('cartUpdated', handleStorageChange);
-      window.removeEventListener('wishlistUpdated', handleStorageChange);
-      window.removeEventListener('userLoggedIn', handleLogin);
-    };
-  }, []);
-  
+    } else {
+      setUser(null);
+    }
+  };
+
   const updateCounts = () => {
     const token = localStorage.getItem('adminToken');
     if (token) {
@@ -74,6 +48,26 @@ const Navbar = () => {
       setWishlistCount(0);
     }
   };
+
+  useEffect(() => {
+    fetchUser();
+    updateCounts();
+
+    const handleLogin = () => fetchUser();
+    const handleStorageChange = () => updateCounts();
+
+    window.addEventListener('userLoggedIn', handleLogin);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('cartUpdated', handleStorageChange);
+    window.addEventListener('wishlistUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('userLoggedIn', handleLogin);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cartUpdated', handleStorageChange);
+      window.removeEventListener('wishlistUpdated', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -104,40 +98,28 @@ const Navbar = () => {
             className="text-3xl font-bold relative group"
             onClick={() => setActiveLink('')}
           >
-            <HeadingTypography text='E-Kraft'/>
+            <div className='flex'>
+              <img className="w-14 h-14" src={Logo} alt="Logo Ekraf Market" />
+              <img src={TextLogo} className='w-full h-16' alt="Text Logo" />
+            </div>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            <NavLink 
-              to="/" 
-              activeLink={activeLink}
-              setActiveLink={setActiveLink}
-            >
+            <NavLink to="/" activeLink={activeLink} setActiveLink={setActiveLink}>
               Beranda
             </NavLink>
-            <NavLink 
-              to="/about-us" 
-              activeLink={activeLink}
-              setActiveLink={setActiveLink}
-            >
+            <NavLink to="/about-us" activeLink={activeLink} setActiveLink={setActiveLink}>
               Tentang Kami
             </NavLink>
-            <NavLink 
-              to="/contact-us" 
-              activeLink={activeLink}
-              setActiveLink={setActiveLink}
-            >
+            <NavLink to="/contact-us" activeLink={activeLink} setActiveLink={setActiveLink}>
               Kontak Kami
             </NavLink>
             
             {user ? (
               <div className="flex items-center space-x-3">
                 {/* Wishlist */}
-                <Link
-                  to="/wishlist"
-                  className="relative p-2 text-gray-600 hover:text-red-500 transition-colors"
-                >
+                <Link to="/wishlist" className="relative p-2 text-gray-600 hover:text-red-500 transition-colors">
                   <FiHeart className="w-5 h-5" />
                   {wishlistCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -147,10 +129,7 @@ const Navbar = () => {
                 </Link>
                 
                 {/* Cart */}
-                <Link
-                  to="/cart"
-                  className="relative p-2 text-gray-600 hover:text-red-500 transition-colors"
-                >
+                <Link to="/cart" className="relative p-2 text-gray-600 hover:text-red-500 transition-colors">
                   <FiShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -175,35 +154,19 @@ const Navbar = () => {
                         <p className="text-sm font-medium text-gray-900">{user.full_name || user.username}</p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
-                      <Link
-                        to="/profile"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        onClick={() => setShowUserMenu(false)}
-                      >
+                      <Link to="/profile" className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2" onClick={() => setShowUserMenu(false)}>
                         <FiUser className="w-4 h-4" />
                         <span>Profile</span>
                       </Link>
-                      <Link
-                        to="/wishlist"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        onClick={() => setShowUserMenu(false)}
-                      >
+                      <Link to="/wishlist" className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2" onClick={() => setShowUserMenu(false)}>
                         <FiHeart className="w-4 h-4" />
                         <span>Wishlist</span>
                       </Link>
-                      <Link
-                        to="/cart"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        onClick={() => setShowUserMenu(false)}
-                      >
+                      <Link to="/cart" className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2" onClick={() => setShowUserMenu(false)}>
                         <FiShoppingCart className="w-4 h-4" />
                         <span>Cart</span>
                       </Link>
-                      <Link
-                        to="/orders"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        onClick={() => setShowUserMenu(false)}
-                      >
+                      <Link to="/orders" className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2" onClick={() => setShowUserMenu(false)}>
                         <FiShoppingCart className="w-4 h-4" />
                         <span>My Orders</span>
                       </Link>
@@ -235,26 +198,11 @@ const Navbar = () => {
               className="text-gray-700 hover:text-red-600 focus:outline-none transition-colors duration-200"
               aria-label="Toggle menu"
             >
-              <svg
-                className="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
@@ -265,27 +213,9 @@ const Navbar = () => {
       {/* Mobile Menu Dropdown */}
       <div className={`md:hidden ${isOpen ? 'block' : 'hidden'} bg-white shadow-lg transition-all duration-300 ease-in-out`}>
         <div className="px-4 pt-2 pb-6 space-y-2">
-          <MobileNavLink 
-            to="/" 
-            setIsOpen={setIsOpen}
-            setActiveLink={setActiveLink}
-          >
-            Beranda
-          </MobileNavLink>
-          <MobileNavLink 
-            to="/about-us" 
-            setIsOpen={setIsOpen}
-            setActiveLink={setActiveLink}
-          >
-            Tentang Kami
-          </MobileNavLink>
-          <MobileNavLink 
-            to="/contact-us" 
-            setIsOpen={setIsOpen}
-            setActiveLink={setActiveLink}
-          >
-            Kontak Kami
-          </MobileNavLink>
+          <MobileNavLink to="/" setIsOpen={setIsOpen} setActiveLink={setActiveLink}>Beranda</MobileNavLink>
+          <MobileNavLink to="/about-us" setIsOpen={setIsOpen} setActiveLink={setActiveLink}>Tentang Kami</MobileNavLink>
+          <MobileNavLink to="/contact-us" setIsOpen={setIsOpen} setActiveLink={setActiveLink}>Kontak Kami</MobileNavLink>
           
           {user ? (
             <div className="border-t border-gray-200 pt-4 mt-4">
@@ -319,15 +249,7 @@ const Navbar = () => {
         onClose={() => setShowLoginModal(false)}
         onLoginSuccess={async () => {
           setShowLoginModal(false);
-          const token = localStorage.getItem('adminToken');
-          if (token) {
-            try {
-              const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}/api/profile`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-              });
-              if (response.ok) setUser(await response.json());
-            } catch { /* silent */ }
-          }
+          await fetchUser();
         }}
       />
     </nav>
@@ -336,7 +258,6 @@ const Navbar = () => {
   );
 };
 
-// Reusable NavLink Component
 const NavLink = ({ to, children, activeLink, setActiveLink }) => (
   <Link
     to={to}
@@ -354,7 +275,6 @@ const NavLink = ({ to, children, activeLink, setActiveLink }) => (
   </Link>
 );
 
-// Reusable MobileNavLink Component
 const MobileNavLink = ({ to, children, setIsOpen, setActiveLink }) => (
   <Link
     to={to}

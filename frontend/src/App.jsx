@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import {Home} from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import CategoryList from './pages/CategoryList';
@@ -11,6 +12,7 @@ import StorePage from './pages/StorePage';
 import StoresPage from './pages/StoresPage';
 import UniversalLogin from './pages/UniversalLogin';
 import UniversalRegister from './pages/UniversalRegister';
+import GoogleCallback from './pages/GoogleCallback';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import Wishlist from './pages/Wishlist';
@@ -37,6 +39,11 @@ function App() {
 
 function AppContent() {
   useLastVisited();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   
   return (
     <Routes>
@@ -47,6 +54,7 @@ function AppContent() {
           <Route path="/contact-us" element={<ContactUs/>}/>
           <Route path="/login" element={<UniversalLogin />} />
           <Route path="/register" element={<UniversalRegister />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<Search />} />
           <Route path="/wishlist" element={<Wishlist />} />

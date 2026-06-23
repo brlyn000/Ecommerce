@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiUser, FiLock, FiShoppingBag, FiHeart, FiClock, FiEdit, FiLogOut, FiGrid, FiHome } from 'react-icons/fi';
+import { FiUser, FiLock, FiShoppingBag, FiHeart, FiClock, FiEdit, FiLogOut, FiGrid, FiHome, FiPackage, FiExternalLink, FiEye, FiEyeOff } from 'react-icons/fi';
 import Navbar from '../assets/components/Navbar';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, getImageUrl } from '../config/api';
 import ConfirmModal from '../components/ConfirmModal';
 
 const Profile = () => {
@@ -21,12 +21,33 @@ const Profile = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
   const [showConfirm, setShowConfirm] = useState(false);
+  const [purchaseHistory, setPurchaseHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
     loadCartAndWishlist();
+    fetchPurchaseHistory();
   }, []);
+
+  const fetchPurchaseHistory = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/orders/user`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPurchaseHistory(data);
+      }
+    } catch { /* ignore */ } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -50,7 +71,7 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      // ignore
     }
   };
 
@@ -111,8 +132,7 @@ const Profile = () => {
         alert(error.message || 'Failed to update profile');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      // ignore
     }
   };
 
@@ -144,7 +164,6 @@ const Profile = () => {
         alert(error.message || 'Failed to update password');
       }
     } catch (error) {
-      console.error('Error updating password:', error);
       alert('Failed to update password');
     }
   };
@@ -233,34 +252,67 @@ const Profile = () => {
         );
         
       case 'password':
+        const getStrength = (pwd) => {
+          let score = 0;
+          if (pwd.length >= 8) score++;
+          if (/[A-Z]/.test(pwd)) score++;
+          if (/[0-9]/.test(pwd)) score++;
+          if (/[^A-Za-z0-9]/.test(pwd)) score++;
+          return score;
+        };
+        const strength = getStrength(passwordData.newPassword);
+        const strengthLabel = ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'][strength];
+        const strengthColor = ['', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'][strength];
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Change Password</h3>
             <div className="space-y-4">
-              <input
-                type="password"
-                placeholder="Current Password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-              <input
-                type="password"
-                placeholder="New Password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-              <input
-                type="password"
-                placeholder="Confirm New Password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-              <button 
+              {[['currentPassword', 'Password Saat Ini', 'current'], ['newPassword', 'Password Baru', 'new'], ['confirmPassword', 'Konfirmasi Password Baru', 'confirm']].map(([field, label, key]) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords[key] ? 'text' : 'password'}
+                      placeholder={label}
+                      value={passwordData[field]}
+                      onChange={(e) => setPasswordData({...passwordData, [field]: e.target.value})}
+                      className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords(p => ({...p, [key]: !p[key]}))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords[key] ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {passwordData.newPassword && (
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-500">Kekuatan password</span>
+                    <span className={`font-medium ${
+                      strength === 1 ? 'text-red-500' : strength === 2 ? 'text-yellow-500' : strength === 3 ? 'text-blue-500' : 'text-green-500'
+                    }`}>{strengthLabel}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor : 'bg-gray-200'}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-xs text-red-500">Password tidak cocok</p>
+              )}
+
+              <button
                 onClick={handlePasswordChange}
-                className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
+                disabled={!passwordData.currentPassword || !passwordData.newPassword || passwordData.newPassword !== passwordData.confirmPassword}
+                className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update Password
               </button>
@@ -425,48 +477,72 @@ const Profile = () => {
         );
         
       case 'history':
-        const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+        const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+        const statusColor = (s) => ({
+          pending: 'bg-yellow-100 text-yellow-800',
+          accepted: 'bg-blue-100 text-blue-800',
+          completed: 'bg-green-100 text-green-800',
+          confirmed: 'bg-green-100 text-green-800',
+          rejected: 'bg-red-100 text-red-800',
+          cancelled: 'bg-gray-100 text-gray-700',
+          disputed: 'bg-orange-100 text-orange-800',
+        })[s] || 'bg-gray-100 text-gray-700';
+
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Purchase History</h3>
-            {purchaseHistory.length > 0 ? (
-              <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Purchase History</h3>
+              <a href="/orders" className="text-sm text-red-600 hover:underline flex items-center gap-1">
+                Lihat Semua <FiExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            {historyLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              </div>
+            ) : purchaseHistory.length > 0 ? (
+              <div className="space-y-3">
                 {purchaseHistory.map((order, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
+                  <div key={`${order.order_id}-${index}`} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="font-medium">Order #{order.id}</p>
-                        <p className="text-sm text-gray-600">{order.date}</p>
+                        <p className="font-medium text-sm">#{order.order_id}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(order.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </p>
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {order.status}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(order.item_status || order.status)}`}>
+                        {order.item_status || order.status}
                       </span>
                     </div>
-                    <div className="space-y-2">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span>{item.name} x{item.quantity}</span>
-                          <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price * item.quantity)}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="border-t pt-2 mt-2">
-                      <div className="flex justify-between font-bold">
-                        <span>Total</span>
-                        <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(order.total)}</span>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={getImageUrl(order.product_image)}
+                        alt={order.product_name}
+                        className="w-10 h-10 object-cover rounded"
+                        onError={(e) => { e.target.src = '/images/placeholder.svg'; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{order.product_name}</p>
+                        <p className="text-xs text-gray-500">Qty: {order.quantity}</p>
                       </div>
+                      <p className="text-sm font-bold text-red-600 flex-shrink-0">
+                        {formatRupiah(order.price * order.quantity)}
+                      </p>
                     </div>
+                    {order.cancellation_reason && (
+                      <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded">
+                        Dibatalkan: {order.cancellation_reason}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <FiClock className="w-12 h-12 mx-auto mb-2" />
-                <p>No purchase history</p>
+                <FiPackage className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>Belum ada riwayat pembelian</p>
+                <a href="/" className="text-sm text-red-600 hover:underline mt-2 block">Mulai belanja</a>
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiUser, FiLock, FiHome } from 'react-icons/fi'
+import { API_BASE_URL } from '../config/api'
 
 export default function TenantLogin() {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -16,7 +17,7 @@ export default function TenantLogin() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:5006/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)

@@ -299,22 +299,82 @@ const orderController = {
     }
   },
 
+  async cancelOrder(req, res) {
+    try {
+      const { order_id } = req.params;
+      const { reason } = req.body;
+      const user_id = req.user.id;
+
+      const [orderCheck] = await db.execute(
+        'SELECT user_id, status FROM orders WHERE order_id = ?',
+        [order_id]
+      );
+
+      if (orderCheck.length === 0)
+        return res.status(404).json({ error: 'Order not found' });
+      if (orderCheck[0].user_id !== user_id)
+        return res.status(403).json({ error: 'Access denied' });
+      if (orderCheck[0].status !== 'pending')
+        return res.status(400).json({ error: 'Hanya pesanan dengan status pending yang bisa dibatalkan' });
+
+      await db.execute(
+        'UPDATE orders SET status = ? WHERE order_id = ?',
+        ['cancelled', order_id]
+      );
+      await db.execute(
+        'UPDATE order_items SET status = ?, cancellation_reason = ? WHERE order_id = ?',
+        ['cancelled', reason || null, order_id]
+      );
+
+      // Restore stock
+      const [items] = await db.execute(
+        'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
+        [order_id]
+      );
+      for (const item of items) {
+        await db.execute(
+          'UPDATE products SET stock = stock + ?, stock_status = CASE WHEN stock + ? > 0 THEN \'available\' ELSE stock_status END WHERE id = ?',
+          [item.quantity, item.quantity, item.product_id]
+        );
+      }
+
+      res.json({ success: true, message: 'Order cancelled successfully' });
+    } catch (error) {
+      logger.error('Cancel order error:', error.message);
+      res.status(500).json({ error: 'Failed to cancel order' });
+    }
+  },
+
   async getUserOrders(req, res) {
     try {
       const user_id = req.user.id;
       
       const [orders] = await db.execute(
-        `SELECT o.*, oi.product_id, oi.quantity, oi.price, oi.status as item_status, 
-                oi.rejection_reason as item_rejection_reason, p.name as product_name, p.image as product_image
+        `SELECT o.*, oi.product_id, oi.quantity, oi.price, oi.status as item_status,
+                oi.rejection_reason as item_rejection_reason, oi.cancellation_reason,
+                p.name as product_name, p.image as product_image,
+                u.phone as tenant_phone, u.contact_info as tenant_contact_info
          FROM orders o
          JOIN order_items oi ON o.order_id = oi.order_id
          JOIN products p ON oi.product_id = p.id
+         LEFT JOIN users u ON p.created_by = u.id
          WHERE o.user_id = ?
          ORDER BY o.created_at DESC`,
         [user_id]
       );
-      
-      res.json(orders);
+
+      const result = orders.map(order => {
+        let tenantWhatsapp = null;
+        try {
+          const contact = typeof order.tenant_contact_info === 'string'
+            ? JSON.parse(order.tenant_contact_info)
+            : order.tenant_contact_info;
+          tenantWhatsapp = contact?.whatsapp || null;
+        } catch { /* ignore */ }
+        return { ...order, tenant_whatsapp: tenantWhatsapp };
+      });
+
+      res.json(result);
     } catch (error) {
       logger.error('Get user orders error:', error.message);
       res.status(500).json({ error: 'Failed to fetch orders' });

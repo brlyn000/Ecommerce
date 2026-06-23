@@ -6,10 +6,11 @@ const { validate, rules } = require('../middleware/validate');
 
 router.post('/', authenticateToken, rules.createOrder, validate, orderController.createOrder);
 router.get('/tenant', authenticateToken, orderController.getTenantOrders);
+router.get('/user', authenticateToken, orderController.getUserOrders);
 router.put('/:order_id/status', authenticateToken, orderController.updateOrderStatus);
 router.put('/:order_id/received', authenticateToken, orderController.confirmOrderReceived);
 router.put('/:order_id/confirm', authenticateToken, orderController.confirmOrderReceived);
+router.put('/:order_id/cancel', authenticateToken, orderController.cancelOrder);
 router.post('/auto-complete', orderController.autoCompleteOrders);
-router.get('/user', authenticateToken, orderController.getUserOrders);
 
 module.exports = router;

@@ -6,6 +6,8 @@ const { validate, rules } = require('../middleware/validate');
 
 router.get('/', productController.getAllProducts);
 router.get('/search', productController.searchProducts);
+router.get('/trending-searches', productController.getTrendingSearches);
+router.post('/:id/track-click', productController.trackClick);
 router.get('/user/my-products', authenticateToken, productController.getUserProducts);
 router.get('/tenant/:tenantId', productController.getTenantProducts);
 router.get('/:id', productController.getProductById);

@@ -96,7 +96,7 @@ const TenantDashboard = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      
     }
   };
   
@@ -144,7 +144,7 @@ const TenantDashboard = () => {
         totalViews: stats.totalOrders || 0
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      
     }
   };
 
@@ -154,7 +154,7 @@ const TenantDashboard = () => {
     try {
       // Fetch all notifications at once
       const allNotifs = await api.getTenantNotifications();
-      console.log('Fetched notifications:', allNotifs);
+      
       
       // Separate by type
       const likeNotifs = allNotifs.filter(n => n.type === 'like');
@@ -203,7 +203,7 @@ const TenantDashboard = () => {
       }));
       setCommentNotifications(formattedComments);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      
       setLikeNotifications([]);
       setCheckoutNotifications([]);
       setCommentNotifications([]);
@@ -225,7 +225,7 @@ const TenantDashboard = () => {
       }));
       setProductAnalytics(formattedAnalytics);
     } catch (error) {
-      console.error('Error fetching product analytics:', error);
+      
     }
   };
 
@@ -236,7 +236,7 @@ const TenantDashboard = () => {
       const ordersData = await api.getTenantOrders();
       setOrders(ordersData);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      
     }
   };
 
@@ -247,7 +247,7 @@ const TenantDashboard = () => {
       const data = await api.getTenantChartData(selectedYear, selectedMonth);
       setChartData(data);
     } catch (error) {
-      console.error('Error fetching chart data:', error);
+      
     }
   };
 
@@ -295,7 +295,7 @@ const TenantDashboard = () => {
       await api.markNotificationAsRead(notificationId);
       fetchNotifications();
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      
     }
   };
 
@@ -304,7 +304,7 @@ const TenantDashboard = () => {
       await api.markAllNotificationsAsRead(type);
       fetchNotifications();
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      
     }
   };
 
@@ -332,7 +332,7 @@ const TenantDashboard = () => {
       const status = confirmAction.action === 'accept' ? 'accepted' : confirmAction.action;
       
       // Send product_id along with the status update
-      const response = await fetch(`http://localhost:5006/api/orders/${confirmAction.orderId}/status`, {
+      const response = await fetch(getApiUrl(`/orders/${confirmAction.orderId}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -354,7 +354,7 @@ const TenantDashboard = () => {
       
       fetchOrders();
     } catch (error) {
-      console.error('Error updating order:', error);
+      
       setStatusMessage('Gagal memperbarui status pesanan. Silakan coba lagi.');
       setStatusType('error');
       setShowStatusModal(true);
@@ -373,7 +373,7 @@ const TenantDashboard = () => {
     }
     
     try {
-      const response = await fetch(`http://localhost:5006/api/orders/${selectedOrder.orderId}/status`, {
+      const response = await fetch(getApiUrl(`/orders/${selectedOrder.orderId}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -399,7 +399,7 @@ const TenantDashboard = () => {
       setRejectionReason('');
       fetchOrders();
     } catch (error) {
-      console.error('Error rejecting order:', error);
+      
       setStatusMessage('Gagal menolak pesanan. Silakan coba lagi.');
       setStatusType('error');
       setShowStatusModal(true);
@@ -1221,7 +1221,7 @@ const TenantDashboard = () => {
                         setShowStatusModal(true);
                       }
                     } catch (error) {
-                      console.error('Error updating profile:', error);
+                      
                       setStatusMessage('Failed to update profile.');
                       setStatusType('error');
                       setShowStatusModal(true);

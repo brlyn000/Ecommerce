@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPackage, FiClock, FiCheck, FiX, FiArrowLeft, FiStar, FiMessageCircle } from 'react-icons/fi';
+import { FiPackage, FiClock, FiCheck, FiX, FiArrowLeft, FiStar, FiMessageCircle, FiAlertTriangle } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { getImageUrl, getApiUrl } from '../config/api';
@@ -12,7 +12,8 @@ const Orders = () => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [ratedOrders, setRatedOrders] = useState(new Set());
-  const [tenantContacts, setTenantContacts] = useState({});
+  const [cancelModal, setCancelModal] = useState({ show: false, orderId: null });
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -28,50 +29,55 @@ const Orders = () => {
     try {
       const ordersData = await api.getUserOrders();
       setOrders(ordersData);
-      
-      // Check which products have been rated by user and get tenant contacts
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      if (user) {
-        const rated = new Set();
-        const contacts = {};
-        
-        for (const order of ordersData) {
-          if ((order.item_status || order.status) === 'confirmed') {
-            try {
-              const response = await fetch(getApiUrl(`/comments/product/${order.product_id}`));
-              if (response.ok) {
-                const comments = await response.json();
-                const hasRated = comments.some(c => c.user_id === user.id && c.comment_type === 'review');
-                if (hasRated) {
-                  rated.add(`${order.order_id}-${order.product_id}`);
-                }
-              }
-            } catch (error) {
-              // ignore
-            }
-          }
-          
-          // Get tenant contact info
+
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      const profileRes = await fetch(getApiUrl('/profile'), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!profileRes.ok) return;
+      const user = await profileRes.json();
+
+      const rated = new Set();
+
+      for (const order of ordersData) {
+        if ((order.item_status || order.status) === 'confirmed') {
           try {
-            const response = await fetch(getApiUrl(`/users/${order.created_by || 'unknown'}/payment-methods`));
+            const response = await fetch(getApiUrl(`/comments/product/${order.product_id}`));
             if (response.ok) {
-              const data = await response.json();
-              if (data.contact_info) {
-                contacts[order.created_by || 'unknown'] = data.contact_info;
-              }
+              const comments = await response.json();
+              if (comments.some(c => c.user_id === user.id && c.comment_type === 'review'))
+                rated.add(`${order.order_id}-${order.product_id}`);
             }
-          } catch (error) {
-            // ignore
-          }
+          } catch { /* ignore */ }
         }
-        
-        setRatedOrders(rated);
-        setTenantContacts(contacts);
       }
-    } catch (error) {
-      // ignore
-    } finally {
+
+      setRatedOrders(rated);
+    } catch { /* ignore */ } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    try {
+      const res = await fetch(getApiUrl(`/orders/${cancelModal.orderId}/cancel`), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ reason: cancelReason })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to cancel order');
+      }
+      setCancelModal({ show: false, orderId: null });
+      setCancelReason('');
+      fetchOrders();
+    } catch (error) {
+      alert(error.message);
     }
   };
 
@@ -85,31 +91,26 @@ const Orders = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'pending':
-        return <FiClock className="w-5 h-5 text-yellow-500" />;
-      case 'accepted':
-        return <FiPackage className="w-5 h-5 text-red-500" />;
-      case 'completed':
-        return <FiCheck className="w-5 h-5 text-green-500" />;
-      case 'rejected':
-        return <FiX className="w-5 h-5 text-red-500" />;
-      default:
-        return <FiClock className="w-5 h-5 text-gray-500" />;
+      case 'pending': return <FiClock className="w-5 h-5 text-yellow-500" />;
+      case 'accepted': return <FiPackage className="w-5 h-5 text-blue-500" />;
+      case 'completed': return <FiCheck className="w-5 h-5 text-green-500" />;
+      case 'confirmed': return <FiCheck className="w-5 h-5 text-green-600" />;
+      case 'rejected': return <FiX className="w-5 h-5 text-red-500" />;
+      case 'cancelled': return <FiX className="w-5 h-5 text-gray-500" />;
+      default: return <FiClock className="w-5 h-5 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'accepted': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-700';
+      case 'disputed': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -175,7 +176,6 @@ const Orders = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Order #{order.order_id}</h3>
-                    <p className="text-xs text-gray-400">Status: {order.status}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(order.created_at).toLocaleDateString('id-ID', {
                         year: 'numeric',
@@ -187,9 +187,9 @@ const Orders = () => {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {getStatusIcon(order.status)}
-                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    {getStatusIcon(order.item_status || order.status)}
+                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(order.item_status || order.status)}`}>
+                      {(order.item_status || order.status).charAt(0).toUpperCase() + (order.item_status || order.status).slice(1)}
                     </span>
                   </div>
                 </div>
@@ -211,6 +211,27 @@ const Orders = () => {
                     </p>
                   </div>
                 </div>
+
+                {(order.item_status || order.status) === 'pending' && (
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setCancelModal({ show: true, orderId: order.order_id })}
+                      className="w-full bg-gray-100 text-red-600 border border-red-300 px-4 py-2 rounded-lg text-sm hover:bg-red-50 flex items-center justify-center space-x-2"
+                    >
+                      <FiX className="w-4 h-4" />
+                      <span>Batalkan Pesanan</span>
+                    </button>
+                  </div>
+                )}
+
+                {(order.item_status || order.status) === 'cancelled' && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm font-medium text-gray-700">Pesanan dibatalkan</p>
+                    {order.cancellation_reason && (
+                      <p className="text-xs text-gray-500 mt-1">Alasan: {order.cancellation_reason}</p>
+                    )}
+                  </div>
+                )}
 
                 {(order.item_status || order.status) === 'rejected' && (order.item_rejection_reason || order.rejection_reason) && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
@@ -304,14 +325,15 @@ const Orders = () => {
                 )}
 
                 {/* Contact Store Button */}
+                {(order.tenant_whatsapp || order.tenant_phone) && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm font-medium text-red-800 mb-2">Need Help?</p>
                   <div className="flex space-x-2">
-                    {tenantContacts[order.created_by || 'unknown']?.whatsapp && (
+                    {order.tenant_whatsapp && (
                       <button
                         onClick={() => {
-                          const phone = tenantContacts[order.created_by || 'unknown'].whatsapp;
-                          const message = `Hi, I have a question about my order #${order.order_id} for ${order.product_name}`;
+                          const phone = order.tenant_whatsapp.replace(/[^0-9]/g, '');
+                          const message = `Hi, saya ingin bertanya tentang pesanan #${order.order_id} untuk ${order.product_name}`;
                           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
                         }}
                         className="bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 flex items-center space-x-2"
@@ -320,20 +342,9 @@ const Orders = () => {
                         <span>WhatsApp</span>
                       </button>
                     )}
-                    {tenantContacts[order.created_by || 'unknown']?.instagram && (
-                      <button
-                        onClick={() => {
-                          const instagram = tenantContacts[order.created_by || 'unknown'].instagram;
-                          window.open(`https://instagram.com/${instagram}`, '_blank');
-                        }}
-                        className="bg-purple-500 text-white px-3 py-2 rounded text-sm hover:bg-purple-600 flex items-center space-x-2"
-                      >
-                        <FiMessageCircle className="w-4 h-4" />
-                        <span>Instagram</span>
-                      </button>
-                    )}
                   </div>
                 </div>
+                )}
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between">
@@ -369,6 +380,45 @@ const Orders = () => {
         )}
       </div>
       
+      {/* Cancel Modal */}
+      {cancelModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-2 rounded-full mr-3">
+                <FiAlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Batalkan Pesanan</h3>
+            </div>
+            <p className="text-gray-600 mb-4">Apakah kamu yakin ingin membatalkan pesanan ini?</p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Alasan pembatalan (opsional)</label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Tulis alasan pembatalan..."
+                rows={3}
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => { setCancelModal({ show: false, orderId: null }); setCancelReason(''); }}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 font-medium"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-medium"
+              >
+                Ya, Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Rating Modal */}
       {showRatingModal && selectedOrder && (
         <RatingModal

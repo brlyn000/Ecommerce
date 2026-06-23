@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiBell, FiMessageCircle, FiStar, FiX, FiCheck } from 'react-icons/fi';
+import { API_BASE_URL } from '../../config/api';
 
 const NotificationPanel = () => {
   const [notifications, setNotifications] = useState([]);
@@ -14,7 +15,7 @@ const NotificationPanel = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('tenantToken');
-      const response = await fetch('http://localhost:5006/api/notifications/tenant', {
+      const response = await fetch(`${API_BASE_URL}/notifications/tenant`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -26,7 +27,6 @@ const NotificationPanel = () => {
         setUnreadCount(data.notifications?.filter(n => !n.is_read).length || 0);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ const NotificationPanel = () => {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('tenantToken');
-      const response = await fetch(`http://localhost:5006/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -49,7 +49,6 @@ const NotificationPanel = () => {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 

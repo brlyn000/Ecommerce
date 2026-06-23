@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL as API_BASE } from '../config/api';
 
 const AuthContext = createContext();
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
 const TOKEN_KEY = 'adminToken';
 
 const isTokenExpired = (token) => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiUserPlus } from 'react-icons/fi'
+import { API_BASE_URL } from '../config/api'
 
 export default function UniversalRegister() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ export default function UniversalRegister() {
   const [ktmUploading, setKtmUploading] = useState(false)
   const navigate = useNavigate()
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api'
+  const API_BASE = API_BASE_URL
 
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: '', color: '' }

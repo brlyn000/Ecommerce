@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Navbar from '../assets/components/Navbar';
 import { createContact } from '../services/api';
+import { getApiUrl, API_BASE_URL } from '../config/api';
 import { useSettings } from '../context/SettingsContext';
 
 const ContactUs = () => {
@@ -22,7 +23,7 @@ const ContactUs = () => {
       const token = localStorage.getItem('adminToken');
       if (token) {
         try {
-          const response = await fetch('http://localhost:5006/api/profile', {
+          const response = await fetch(getApiUrl('/profile'), {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (response.ok) {
@@ -33,8 +34,8 @@ const ContactUs = () => {
               email: userData.email || ''
             });
           }
-        } catch (error) {
-          console.error('Error fetching user:', error);
+        } catch {
+          // ignore
         }
       }
     };
@@ -95,7 +96,6 @@ const ContactUs = () => {
       form.current.reset();
       
     } catch (error) {
-      console.error('Form submission error:', error);
       
       setSubmitStatus({ 
         success: false, 

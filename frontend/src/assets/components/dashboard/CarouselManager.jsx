@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiImage, FiX, FiSave, FiEye, FiEyeOff, FiUpload } from 'react-icons/fi';
 import { api } from '../../../services/api';
-import { getImageUrl } from '../../../config/api';
+import { getImageUrl, API_CONFIG } from '../../../config/api';
 
 const CarouselManager = () => {
   const [carouselItems, setCarouselItems] = useState([]);
@@ -152,7 +152,7 @@ const CarouselManager = () => {
     try {
       const result = await api.uploadFile(file, 'carousel');
       console.log('Upload result:', result);
-      const imageUrl = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}${result.url}`;
+      const imageUrl = `${API_CONFIG.SERVER_URL}${result.url}`;
       setFormData({ ...formData, image: imageUrl });
       setPreviewImage(imageUrl);
       showNotification('Image uploaded successfully!');
@@ -344,7 +344,7 @@ const CarouselManager = () => {
                       <div className="mt-2">
                         <p className="text-sm text-gray-600 mb-1">Preview:</p>
                         <img
-                          src={getImageUrl(previewImage).replace(':5005', ':5006')}
+                          src={getImageUrl(previewImage)}
                           alt="Preview"
                           className="w-full h-32 object-cover rounded-lg border"
                           onError={(e) => {
@@ -442,7 +442,7 @@ const CarouselManager = () => {
               <div className="aspect-w-16 aspect-h-9 bg-gray-200">
                 {item.image ? (
                   <img
-                    src={getImageUrl(item.image).replace(':5005', ':5006')}
+                    src={getImageUrl(item.image)}
                     alt={item.title}
                     className="w-full h-48 object-cover"
                     onError={(e) => {

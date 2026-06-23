@@ -1,6 +1,5 @@
 import { getValidToken } from '../context/AuthContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL } from '../config/api';
 
 const authHeader = () => {
   const token = getValidToken();
@@ -42,6 +41,8 @@ export const api = {
   // Products
   getProducts: () => fetchWithTimeout(`${API_BASE_URL}/products`),
   searchProducts: (q) => fetchWithTimeout(`${API_BASE_URL}/products/search?q=${encodeURIComponent(q)}`),
+  trackProductClick: (id) => fetchWithTimeout(`${API_BASE_URL}/products/${id}/track-click`, { method: 'POST' }),
+  getTrendingSearches: () => fetchWithTimeout(`${API_BASE_URL}/products/trending-searches`),
   getProductById: (id) => fetchWithTimeout(`${API_BASE_URL}/products/${id}`),
   getProductsByCategory: (categoryId) => fetchWithTimeout(`${API_BASE_URL}/products/category/${categoryId}`),
 

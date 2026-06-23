@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { FiShoppingBag, FiPackage, FiSearch, FiStar, FiMapPin } from 'react-icons/fi';
 import Navbar from '../assets/components/Navbar';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API_URL } from '../config/api';
 
 const StoresPage = () => {
   const [stores, setStores] = useState([]);

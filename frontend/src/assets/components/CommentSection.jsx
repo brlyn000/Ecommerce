@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiSend, FiUser, FiClock, FiEdit, FiTrash2, FiCheck, FiX, FiStar, FiMessageCircle } from 'react-icons/fi';
 import { api } from '../../services/api';
+import { API_BASE_URL } from '../../config/api';
 
 const CommentSection = ({ productId }) => {
   const [comments, setComments] = useState([]);
@@ -22,7 +23,7 @@ const CommentSection = ({ productId }) => {
       const token = localStorage.getItem('adminToken');
       if (token) {
         try {
-          const response = await fetch('http://localhost:5006/api/profile', {
+          const response = await fetch(`${API_BASE_URL}/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (response.ok) {
@@ -30,7 +31,6 @@ const CommentSection = ({ productId }) => {
             setUser(userData);
           }
         } catch (error) {
-          console.error('Error fetching user:', error);
         }
       }
     };
@@ -41,13 +41,12 @@ const CommentSection = ({ productId }) => {
 
   const loadComments = async () => {
     try {
-      const response = await fetch(`http://localhost:5006/api/comments/product/${productId}`);
+      const response = await fetch(`${API_BASE_URL}/comments/product/${productId}`);
       if (response.ok) {
         const data = await response.json();
         setComments(data);
       }
     } catch (error) {
-      console.error('Error loading comments:', error);
     }
   };
 
@@ -66,7 +65,6 @@ const CommentSection = ({ productId }) => {
       setEditingComment(null);
       loadComments();
     } catch (error) {
-      console.error('Error updating comment:', error);
     }
   };
 
@@ -82,7 +80,6 @@ const CommentSection = ({ productId }) => {
       loadComments();
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error deleting comment:', error);
     }
     setCommentToDelete(null);
   };
@@ -106,7 +103,7 @@ const CommentSection = ({ productId }) => {
     
     try {
       // Send to backend API
-      const response = await fetch('http://localhost:5006/api/comments', {
+      const response = await fetch(`${API_BASE_URL}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -129,7 +126,6 @@ const CommentSection = ({ productId }) => {
         throw new Error('Failed to add comment');
       }
     } catch (error) {
-      console.error('Error adding comment:', error);
       alert('Failed to add comment');
     } finally {
       setLoading(false);

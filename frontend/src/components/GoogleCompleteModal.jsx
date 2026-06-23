@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiUser, FiPhone, FiHome, FiX, FiMapPin } from 'react-icons/fi';
-
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API } from '../config/api';
 
 export default function GoogleCompleteModal({ googleData, onSuccess, onClose }) {
   const [form, setForm] = useState({

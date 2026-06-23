@@ -4,16 +4,18 @@ services:
   backend:
     build: ./backend
     ports:
-      - "5006:5006"
+      - "${PORT}:${PORT}"
     environment:
       - NODE_ENV=production
       - DB_HOST=mysql
-      - DB_USER=root
-      - DB_PASSWORD=rootpassword
-      - DB_NAME=e-commerce
-      - JWT_SECRET=your_jwt_secret_key_here_12345
-      - PORT=5006
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     volumes:
       - ./backend/public/uploads:/app/public/uploads
     depends_on:
@@ -22,7 +24,12 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+        - VITE_SERVER_URL=${VITE_SERVER_URL}
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     ports:
       - "3000:80"
     depends_on:
@@ -31,8 +38,8 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: e-commerce
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
     ports:
       - "3306:3306"
     volumes:
@@ -50,9 +57,9 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: rootpassword
-      MYSQL_ROOT_PASSWORD: rootpassword
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       PMA_ARBITRARY: 1
     depends_on:
       mysql:

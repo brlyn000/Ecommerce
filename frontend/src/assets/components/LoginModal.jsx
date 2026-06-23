@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiUser, FiLock, FiX } from 'react-icons/fi'
+import { API_BASE_URL } from '../../config/api'
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -13,7 +14,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:5006/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)

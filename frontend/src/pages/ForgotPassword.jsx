@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMail, FiArrowLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API } from '../config/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');

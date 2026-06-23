@@ -1,4 +1,4 @@
-import imageAbout from "../image/bannerAboutUs/bannerAboutUs.png"
+import imageAbout from "../image/LogoFull.png"
 
 export default function CardLandscape() {
   return (

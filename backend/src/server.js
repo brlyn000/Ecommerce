@@ -5,6 +5,8 @@ const logger = require('./utils/logger');
 require('dotenv').config();
 const { createCommentsTable } = require('./migrations/create_comments_table');
 const { createNotificationsTable } = require('./migrations/create_notifications_table');
+const { addCancellationReason } = require('./migrations/add_cancellation_reason');
+const { addGoogleIdToUsers } = require('./migrations/add_google_id_to_users');
 
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
@@ -32,7 +34,7 @@ if (!process.env.JWT_SECRET) {
 // agar response 429 tetap menyertakan CORS header
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:5173'];
+  : ['http://localhost:5173', 'http://localhost:3000'];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -114,9 +116,11 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
   await createCommentsTable();
   await createNotificationsTable();
+  await addCancellationReason();
+  await addGoogleIdToUsers();
 }).on('error', (err) => {
   logger.error('Server error:', err);
   process.exit(1);

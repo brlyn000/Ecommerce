@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiImage, FiMessageCircle, FiEye, FiAlertTriangle, FiCheck, FiX } from 'react-icons/fi';
 import { api } from '../services/api';
-import { getImageUrl } from '../config/api';
+import { getImageUrl, API_CONFIG } from '../config/api';
 import TenantProductDetail from './TenantProductDetail';
 
 const TenantProductManager = () => {
@@ -43,7 +43,9 @@ const TenantProductManager = () => {
       setLoading(true);
       const data = await api.getUserProducts();
       setProducts(data);
-    } catch (error) {
+    } catch {
+      // ignore
+    } finally {
       setLoading(false);
     }
   };
@@ -447,7 +449,7 @@ const TenantProductManager = () => {
                 {formData.image && (
                   <div className="mt-3 flex items-center space-x-3">
                     <img 
-                      src={formData.image.startsWith('http') ? formData.image : `http://localhost:5006${formData.image}`} 
+                    src={formData.image.startsWith('http') ? formData.image : `${API_CONFIG.SERVER_URL}${formData.image}`} 
                       alt="Current" 
                       className="w-16 h-16 object-cover rounded-lg border"
                       onError={(e) => {

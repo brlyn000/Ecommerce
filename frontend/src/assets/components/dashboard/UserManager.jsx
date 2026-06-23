@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiUser, FiX, FiSave } from 'react-icons/fi';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../config/api';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+const API_URL = API_BASE_URL;
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);

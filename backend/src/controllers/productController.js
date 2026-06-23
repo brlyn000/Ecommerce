@@ -103,6 +103,24 @@ const productController = {
     }
   },
 
+  async trackClick(req, res) {
+    try {
+      await Product.trackClick(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  async getTrendingSearches(req, res) {
+    try {
+      const trending = await Product.getTrendingSearches();
+      res.json(trending);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   async deleteProduct(req, res) {
     try {
       // Check if product belongs to user

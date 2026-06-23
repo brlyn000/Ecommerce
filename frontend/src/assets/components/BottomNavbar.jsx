@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiHome, FiSearch, FiHeart, FiShoppingCart, FiUser, FiMenu, FiPhone, FiInfo } from 'react-icons/fi';
+import { API_BASE_URL } from '../../config/api';
 
 const BottomNavbar = () => {
   const [user, setUser] = useState(null);
@@ -14,7 +15,7 @@ const BottomNavbar = () => {
       const token = localStorage.getItem('adminToken');
       if (token) {
         try {
-          const response = await fetch('http://localhost:5006/api/profile', {
+          const response = await fetch(`${API_BASE_URL}/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -26,7 +27,6 @@ const BottomNavbar = () => {
             setUser(null);
           }
         } catch (error) {
-          console.error('BottomNavbar: Error fetching user:', error);
           setUser(null);
         }
       } else {
@@ -92,7 +92,6 @@ const BottomNavbar = () => {
         setWishlistCount(0);
       }
     } catch (error) {
-      console.error('Error parsing cart/wishlist data:', error);
       localStorage.removeItem('cart');
       localStorage.removeItem('wishlist');
       setCartCount(0);

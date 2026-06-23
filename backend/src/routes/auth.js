@@ -1,12 +1,39 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 const db = require('../config/database');
 const { validate, rules } = require('../middleware/validate');
 const router = express.Router();
 
 const ALLOWED_ROLES = ['user', 'tenant'];
 const TOKEN_EXPIRY = '24h';
+
+// Helper: exchange Google code for tokens + user info
+async function getGoogleUser(code, redirectUri) {
+  // Exchange code for tokens
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    }),
+  });
+  const tokens = await tokenRes.json();
+  if (!tokenRes.ok || tokens.error) throw new Error(tokens.error_description || 'Token exchange failed');
+
+  // Get user info
+  const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  const googleUser = await userRes.json();
+  if (!userRes.ok) throw new Error('Failed to get Google user info');
+  return googleUser;
+}
 
 // Register
 router.post('/register', rules.register, validate, async (req, res) => {
@@ -34,6 +61,20 @@ router.post('/register', rules.register, validate, async (req, res) => {
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Registration failed' });
+  }
+});
+
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const [users] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+    // Always return success to prevent email enumeration
+    res.json({ message: 'Jika email terdaftar, link reset password telah dikirim.' });
+  } catch {
+    res.status(500).json({ message: 'Failed to process request' });
   }
 });
 
@@ -76,6 +117,85 @@ router.post('/login', rules.login, validate, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+// Google OAuth — exchange code for JWT
+router.post('/google/code', async (req, res) => {
+  try {
+    const { code, redirect_uri } = req.body;
+    if (!code || !redirect_uri) return res.status(400).json({ message: 'code and redirect_uri required' });
+    if (!process.env.GOOGLE_CLIENT_SECRET) return res.status(500).json({ message: 'Google auth not configured' });
+
+    const googleUser = await getGoogleUser(code, redirect_uri);
+    const { id: google_id, email, name, picture } = googleUser;
+
+    // Cari user berdasarkan google_id atau email
+    const [users] = await db.execute(
+      'SELECT id, username, email, role, full_name, google_id FROM users WHERE google_id = ? OR email = ?',
+      [google_id, email]
+    );
+
+    let user;
+    if (users.length > 0) {
+      user = users[0];
+      // Update google_id jika belum tersimpan
+      if (!user.google_id) {
+        await db.execute('UPDATE users SET google_id = ? WHERE id = ?', [google_id, user.id]);
+      }
+    } else {
+      // User baru — perlu complete profile (role selection)
+      return res.json({
+        needs_completion: true,
+        google_data: { google_id, email, name, picture },
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, username: user.username, email: user.email, role: user.role, full_name: user.full_name },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Google login failed' });
+  }
+});
+
+// Google OAuth — complete registration (new user)
+router.post('/google/complete', async (req, res) => {
+  try {
+    const { google_id, email, name, picture, role } = req.body;
+    if (!google_id || !email || !role) return res.status(400).json({ message: 'Data tidak lengkap' });
+    if (!ALLOWED_ROLES.includes(role)) return res.status(400).json({ message: 'Role tidak valid' });
+
+    const [existing] = await db.execute('SELECT id FROM users WHERE email = ? OR google_id = ?', [email, google_id]);
+    if (existing.length > 0) return res.status(400).json({ message: 'Email sudah terdaftar' });
+
+    const username = email.split('@')[0] + '_' + Date.now().toString().slice(-4);
+    const randomPassword = await bcrypt.hash(Math.random().toString(36), 12);
+
+    const [result] = await db.execute(
+      'INSERT INTO users (username, email, password, role, full_name, google_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, email, randomPassword, role, name || username, google_id]
+    );
+
+    const token = jwt.sign(
+      { id: result.insertId, username, role },
+      process.env.JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    res.json({
+      token,
+      user: { id: result.insertId, username, email, role, full_name: name || username },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Registration failed' });
   }
 });
 

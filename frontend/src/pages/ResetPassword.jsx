@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiLock, FiEye, FiEyeOff, FiCheckCircle } from 'react-icons/fi';
 import { useSearchParams } from 'react-router-dom';
-
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API } from '../config/api';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();

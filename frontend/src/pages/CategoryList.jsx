@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { FiArrowLeft, FiFrown } from 'react-icons/fi';
 import { api } from '../services/api';
+import { API_CONFIG } from '../config/api';
 import { useState, useEffect } from 'react';
 
 export default function CategoryList() {
@@ -32,7 +33,6 @@ export default function CategoryList() {
           setCategoryName(category);
         }
       } catch (error) {
-        console.error('Error fetching products:', error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -97,7 +97,7 @@ export default function CategoryList() {
                 {/* Product Image */}
                 <div className="relative h-48 md:h-56 overflow-hidden bg-gray-50">
                   <img 
-                    src={item.image?.startsWith('http') ? item.image : `http://localhost:5006${item.image}`} 
+                    src={item.image?.startsWith('http') ? item.image : `${API_CONFIG.SERVER_URL}${item.image}`} 
                     alt={item.name} 
                     className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 p-4" 
                     loading="lazy"

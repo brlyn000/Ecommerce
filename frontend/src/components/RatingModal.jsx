@@ -1,42 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiStar, FiX } from 'react-icons/fi';
-import { api } from '../services/api';
-import { getImageUrl } from '../config/api';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { getImageUrl, API_BASE_URL } from '../config/api';
 
 const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
   const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) setUser(await res.json());
+      } catch { /* ignore */ }
+    };
+    fetchUser();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      alert('Silakan login ulang untuk memberikan rating');
+      return;
+    }
     setLoading(true);
-
     try {
-      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (!user) throw new Error('Silakan login ulang untuk memberikan rating');
-
-      const response = await fetch(`${API_BASE}/comments`, {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           product_id: order.product_id,
           name: user.full_name || user.username,
           email: user.email,
-          comment: comment,
-          rating: rating,
+          comment,
+          rating,
           comment_type: 'review',
           user_id: user.id
         })
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit rating');
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to submit rating');
       }
-
       onRatingSubmitted();
       onClose();
     } catch (error) {
@@ -56,7 +71,7 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
           </button>
         </div>
 
-        <div className="mb-4">
+          <div className="mb-4">
           <img
             src={getImageUrl(order.product_image)}
             alt={order.product_name}
@@ -74,16 +89,21 @@ const RatingModal = ({ order, onClose, onRatingSubmitted }) => {
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
                   className="p-1"
                 >
                   <FiStar
-                    className={`w-8 h-8 ${
-                      star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                    className={`w-8 h-8 transition-colors ${
+                      star <= (hoverRating || rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                     }`}
                   />
                 </button>
               ))}
             </div>
+            <p className="text-center text-sm text-gray-500 mt-1">
+              {['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Bagus', 'Sangat Bagus'][hoverRating || rating]}
+            </p>
           </div>
 
           <div>

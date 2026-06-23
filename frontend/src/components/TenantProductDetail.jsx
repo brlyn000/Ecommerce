@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiHeart, FiMessageCircle, FiShoppingCart, FiStar, FiUser, FiClock } from 'react-icons/fi';
 import { api } from '../services/api';
+import { getImageUrl, getApiUrl } from '../config/api';
 
 const TenantProductDetail = ({ product, onClose }) => {
   const [stats, setStats] = useState({
@@ -29,48 +30,43 @@ const TenantProductDetail = ({ product, onClose }) => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // Fetch comments first
-      const commentsResponse = await fetch(`http://localhost:5006/api/comments/product/${product.id}`);
-      let commentsData = [];
-      if (commentsResponse.ok) {
-        commentsData = await commentsResponse.json();
-        setComments(commentsData);
-      }
+      const [commentsResponse, likesResponse, orders] = await Promise.all([
+        fetch(getApiUrl(`/comments/product/${product.id}`)),
+        fetch(getApiUrl(`/likes/products/${product.id}/status`)),
+        api.getTenantOrders().catch(() => [])
+      ]);
 
-      // Fetch likes
-      const likesResponse = await fetch(`http://localhost:5006/api/likes/products/${product.id}/status`);
-      let likesCount = 0;
-      if (likesResponse.ok) {
-        const likesData = await likesResponse.json();
-        likesCount = likesData.likesCount || 0;
-      }
-      
-      // Get orders
-      const orders = await api.getTenantOrders();
-      const productOrders = orders.filter(order => order.product_id === product.id);
-      
-      const orderStats = {
-        pending: productOrders.filter(o => o.status === 'pending').length,
-        accepted: productOrders.filter(o => o.status === 'accepted').length,
-        completed: productOrders.filter(o => o.status === 'completed').length,
-        confirmed: productOrders.filter(o => o.status === 'confirmed').length,
-        rejected: productOrders.filter(o => o.status === 'rejected').length,
-        disputed: productOrders.filter(o => o.status === 'disputed').length
-      };
+      const commentsData = commentsResponse.ok ? await commentsResponse.json() : [];
+      setComments(commentsData);
 
-      // Calculate total quantity sold
-      const totalQuantity = productOrders.reduce((sum, order) => sum + (order.quantity || 0), 0);
+      const likesCount = likesResponse.ok
+        ? ((await likesResponse.json()).likesCount || 0)
+        : 0;
 
-      // Set all stats at once
+      const productOrders = Array.isArray(orders)
+        ? orders.filter(order => order.product_id === product.id)
+        : [];
+
+      const completedOrders = productOrders.filter(o =>
+        ['completed', 'confirmed'].includes(o.item_status || o.status)
+      );
+
       setStats({
         totalLikes: likesCount,
         totalComments: commentsData.length,
         totalOrders: productOrders.length,
-        totalQuantity: totalQuantity,
-        orderStats
+        totalQuantity: completedOrders.reduce((sum, o) => sum + (o.quantity || 0), 0),
+        orderStats: {
+          pending:   productOrders.filter(o => (o.item_status || o.status) === 'pending').length,
+          accepted:  productOrders.filter(o => (o.item_status || o.status) === 'accepted').length,
+          completed: productOrders.filter(o => (o.item_status || o.status) === 'completed').length,
+          confirmed: productOrders.filter(o => (o.item_status || o.status) === 'confirmed').length,
+          rejected:  productOrders.filter(o => (o.item_status || o.status) === 'rejected').length,
+          disputed:  productOrders.filter(o => (o.item_status || o.status) === 'disputed').length,
+        }
       });
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -176,7 +172,7 @@ const TenantProductDetail = ({ product, onClose }) => {
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg text-center">
               <FiStar className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-yellow-600">{(product.average_rating || 0).toFixed(1)}</p>
+              <p className="text-2xl font-bold text-yellow-600">{parseFloat(product.average_rating || 0).toFixed(1)}</p>
               <p className="text-sm text-gray-600">Rating</p>
             </div>
           </div>

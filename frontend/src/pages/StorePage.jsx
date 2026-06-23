@@ -4,8 +4,7 @@ import { motion } from 'framer-motion';
 import { FiArrowLeft, FiPackage, FiMail, FiPhone, FiMapPin, FiShoppingBag, FiStar, FiUsers, FiTrendingUp, FiClock } from 'react-icons/fi';
 import Navbar from '../assets/components/Navbar';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5006/api';
+import { API_BASE_URL as API_URL, API_CONFIG } from '../config/api';
 
 const StorePage = () => {
   const { id } = useParams();
@@ -43,7 +42,7 @@ const StorePage = () => {
 
   const getImageUrl = (image) => {
     if (!image) return '/images/placeholder.svg';
-    return image.startsWith('http') ? image : `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5006'}${image}`;
+    return image.startsWith('http') ? image : `${API_CONFIG.SERVER_URL}${image}`;
   };
 
   // Calculate real statistics
