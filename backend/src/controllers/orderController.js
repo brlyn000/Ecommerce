@@ -54,6 +54,28 @@ const orderController = {
       );
       const productMap = Object.fromEntries(productRows.map(p => [p.id, p]));
 
+      // Validate stock for all items before processing
+      const stockErrors = [];
+      for (const { itemId, itemQuantity } of parsedItems) {
+        const product = productMap[itemId];
+        if (!product) {
+          stockErrors.push(`Product ID ${itemId} not found`);
+          continue;
+        }
+        const currentStock = parseInt(product.stock) || 0;
+        if (currentStock <= 0) {
+          stockErrors.push(`Produk "${product.name}" sudah habis (sold out)`);
+        } else if (itemQuantity > currentStock) {
+          stockErrors.push(`Stok produk "${product.name}" tidak mencukupi. Tersedia: ${currentStock}, diminta: ${itemQuantity}`);
+        }
+      }
+
+      if (stockErrors.length > 0) {
+        // Rollback: delete the order that was already inserted
+        await db.execute('DELETE FROM orders WHERE order_id = ?', [order_id]);
+        return res.status(400).json({ error: stockErrors[0], stock_errors: stockErrors });
+      }
+
       // Insert order items + update stock + notifications
       for (const { itemId, itemQuantity, finalPrice } of parsedItems) {
         await db.execute(
@@ -94,6 +116,49 @@ const orderController = {
     } catch (error) {
       logger.error('Create order error:', error.message);
       res.status(500).json({ error: 'Failed to create order' });
+    }
+  },
+
+  async getAllOrdersAdmin(req, res) {
+    try {
+      if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+
+      const [orders] = await db.execute(
+        `SELECT o.order_id, o.customer_name, o.total, o.status, o.created_at,
+                u.email as customer_email,
+                oi.product_id, oi.quantity, oi.price, oi.status as item_status,
+                p.name as product_name, p.image as product_image,
+                t.username as tenant_username, t.store_name
+         FROM orders o
+         LEFT JOIN users u ON o.user_id = u.id
+         JOIN order_items oi ON o.order_id = oi.order_id
+         JOIN products p ON oi.product_id = p.id
+         LEFT JOIN users t ON p.created_by = t.id
+         ORDER BY o.created_at DESC`
+      );
+      res.json(orders);
+    } catch (error) {
+      logger.error('Get all orders admin error:', error.message);
+      res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+  },
+
+  async deleteOrderAdmin(req, res) {
+    try {
+      if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+      const { order_id } = req.params;
+
+      const [order] = await db.execute('SELECT order_id FROM orders WHERE order_id = ?', [order_id]);
+      if (order.length === 0) return res.status(404).json({ error: 'Order not found' });
+
+      await db.execute('DELETE FROM order_items WHERE order_id = ?', [order_id]);
+      await db.execute('DELETE FROM notifications WHERE order_id = ?', [order_id]);
+      await db.execute('DELETE FROM orders WHERE order_id = ?', [order_id]);
+
+      res.json({ success: true, message: 'Order deleted successfully' });
+    } catch (error) {
+      logger.error('Delete order admin error:', error.message);
+      res.status(500).json({ error: 'Failed to delete order' });
     }
   },
 

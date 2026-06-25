@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPackage, FiMenu, FiHome, FiBarChart, FiLogOut, FiUser, FiHeart, FiBell, FiCheck, FiX, FiEye, FiRefreshCw, FiAlertTriangle } from 'react-icons/fi';
+import { FiPackage, FiMenu, FiHome, FiBarChart, FiLogOut, FiUser, FiHeart, FiBell, FiCheck, FiX, FiEye, FiRefreshCw, FiAlertTriangle, FiDownload } from 'react-icons/fi';
 import { api } from '../services/api';
 import { getApiUrl } from '../config/api';
 import TenantProductManager from '../components/TenantProductManager';
@@ -16,6 +16,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import * as XLSX from 'xlsx';
 
 ChartJS.register(
   CategoryScale,
@@ -62,6 +63,49 @@ const TenantDashboard = () => {
     email: '',
     username: ''
   });
+
+  // Analytics pagination
+  const [analyticsPage, setAnalyticsPage] = useState(1);
+  const ANALYTICS_PAGE_SIZE = 10;
+
+  // Orders pagination
+  const [ordersPage, setOrdersPage] = useState(1);
+  const ORDERS_PAGE_SIZE = 10;
+
+  const exportAnalyticsExcel = () => {
+    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+    const rows = productAnalytics.map(p => ({
+      'Produk': p.name,
+      'Total Orders': p.views,
+      'Total Likes': p.likes,
+      'Quantity Terjual': p.orders,
+      'Revenue': parseFloat(p.revenue),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 30 }, { wch: 14 }, { wch: 12 }, { wch: 16 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Product Analytics');
+    XLSX.writeFile(wb, `analytics_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportOrdersExcel = () => {
+    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+    const rows = filteredOrders.map(o => ({
+      'Order ID': o.order_id,
+      'Customer': o.customer_name,
+      'Email': o.customer_email || '',
+      'Produk': o.product_name,
+      'Qty': o.quantity,
+      'Total': parseFloat(o.price * o.quantity),
+      'Status': o.item_status || o.status,
+      'Tanggal': new Date(o.created_at).toLocaleDateString('id-ID'),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 24 }, { wch: 24 }, { wch: 6 }, { wch: 16 }, { wch: 12 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+    XLSX.writeFile(wb, `orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
   
   // Modal states
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -874,14 +918,24 @@ const TenantDashboard = () => {
         );
       
       case 'analytics':
+        const analyticsTotalPages = Math.ceil(productAnalytics.length / ANALYTICS_PAGE_SIZE);
+        const paginatedAnalytics = productAnalytics.slice((analyticsPage - 1) * ANALYTICS_PAGE_SIZE, analyticsPage * ANALYTICS_PAGE_SIZE);
         return (
           <div className="space-y-6">
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Product Analytics</h3>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                <h3 className="text-lg font-semibold">Product Analytics</h3>
+                <button
+                  onClick={exportAnalyticsExcel}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors"
+                >
+                  <FiDownload className="w-4 h-4" /> Export Excel
+                </button>
+              </div>
               
               {/* Mobile Card View */}
               <div className="block lg:hidden space-y-4">
-                {productAnalytics.map((product) => (
+                {paginatedAnalytics.map((product) => (
                   <div key={product.id} className="border border-gray-200 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-3">{product.name}</h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
@@ -919,7 +973,7 @@ const TenantDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {productAnalytics.map((product) => (
+                    {paginatedAnalytics.map((product) => (
                       <tr key={product.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {product.name}

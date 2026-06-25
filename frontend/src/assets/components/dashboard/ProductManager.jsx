@@ -4,6 +4,7 @@ import { FiPlus, FiEdit, FiTrash2, FiSearch, FiFilter, FiPackage, FiX, FiSave, F
 import { api } from '../../../services/api';
 import { getImageUrl, API_CONFIG } from '../../../config/api';
 import RefreshIndicator from './RefreshIndicator';
+import Pagination from './Pagination';
 
 
 const ProductManager = () => {
@@ -33,6 +34,8 @@ const ProductManager = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [imageKey, setImageKey] = useState(0);
   const [viewingProduct, setViewingProduct] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   useEffect(() => {
     fetchData();
@@ -67,6 +70,9 @@ const ProductManager = () => {
     const matchesCategory = selectedCategory === '' || product.category_id.toString() === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
+  const paginatedProducts = filteredProducts.slice((page - 1) * pageSize, page * pageSize);
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -250,7 +256,7 @@ const ProductManager = () => {
               type="text"
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -258,7 +264,7 @@ const ProductManager = () => {
             <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
               className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="">All Categories</option>
@@ -553,7 +559,7 @@ const ProductManager = () => {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product, index) => (
+        {paginatedProducts.map((product, index) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 20 }}
@@ -613,6 +619,17 @@ const ProductManager = () => {
           <FiPackage className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-500">No products found</p>
         </div>
+      )}
+
+      {filteredProducts.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={filteredProducts.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+        />
       )}
 
       {/* Product Detail Modal */}

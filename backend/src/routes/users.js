@@ -82,11 +82,12 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all tenants (Public access)
+// Get all tenants (Admin only)
 router.get('/tenants', async (req, res) => {
   try {
     const [tenants] = await db.execute(
-      `SELECT id, username, email, store_name as business_name, phone, address, status, created_at 
+      `SELECT id, username, email, full_name, store_name as business_name, phone, address,
+              nim, student_card_image, status, created_at
        FROM users WHERE role = 'tenant' ORDER BY created_at DESC`
     );
     res.json(tenants);
@@ -95,19 +96,16 @@ router.get('/tenants', async (req, res) => {
   }
 });
 
-// Get single tenant (Public)
+// Get single tenant (Admin only)
 router.get('/tenants/:id', async (req, res) => {
   try {
     const [tenant] = await db.execute(
-      `SELECT id, username, email, store_name as business_name, phone, address, status, created_at 
+      `SELECT id, username, email, full_name, store_name as business_name, phone, address,
+              nim, student_card_image, status, created_at
        FROM users WHERE id = ? AND role = 'tenant'`,
       [req.params.id]
     );
-    
-    if (tenant.length === 0) {
-      return res.status(404).json({ message: 'Tenant tidak ditemukan' });
-    }
-    
+    if (tenant.length === 0) return res.status(404).json({ message: 'Tenant tidak ditemukan' });
     res.json(tenant[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -200,21 +198,48 @@ router.put('/tenants/:id', authenticateToken, isAdmin, async (req, res) => {
 router.delete('/tenants/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const tenantId = req.params.id;
-    
-    // Check if tenant exists
+
     const [tenant] = await db.execute(
       'SELECT id FROM users WHERE id = ? AND role = "tenant"',
       [tenantId]
     );
-    
     if (tenant.length === 0) {
       return res.status(404).json({ message: 'Tenant tidak ditemukan' });
     }
-    
-    // Delete tenant
+
+    // Ambil semua produk milik tenant
+    const [products] = await db.execute(
+      'SELECT id FROM products WHERE created_by = ?',
+      [tenantId]
+    );
+    const productIds = products.map(p => p.id);
+
+    if (productIds.length > 0) {
+      const placeholders = productIds.map(() => '?').join(',');
+
+      // Hapus order_items yang terkait produk ini
+      await db.execute(`DELETE FROM order_items WHERE product_id IN (${placeholders})`, productIds);
+
+      // Hapus likes produk
+      await db.execute(`DELETE FROM product_likes WHERE product_id IN (${placeholders})`, productIds);
+
+      // Hapus comments produk
+      await db.execute(`DELETE FROM comments WHERE product_id IN (${placeholders})`, productIds);
+
+      // Hapus notifikasi terkait produk
+      await db.execute(`DELETE FROM notifications WHERE product_id IN (${placeholders})`, productIds);
+
+      // Hapus semua produk tenant
+      await db.execute(`DELETE FROM products WHERE created_by = ?`, [tenantId]);
+    }
+
+    // Hapus notifikasi milik tenant
+    await db.execute('DELETE FROM notifications WHERE tenant_id = ?', [tenantId]);
+
+    // Hapus tenant
     await db.execute('DELETE FROM users WHERE id = ?', [tenantId]);
-    
-    res.json({ message: 'Tenant berhasil dihapus' });
+
+    res.json({ message: 'Tenant dan semua produknya berhasil dihapus', deletedProducts: productIds.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

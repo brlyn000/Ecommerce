@@ -34,6 +34,12 @@ const Cart = () => {
       return;
     }
     
+    const item = cartItems.find(i => i.id === productId);
+    if (item && newQuantity > (item.stock || Infinity)) {
+      alert(`Stok tidak mencukupi. Maksimal ${item.stock} pcs`);
+      return;
+    }
+    
     const updated = cartItems.map(item => 
       item.id === productId ? { ...item, quantity: newQuantity } : item
     );
@@ -82,6 +88,21 @@ const Cart = () => {
     if (!confirmed) return;
     
     setIsCheckingOut(true);
+    
+    // Validate stock before checkout
+    const stockErrors = [];
+    for (const item of cartItems) {
+      if ((item.stock || 0) <= 0) {
+        stockErrors.push(`"${item.name}" sudah habis (sold out)`);
+      } else if (item.quantity > (item.stock || 0)) {
+        stockErrors.push(`Stok "${item.name}" tidak mencukupi. Tersedia: ${item.stock}, diminta: ${item.quantity}`);
+      }
+    }
+    if (stockErrors.length > 0) {
+      alert(`Tidak dapat checkout:\n${stockErrors.join('\n')}`);
+      setIsCheckingOut(false);
+      return;
+    }
     
     const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
     

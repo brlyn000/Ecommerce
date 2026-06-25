@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit, FiTrash2, FiGrid, FiX, FiSave } from 'react-icons/fi';
 import { api } from '../../../services/api';
 import { iconMapper } from '../../../utils/iconMapper';
+import Pagination from './Pagination';
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -16,6 +17,8 @@ const CategoryManager = () => {
     link: ''
   });
   const [notification, setNotification] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   useEffect(() => {
     fetchCategories();
@@ -82,6 +85,9 @@ const CategoryManager = () => {
       }
     }
   };
+
+  const paginatedCategories = categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(categories.length / PAGE_SIZE);
 
   if (loading) {
     return (
@@ -270,7 +276,7 @@ const CategoryManager = () => {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category, index) => {
+        {paginatedCategories.map((category, index) => {
           const IconComponent = iconMapper[category.icon] || FiGrid;
           return (
             <motion.div
@@ -326,6 +332,16 @@ const CategoryManager = () => {
           <FiGrid className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-500">No categories found</p>
         </div>
+      )}
+
+      {categories.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={categories.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

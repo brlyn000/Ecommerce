@@ -482,6 +482,7 @@ export default function ProductDetail() {
               <div className="mt-auto space-y-4">
                 <div className="flex space-x-3">
                   <button
+                    disabled={product.stock <= 0}
                     onClick={() => {
                       const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
                       if (!token) {
@@ -491,6 +492,14 @@ export default function ProductDetail() {
                       
                       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
                       const existingItem = cart.find(item => item.id === product.id);
+                      const currentQty = existingItem ? existingItem.quantity : 0;
+                      
+                      if (currentQty >= product.stock) {
+                        setCartMessage(`Stok tidak mencukupi. Maksimal ${product.stock} pcs`);
+                        setShowCartModal(true);
+                        setTimeout(() => setShowCartModal(false), 2000);
+                        return;
+                      }
                       
                       if (existingItem) {
                         existingItem.quantity += 1;
@@ -503,16 +512,19 @@ export default function ProductDetail() {
                       localStorage.setItem('cart', JSON.stringify(cart));
                       window.dispatchEvent(new Event('cartUpdated'));
                       setShowCartModal(true);
-                      
-                      // Auto close modal after 2 seconds
                       setTimeout(() => setShowCartModal(false), 2000);
                     }}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+                    className={`flex-1 font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center ${
+                      product.stock <= 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white hover:shadow-lg'
+                    }`}
                   >
                     <FaShoppingCart className="mr-2" />
-                    ADD TO CART
+                    {product.stock <= 0 ? 'STOK HABIS' : 'ADD TO CART'}
                   </button>
                   <button
+                    disabled={product.stock <= 0}
                     onClick={() => {
                       const token = localStorage.getItem('adminToken') || localStorage.getItem('userToken');
                       if (!token) {
@@ -524,10 +536,14 @@ export default function ProductDetail() {
                       setQuantityError('');
                       setShowCheckoutModal(true);
                     }}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+                    className={`flex-1 font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center ${
+                      product.stock <= 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white hover:shadow-lg'
+                    }`}
                   >
                     <FaShoppingCart className="mr-2" />
-                    ORDER NOW
+                    {product.stock <= 0 ? 'STOK HABIS' : 'ORDER NOW'}
                   </button>
                   <div className="relative">
                     <button 
@@ -593,14 +609,14 @@ export default function ProductDetail() {
 
                 {/* Additional Info */}
                 <div className="flex items-center gap-3 text-sm text-gray-500 mt-3">
-                  <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-                    <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`flex items-center px-3 py-1 rounded-full ${product.stock <= 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+                    <svg className={`w-4 h-4 mr-1 ${product.stock <= 0 ? 'text-red-500' : 'text-green-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
-                    Status: {product.stock_status || 'available'}
+                    Status: {product.stock <= 0 ? 'Sold Out' : (product.stock_status || 'available')}
                   </div>
-                  <div className="flex items-center bg-red-100 px-3 py-1 rounded-full">
-                    <span className="text-red-600 font-medium">
+                  <div className={`flex items-center px-3 py-1 rounded-full ${product.stock <= 0 ? 'bg-red-100' : 'bg-green-100'}`}>
+                    <span className={`font-medium ${product.stock <= 0 ? 'text-red-600' : 'text-green-600'}`}>
                       Stock: {product.stock || 0} pcs
                     </span>
                   </div>
@@ -736,6 +752,10 @@ export default function ProductDetail() {
                       <span className="w-12 text-center font-medium">{orderQuantity}</span>
                       <button
                         onClick={() => {
+                          if (orderQuantity >= product.stock) {
+                            setQuantityError(`Stok tidak mencukupi. Maksimal ${product.stock} pcs`);
+                            return;
+                          }
                           setOrderQuantity(orderQuantity + 1);
                           setQuantityError('');
                         }}
@@ -777,6 +797,10 @@ export default function ProductDetail() {
                     onClick={async () => {
                       if (orderQuantity <= 0) {
                         setQuantityError('Jumlah pesanan tidak boleh 0');
+                        return;
+                      }
+                      if (orderQuantity > product.stock) {
+                        setQuantityError(`Stok tidak mencukupi. Tersedia: ${product.stock} pcs`);
                         return;
                       }
                       

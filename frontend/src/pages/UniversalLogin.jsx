@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiShield, FiX, FiMail } from 'react-icons/fi'
 import { API_BASE_URL as API_BASE } from '../config/api'
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
-import GoogleCompleteModal from '../components/GoogleCompleteModal'
 
 export default function UniversalLogin() {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -14,10 +13,9 @@ export default function UniversalLogin() {
   // Forgot password state
   const [showForgotModal, setShowForgotModal] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
-  const [forgotStep, setForgotStep] = useState('email') // 'email' | 'sent'
+  const [forgotStep, setForgotStep] = useState('email')
   const [forgotLoading, setForgotLoading] = useState(false)
   const [forgotError, setForgotError] = useState('')
-  const [googleCompletion, setGoogleCompletion] = useState(null)
 
   const { signIn: googleSignIn } = useGoogleAuth({
     onSuccess: (data) => {
@@ -29,7 +27,7 @@ export default function UniversalLogin() {
       else if (role === 'tenant') window.location.href = '/tenant-dashboard'
       else window.location.href = localStorage.getItem('lastVisitedPage') || '/'
     },
-    onNeedsCompletion: (googleData) => setGoogleCompletion(googleData),
+    onNeedsCompletion: () => {},
     onError: (msg) => setError(msg),
   })
 
@@ -247,22 +245,6 @@ export default function UniversalLogin() {
           </div>
         </motion.div>
       </div>
-
-      {googleCompletion && (
-        <GoogleCompleteModal
-          googleData={googleCompletion}
-          onSuccess={(data) => {
-            localStorage.setItem('adminToken', data.token)
-            localStorage.setItem('currentUser', JSON.stringify(data.user))
-            window.dispatchEvent(new Event('userLoggedIn'))
-            const role = data.user.role
-            if (role === 'admin') window.location.href = '/dashboard'
-            else if (role === 'tenant') window.location.href = '/tenant-dashboard'
-            else window.location.href = localStorage.getItem('lastVisitedPage') || '/'
-          }}
-          onClose={() => setGoogleCompletion(null)}
-        />
-      )}
 
       {/* Forgot Password Modal */}
       <AnimatePresence>

@@ -1,374 +1,410 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiTrendingUp, FiUsers, FiPackage, FiMail, FiGrid, FiImage } from 'react-icons/fi';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
+import { FiTrendingUp, FiUsers, FiPackage, FiMail, FiShoppingBag, FiDollarSign, FiRefreshCw, FiDownload } from 'react-icons/fi';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import { getAnalyticsOverview, getProductAnalytics, getContactAnalytics } from '../../../services/api';
+import { API_BASE_URL } from '../../../config/api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler);
+
+const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+const fmtDate = (d) => new Date(d).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+
+const lineOpts = (label, isCurrency = false) => ({
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => isCurrency ? fmt(ctx.raw) : `${label}: ${ctx.raw}` } } },
+  scales: { y: { beginAtZero: true, ticks: { callback: (v) => isCurrency ? `Rp${(v/1000).toFixed(0)}k` : v } }, x: { grid: { display: false } } },
+});
+
+const barOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+};
+
+const donutOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom' } },
+};
+
+const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
+
+const StatCard = ({ title, value, icon: Icon, color, trend }) => (
+  <motion.div whileHover={{ scale: 1.02 }} className="bg-white p-5 rounded-xl shadow-sm border">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        {trend !== undefined && (
+          <p className={`text-xs flex items-center gap-1 mt-1 ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <FiTrendingUp className="h-3 w-3" />{trend >= 0 ? '+' : ''}{trend}%
+          </p>
+        )}
+      </div>
+      <div className={`p-3 rounded-xl ${color}`}><Icon className="h-5 w-5 text-white" /></div>
+    </div>
+  </motion.div>
+);
+
+const EmptyChart = ({ title }) => (
+  <div className="bg-white p-5 rounded-xl shadow-sm border">
+    <h3 className="font-semibold text-gray-900 mb-3">{title}</h3>
+    <div className="h-56 flex items-center justify-center text-gray-400 text-sm">Tidak ada data dalam 30 hari terakhir</div>
+  </div>
 );
 
 const Analytics = () => {
   const [overview, setOverview] = useState(null);
+  const [orderAnalytics, setOrderAnalytics] = useState(null);
   const [productAnalytics, setProductAnalytics] = useState(null);
-  const [contactAnalytics, setContactAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true);
-      const [overviewData, productData, contactData] = await Promise.all([
-        getAnalyticsOverview(),
-        getProductAnalytics(),
-        getContactAnalytics()
+      const token = localStorage.getItem('adminToken');
+      const headers = { Authorization: `Bearer ${token}` };
+      const [ov, oa, pa] = await Promise.all([
+        fetch(`${API_BASE_URL}/analytics/overview`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/analytics/orders`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/analytics/products`, { headers }).then(r => r.json()),
       ]);
-      
-      setOverview(overviewData);
-      setProductAnalytics(productData);
-      setContactAnalytics(contactData);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    } finally {
-      setLoading(false);
-    }
+      setOverview(ov);
+      setOrderAnalytics(oa);
+      setProductAnalytics(pa);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-white p-6 rounded-lg shadow-sm border"
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {trend && (
-            <p className={`text-sm ${trend > 0 ? 'text-green-600' : 'text-red-600'} flex items-center mt-1`}>
-              <FiTrendingUp className="h-4 w-4 mr-1" />
-              {trend > 0 ? '+' : ''}{trend}%
-            </p>
-          )}
-        </div>
-        <div className={`p-3 rounded-full ${color}`}>
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-      </div>
-    </motion.div>
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const now = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(220, 38, 38);
+    doc.text('Analytics Report - EkrafMarket', 14, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Digenerate: ${now}`, 14, 26);
+
+    let y = 34;
+
+    // Overview stats
+    if (o && Object.keys(o).length > 0) {
+      doc.setFontSize(13);
+      doc.setTextColor(30);
+      doc.text('Ringkasan Platform', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Metrik', 'Nilai']],
+        body: [
+          ['Total Revenue', fmt(o.revenue || 0)],
+          ['Total Orders', String(o.orders || 0)],
+          ['Pending Orders', String(o.pendingOrders || 0)],
+          ['Total Users', String(o.users || 0)],
+          ['Total Tenants', String(o.tenants || 0)],
+          ['Total Produk', String(o.products || 0)],
+          ['Stok Habis', String(o.soldOutProducts || 0)],
+          ['Pesan Masuk', String(o.contacts || 0)],
+        ],
+        headStyles: { fillColor: [220, 38, 38] },
+        alternateRowStyles: { fillColor: [254, 242, 242] },
+        margin: { left: 14, right: 14 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Revenue Trend
+    if (overview?.revenueTrend?.length > 0) {
+      doc.setFontSize(13);
+      doc.setTextColor(30);
+      doc.text('Revenue Trend (30 hari)', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Tanggal', 'Revenue']],
+        body: overview.revenueTrend.map(d => [
+          new Date(d.date).toLocaleDateString('id-ID'),
+          fmt(parseFloat(d.total)),
+        ]),
+        headStyles: { fillColor: [16, 185, 129] },
+        margin: { left: 14, right: 14 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Order Trend
+    if (overview?.orderTrend?.length > 0) {
+      if (y > 220) { doc.addPage(); y = 20; }
+      doc.setFontSize(13);
+      doc.setTextColor(30);
+      doc.text('Order Trend (30 hari)', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Tanggal', 'Jumlah Order']],
+        body: overview.orderTrend.map(d => [
+          new Date(d.date).toLocaleDateString('id-ID'),
+          String(d.count),
+        ]),
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 14, right: 14 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Top Tenants
+    if (orderAnalytics?.topTenantsByOrders?.length > 0) {
+      if (y > 220) { doc.addPage(); y = 20; }
+      doc.setFontSize(13);
+      doc.setTextColor(30);
+      doc.text('Top Tenant by Revenue', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['#', 'Username', 'Toko', 'Orders', 'Revenue']],
+        body: orderAnalytics.topTenantsByOrders.map((t, i) => [
+          String(i + 1),
+          t.username,
+          t.store_name || '-',
+          String(t.order_count),
+          fmt(t.revenue),
+        ]),
+        headStyles: { fillColor: [220, 38, 38] },
+        margin: { left: 14, right: 14 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Top Products
+    if (productAnalytics?.topProducts?.length > 0) {
+      if (y > 220) { doc.addPage(); y = 20; }
+      doc.setFontSize(13);
+      doc.setTextColor(30);
+      doc.text('Top Produk (by Likes)', 14, y);
+      y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['#', 'Produk', 'Kategori', 'Stok', 'Likes', 'Rating']],
+        body: productAnalytics.topProducts.map((p, i) => [
+          String(i + 1),
+          p.name,
+          p.category || '-',
+          String(p.stock),
+          String(p.likes_count || 0),
+          String(parseFloat(p.rating || 0).toFixed(1)),
+        ]),
+        headStyles: { fillColor: [124, 58, 237] },
+        margin: { left: 14, right: 14 },
+      });
+    }
+
+    doc.save(`analytics_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600" />
+    </div>
   );
 
-  const BarChart = ({ data, title, color = '#3B82F6' }) => {
-    if (!data || data.length === 0) {
-      return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">{title}</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            Tidak ada data
-          </div>
-        </div>
-      );
-    }
+  const o = overview?.overview || {};
 
-    const chartData = {
-      labels: data.map(item => item.category || item.status || item.name),
-      datasets: [
-        {
-          label: 'Jumlah',
-          data: data.map(item => item.count),
-          backgroundColor: color,
-          borderColor: color,
-          borderWidth: 1,
-          borderRadius: 4,
-        },
-      ],
-    };
+  // Revenue trend chart data
+  const revChartData = overview?.revenueTrend?.length > 0 ? {
+    labels: overview.revenueTrend.map(d => fmtDate(d.date)),
+    datasets: [{ label: 'Revenue', data: overview.revenueTrend.map(d => d.total), borderColor: '#10b981', backgroundColor: '#10b98120', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#10b981', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4 }],
+  } : null;
 
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
-      },
-    };
+  // Order trend chart data
+  const orderChartData = overview?.orderTrend?.length > 0 ? {
+    labels: overview.orderTrend.map(d => fmtDate(d.date)),
+    datasets: [{ label: 'Orders', data: overview.orderTrend.map(d => d.count), borderColor: '#3b82f6', backgroundColor: '#3b82f620', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#3b82f6', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4 }],
+  } : null;
 
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
-        <div className="h-64">
-          <Bar data={chartData} options={options} />
-        </div>
-      </div>
-    );
-  };
+  // User growth chart data
+  const userChartData = overview?.userGrowth?.length > 0 ? {
+    labels: overview.userGrowth.map(d => fmtDate(d.date)),
+    datasets: [{ label: 'Users', data: overview.userGrowth.map(d => d.count), borderColor: '#8b5cf6', backgroundColor: '#8b5cf620', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#8b5cf6', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4 }],
+  } : null;
 
-  const PieChart = ({ data, title }) => {
-    if (!data || data.length === 0) {
-      return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">{title}</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            Tidak ada data
-          </div>
-        </div>
-      );
-    }
+  // Products by category
+  const catChartData = overview?.productsByCategory?.length > 0 ? {
+    labels: overview.productsByCategory.map(c => c.category),
+    datasets: [{ data: overview.productsByCategory.map(c => c.count), backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }],
+  } : null;
 
-    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-    
-    const chartData = {
-      labels: data.map(item => {
-        const label = item.status || item.category;
-        return label === 'new' ? 'Baru' : label === 'read' ? 'Dibaca' : label === 'replied' ? 'Dibalas' : label;
-      }),
-      datasets: [
-        {
-          data: data.map(item => item.count),
-          backgroundColor: colors.slice(0, data.length),
-          borderWidth: 2,
-          borderColor: '#ffffff',
-        },
-      ],
-    };
+  // Orders by status donut
+  const statusChartData = orderAnalytics?.ordersByStatus?.length > 0 ? {
+    labels: orderAnalytics.ordersByStatus.map(s => s.status),
+    datasets: [{ data: orderAnalytics.ordersByStatus.map(s => s.count), backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }],
+  } : null;
 
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-        },
-      },
-    };
-
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
-        <div className="h-64">
-          <Doughnut data={chartData} options={options} />
-        </div>
-      </div>
-    );
-  };
-
-  const LineChart = ({ data, title, color = '#3B82F6' }) => {
-    if (!data || data.length === 0) {
-      return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">{title}</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            Tidak ada data dalam 30 hari terakhir
-          </div>
-        </div>
-      );
-    }
-
-    const chartData = {
-      labels: data.map(item => 
-        new Date(item.date).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
-      ),
-      datasets: [
-        {
-          label: 'Jumlah',
-          data: data.map(item => item.count),
-          borderColor: color,
-          backgroundColor: color + '20',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: color,
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-        },
-      ],
-    };
-
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
-        x: {
-          grid: {
-            display: false,
-          },
-        },
-      },
-    };
-
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
-        <div className="h-64">
-          <Line data={chartData} options={options} />
-        </div>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-      </div>
-    );
-  }
+  // Top categories bar
+  const topCatData = productAnalytics?.topCategories?.length > 0 ? {
+    labels: productAnalytics.topCategories.map(c => c.category),
+    datasets: [{ label: 'Produk', data: productAnalytics.topCategories.map(c => c.count), backgroundColor: '#ef4444', borderRadius: 4 }],
+  } : null;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
-        <button
-          onClick={fetchAnalytics}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-        >
-          Refresh Data
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Analytics & Reports</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Data lengkap platform 30 hari terakhir</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={exportPDF} className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+            <FiDownload className="w-4 h-4" /> Export PDF
+          </button>
+          <button onClick={fetchAll} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+            <FiRefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Overview Stats */}
-      {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Produk"
-            value={overview.overview.products}
-            icon={FiPackage}
-            color="bg-red-500"
-          />
-          <StatCard
-            title="Total Kategori"
-            value={overview.overview.categories}
-            icon={FiGrid}
-            color="bg-green-500"
-          />
-          <StatCard
-            title="Total Kontak"
-            value={overview.overview.contacts}
-            icon={FiMail}
-            color="bg-purple-500"
-          />
-          <StatCard
-            title="Carousel Items"
-            value={overview.overview.carousel}
-            icon={FiImage}
-            color="bg-orange-500"
-          />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Revenue" value={fmt(o.revenue || 0)} icon={FiDollarSign} color="bg-emerald-500" />
+        <StatCard title="Total Orders" value={o.orders || 0} icon={FiShoppingBag} color="bg-blue-500" />
+        <StatCard title="Total Users" value={o.users || 0} icon={FiUsers} color="bg-violet-500" />
+        <StatCard title="Total Tenants" value={o.tenants || 0} icon={FiUsers} color="bg-pink-500" />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Produk" value={o.products || 0} icon={FiPackage} color="bg-sky-500" />
+        <StatCard title="Pending Orders" value={o.pendingOrders || 0} icon={FiShoppingBag} color="bg-orange-500" />
+        <StatCard title="Stok Habis" value={o.soldOutProducts || 0} icon={FiPackage} color="bg-red-500" />
+        <StatCard title="Pesan Masuk" value={o.contacts || 0} icon={FiMail} color="bg-teal-500" />
+      </div>
+
+      {/* Row 1: Revenue + Orders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {revChartData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">📈 Revenue Trend (30 hari)</h3>
+            <div className="h-56"><Line data={revChartData} options={lineOpts('Revenue', true)} /></div>
+          </div>
+        ) : <EmptyChart title="📈 Revenue Trend (30 hari)" />}
+
+        {orderChartData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">🛒 Order Trend (30 hari)</h3>
+            <div className="h-56"><Line data={orderChartData} options={lineOpts('Orders')} /></div>
+          </div>
+        ) : <EmptyChart title="🛒 Order Trend (30 hari)" />}
+      </div>
+
+      {/* Row 2: User Growth + Order Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {userChartData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">👥 Pertumbuhan User (30 hari)</h3>
+            <div className="h-56"><Line data={userChartData} options={lineOpts('Users')} /></div>
+          </div>
+        ) : <EmptyChart title="👥 Pertumbuhan User (30 hari)" />}
+
+        {statusChartData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">📦 Status Order</h3>
+            <div className="h-56"><Doughnut data={statusChartData} options={donutOpts} /></div>
+          </div>
+        ) : <EmptyChart title="📦 Status Order" />}
+      </div>
+
+      {/* Row 3: Products by Category + Top Categories bar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {catChartData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">🗂️ Produk per Kategori</h3>
+            <div className="h-56"><Doughnut data={catChartData} options={donutOpts} /></div>
+          </div>
+        ) : <EmptyChart title="🗂️ Produk per Kategori" />}
+
+        {topCatData ? (
+          <div className="bg-white p-5 rounded-xl shadow-sm border">
+            <h3 className="font-semibold text-gray-900 mb-3">🏆 Top Kategori</h3>
+            <div className="h-56"><Bar data={topCatData} options={barOpts} /></div>
+          </div>
+        ) : <EmptyChart title="🏆 Top Kategori" />}
+      </div>
+
+      {/* Top Tenants Table */}
+      {orderAnalytics?.topTenantsByOrders?.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border">
+          <div className="p-5 border-b">
+            <h3 className="font-semibold text-gray-900">🏪 Top Tenant by Revenue</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50">
+                <tr>
+                  {['#', 'Tenant', 'Toko', 'Total Orders', 'Revenue'].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orderAnalytics.topTenantsByOrders.map((t, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3 text-sm font-bold text-gray-500">#{i + 1}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xs">
+                          {t.username?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">{t.username}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-sm text-gray-600">{t.store_name || '-'}</td>
+                    <td className="px-5 py-3 text-sm font-semibold text-blue-600">{t.order_count}</td>
+                    <td className="px-5 py-3 text-sm font-bold text-emerald-600">{fmt(t.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Products by Category */}
-        {overview && (
-          <BarChart
-            data={overview.productsByCategory}
-            title="Produk per Kategori"
-            color="#3B82F6"
-          />
-        )}
-
-        {/* Contact Status */}
-        {overview && (
-          <PieChart
-            data={overview.contactStatus}
-            title="Status Kontak"
-          />
-        )}
-
-        {/* Products Over Time */}
-        {productAnalytics && (
-          <LineChart
-            data={productAnalytics.productsOverTime}
-            title="Produk Ditambahkan (30 hari terakhir)"
-            color="#10B981"
-          />
-        )}
-
-        {/* Contacts Over Time */}
-        {contactAnalytics && (
-          <LineChart
-            data={contactAnalytics.contactsOverTime}
-            title="Kontak Masuk (30 hari terakhir)"
-            color="#8B5CF6"
-          />
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      {contactAnalytics && contactAnalytics.recentActivity && contactAnalytics.recentActivity.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold">Aktivitas Terbaru</h3>
+      {/* Top Products Table */}
+      {productAnalytics?.topProducts?.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border">
+          <div className="p-5 border-b">
+            <h3 className="font-semibold text-gray-900">⭐ Top Produk (by Likes)</h3>
           </div>
-          <div className="divide-y">
-            {contactAnalytics.recentActivity.map((activity, index) => (
-              <div key={index} className="p-4 hover:bg-gray-50">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.name}</p>
-                    <p className="text-sm text-gray-600">{activity.email}</p>
-                    <p className="text-sm text-gray-800 mt-1">{activity.subject}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      activity.status === 'new' ? 'bg-red-100 text-red-800' :
-                      activity.status === 'read' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {activity.status === 'new' ? 'Baru' : activity.status === 'read' ? 'Dibaca' : 'Dibalas'}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(activity.created_at).toLocaleDateString('id-ID')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50">
+                <tr>
+                  {['#', 'Produk', 'Kategori', 'Stok', 'Likes', 'Rating'].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {productAnalytics.topProducts.map((p, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3 text-sm font-bold text-gray-500">#{i + 1}</td>
+                    <td className="px-5 py-3 text-sm font-medium text-gray-900">{p.name}</td>
+                    <td className="px-5 py-3"><span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{p.category || '-'}</span></td>
+                    <td className="px-5 py-3">
+                      <span className={`text-xs font-semibold ${p.stock <= 0 ? 'text-red-600' : p.stock <= 5 ? 'text-orange-600' : 'text-green-600'}`}>
+                        {p.stock <= 0 ? '❌ Habis' : p.stock}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-sm text-pink-600 font-semibold">❤️ {p.likes_count || 0}</td>
+                    <td className="px-5 py-3 text-sm text-yellow-600 font-semibold">⭐ {parseFloat(p.rating || 0).toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

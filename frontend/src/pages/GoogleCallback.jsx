@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { API_BASE_URL as API } from '../config/api';
+import GoogleCompleteModal from '../components/GoogleCompleteModal';
 
 export default function GoogleCallback() {
   const [status, setStatus] = useState('Memproses login Google...');
+  const [googleData, setGoogleData] = useState(null);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -33,17 +35,13 @@ export default function GoogleCallback() {
           localStorage.setItem('currentUser', JSON.stringify(data.user));
           window.dispatchEvent(new Event('userLoggedIn'));
 
-          const returnPath = sessionStorage.getItem('google_auth_return') || '/';
-          sessionStorage.removeItem('google_auth_return');
-
           const dest = data.user.role === 'admin' ? '/dashboard'
             : data.user.role === 'tenant' ? '/tenant-dashboard'
             : '/';
-
           window.location.replace(dest);
         } else if (data.needs_completion) {
-          sessionStorage.setItem('google_completion_data', JSON.stringify(data.google_data));
-          window.location.replace('/login?complete=google');
+          // Tampilkan modal langsung di halaman ini
+          setGoogleData(data.google_data);
         } else {
           setStatus(data.message || 'Login gagal.');
           setTimeout(() => window.location.replace('/login'), 2000);
@@ -54,6 +52,26 @@ export default function GoogleCallback() {
         setTimeout(() => window.location.replace('/login'), 2000);
       });
   }, []);
+
+  const handleCompleteSuccess = (data) => {
+    localStorage.setItem('adminToken', data.token);
+    localStorage.setItem('currentUser', JSON.stringify(data.user));
+    window.dispatchEvent(new Event('userLoggedIn'));
+    const dest = data.user.role === 'tenant' ? '/tenant-dashboard' : '/';
+    window.location.replace(dest);
+  };
+
+  if (googleData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <GoogleCompleteModal
+          googleData={googleData}
+          onSuccess={handleCompleteSuccess}
+          onClose={() => window.location.replace('/login')}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{

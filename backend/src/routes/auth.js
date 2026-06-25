@@ -169,19 +169,30 @@ router.post('/google/code', async (req, res) => {
 // Google OAuth — complete registration (new user)
 router.post('/google/complete', async (req, res) => {
   try {
-    const { google_id, email, name, picture, role } = req.body;
-    if (!google_id || !email || !role) return res.status(400).json({ message: 'Data tidak lengkap' });
-    if (!ALLOWED_ROLES.includes(role)) return res.status(400).json({ message: 'Role tidak valid' });
+    const { google_id, email, full_name, username, phone, role, address, store_name, nim, student_card_image } = req.body;
 
-    const [existing] = await db.execute('SELECT id FROM users WHERE email = ? OR google_id = ?', [email, google_id]);
-    if (existing.length > 0) return res.status(400).json({ message: 'Email sudah terdaftar' });
+    if (!google_id || !email || !username || !phone || !role)
+      return res.status(400).json({ message: 'Data tidak lengkap. Username dan No. HP wajib diisi.' });
+    if (!ALLOWED_ROLES.includes(role))
+      return res.status(400).json({ message: 'Role tidak valid' });
+    if (role === 'tenant' && (!nim || !student_card_image))
+      return res.status(400).json({ message: 'NIM dan KTM wajib diisi untuk Tenant' });
 
-    const username = email.split('@')[0] + '_' + Date.now().toString().slice(-4);
+    const [existing] = await db.execute(
+      'SELECT id FROM users WHERE email = ? OR google_id = ? OR username = ?',
+      [email, google_id, username]
+    );
+    if (existing.length > 0) return res.status(400).json({ message: 'Email atau username sudah terdaftar' });
+
     const randomPassword = await bcrypt.hash(Math.random().toString(36), 12);
+    const finalName = full_name || username;
+    const storeNameValue = role === 'tenant' ? (store_name || null) : null;
+    const nimValue = role === 'tenant' ? (nim || null) : null;
+    const ktmValue = role === 'tenant' ? (student_card_image || null) : null;
 
     const [result] = await db.execute(
-      'INSERT INTO users (username, email, password, role, full_name, google_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, email, randomPassword, role, name || username, google_id]
+      'INSERT INTO users (username, email, password, role, full_name, phone, address, google_id, store_name, nim, student_card_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [username, email, randomPassword, role, finalName, phone, address || null, google_id, storeNameValue, nimValue, ktmValue]
     );
 
     const token = jwt.sign(
@@ -192,7 +203,7 @@ router.post('/google/complete', async (req, res) => {
 
     res.json({
       token,
-      user: { id: result.insertId, username, email, role, full_name: name || username },
+      user: { id: result.insertId, username, email, role, full_name: finalName, store_name: storeNameValue },
     });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Registration failed' });
