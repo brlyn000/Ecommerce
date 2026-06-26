@@ -188,6 +188,11 @@ class Product {
   }
 
   static async delete(id) {
+    await db.execute('DELETE FROM order_items WHERE product_id = ?', [id]);
+    await db.execute('DELETE FROM comments WHERE product_id = ?', [id]);
+    await db.execute('DELETE FROM product_likes WHERE product_id = ?', [id]);
+    await db.execute('DELETE FROM notifications WHERE product_id = ?', [id]);
+    await db.execute('DELETE FROM product_search_clicks WHERE product_id = ?', [id]);
     const [result] = await db.execute('DELETE FROM products WHERE id = ?', [id]);
     return result.affectedRows > 0;
   }

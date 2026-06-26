@@ -61,7 +61,11 @@ const Analytics = () => {
   const [productAnalytics, setProductAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+    window.addEventListener('productChanged', fetchAll);
+    return () => window.removeEventListener('productChanged', fetchAll);
+  }, []);
 
   const fetchAll = async () => {
     try {

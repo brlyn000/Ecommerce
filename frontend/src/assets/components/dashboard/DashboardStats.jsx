@@ -32,7 +32,11 @@ const DashboardStats = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    window.addEventListener('productChanged', fetchData);
+    return () => window.removeEventListener('productChanged', fetchData);
+  }, []);
 
   const fetchData = async () => {
     try {

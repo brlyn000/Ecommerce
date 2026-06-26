@@ -194,6 +194,7 @@ const ProductManager = () => {
         await api.deleteProduct(productId);
         showNotification('Product deleted successfully!');
         await fetchData();
+        window.dispatchEvent(new CustomEvent('productChanged'));
       } catch (error) {
         showNotification('Error deleting product: ' + error.message, 'error');
       }

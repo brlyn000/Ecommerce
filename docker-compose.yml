@@ -44,7 +44,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+      - ./ecommerce.sql:/docker-entrypoint-initdb.d/ecommerce.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
