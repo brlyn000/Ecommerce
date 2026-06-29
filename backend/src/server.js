@@ -7,6 +7,7 @@ const { createCommentsTable } = require('./migrations/create_comments_table');
 const { createNotificationsTable } = require('./migrations/create_notifications_table');
 const { addCancellationReason } = require('./migrations/add_cancellation_reason');
 const { addGoogleIdToUsers } = require('./migrations/add_google_id_to_users');
+const { createPasswordResetTokensTable } = require('./migrations/create_password_reset_tokens');
 
 const productRoutes = require('./routes/products');
 const categoryRoutes = require('./routes/categories');
@@ -121,6 +122,7 @@ app.listen(PORT, async () => {
   await createNotificationsTable();
   await addCancellationReason();
   await addGoogleIdToUsers();
+  await createPasswordResetTokensTable();
 }).on('error', (err) => {
   logger.error('Server error:', err);
   process.exit(1);

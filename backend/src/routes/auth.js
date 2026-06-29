@@ -1,9 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const https = require('https');
 const db = require('../config/database');
 const { validate, rules } = require('../middleware/validate');
+const { sendResetPasswordEmail } = require('../utils/mailer');
 const router = express.Router();
 
 const ALLOWED_ROLES = ['user', 'tenant'];
@@ -71,10 +73,76 @@ router.post('/forgot-password', async (req, res) => {
     if (!email) return res.status(400).json({ message: 'Email is required' });
 
     const [users] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+
     // Always return success to prevent email enumeration
-    res.json({ message: 'Jika email terdaftar, link reset password telah dikirim.' });
+    if (users.length === 0) {
+      return res.json({ message: 'Jika email terdaftar, link reset password telah dikirim.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 jam
+
+    // Hapus token lama untuk user ini
+    await db.execute('DELETE FROM password_reset_tokens WHERE user_id = ?', [users[0].id]);
+
+    // Simpan token baru
+    await db.execute(
+      'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+      [users[0].id, token, expiresAt]
+    );
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+
+    const smtpConfigured = process.env.SMTP_USER && process.env.SMTP_PASS;
+
+    if (smtpConfigured) {
+      try {
+        await sendResetPasswordEmail(email, resetUrl);
+        return res.json({ message: 'Jika email terdaftar, link reset password telah dikirim.' });
+      } catch (mailErr) {
+        console.error('Email send failed:', mailErr.message);
+        // Fallback ke dev_reset_url jika email gagal
+        return res.json({
+          message: 'Jika email terdaftar, link reset password telah dikirim.',
+          dev_reset_url: resetUrl,
+        });
+      }
+    }
+
+    // SMTP belum dikonfigurasi — tampilkan dev link
+    res.json({
+      message: 'Jika email terdaftar, link reset password telah dikirim.',
+      dev_reset_url: resetUrl,
+    });
   } catch {
     res.status(500).json({ message: 'Failed to process request' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ message: 'Token dan password wajib diisi' });
+    if (password.length < 6) return res.status(400).json({ message: 'Password minimal 6 karakter' });
+
+    const [tokens] = await db.execute(
+      'SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0 AND expires_at > NOW()',
+      [token]
+    );
+
+    if (tokens.length === 0) {
+      return res.status(400).json({ message: 'Token tidak valid atau sudah kadaluarsa' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, tokens[0].user_id]);
+    await db.execute('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token]);
+
+    res.json({ message: 'Password berhasil direset' });
+  } catch {
+    res.status(500).json({ message: 'Failed to reset password' });
   }
 });
 
