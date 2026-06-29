@@ -1,765 +1,532 @@
 <div align="center">
-  
-  <!-- Animated Header -->
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=35&duration=3000&pause=1000&color=DC2626&center=true&vCenter=true&width=600&lines=🛒+E-Commerce+Platform;Modern+Multi-Tenant+Solution;Built+with+React+%26+Node.js" alt="Typing SVG" />
-  
-  <br><br>
-  
-  <!-- Animated Badges -->
-  <p>
-    <img src="https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=000000" alt="React">
-    <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white&labelColor=000000" alt="Node.js">
-    <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white&labelColor=000000" alt="MySQL">
-    <img src="https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white&labelColor=000000" alt="Tailwind">
-  </p>
-  
-  <!-- Status Badges -->
-  <p>
-    <img src="https://img.shields.io/badge/Status-🚀_Active-success?style=flat-square&labelColor=000000" alt="Status">
-    <img src="https://img.shields.io/badge/License-📄_MIT-blue?style=flat-square&labelColor=000000" alt="License">
-    <img src="https://img.shields.io/badge/Version-🏷️_1.0.0-orange?style=flat-square&labelColor=000000" alt="Version">
-    <img src="https://img.shields.io/badge/Build-✅_Passing-brightgreen?style=flat-square&labelColor=000000" alt="Build">
-  </p>
-  
-  <!-- Animated Divider -->
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-  
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=40&duration=3000&pause=1000&color=DC2626&center=true&vCenter=true&width=700&lines=🛒+E-Kraft+E-Commerce;Full-Stack+Multi-Tenant+Platform;React+19+%2B+Node.js+%2B+MySQL" alt="Typing SVG" />
+
+<br/>
+
+<p>
+  <img src="https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/Node.js-Express_4.18-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white&labelColor=0d1117" />
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/Vite-6.3-646CFF?style=for-the-badge&logo=vite&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/JWT-Auth-F7B731?style=for-the-badge&logo=jsonwebtokens&logoColor=white&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/Google-OAuth2-4285F4?style=for-the-badge&logo=google&logoColor=white&labelColor=0d1117" />
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Status-🚀_Active-22c55e?style=flat-square&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-f97316?style=flat-square&labelColor=0d1117" />
+  <img src="https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square&labelColor=0d1117" />
+</p>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
 </div>
 
-## 🌟 Overview
+## 📌 Overview
+
+**E-Kraft** adalah platform e-commerce full-stack modern berbasis multi-tenant, dirancang untuk ekosistem kampus maupun bisnis skala kecil–menengah. Setiap tenant (penjual) mendapatkan toko dan dashboard analytics tersendiri, sementara admin dapat memantau seluruh sistem dari satu panel terpusat.
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=20&duration=2000&pause=500&color=059669&center=true&vCenter=true&width=800&lines=A+full-stack+e-commerce+platform;Multi-tenant+support+with+real-time+features;Perfect+for+businesses+and+marketplaces" alt="Overview" />
+
+| 🏪 Multi-Tenant | 🔐 3 Role Auth | 📱 Mobile-First | 📊 Analytics | 🔔 Notifikasi |
+|:-:|:-:|:-:|:-:|:-:|
+| Toko per tenant | Admin / Tenant / User | Responsive UI | Dashboard lengkap | Real-time alerts |
+
 </div>
 
-<br>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-A **modern, full-stack e-commerce platform** built with cutting-edge technologies, featuring multi-tenant support, real-time notifications, and comprehensive product management. Designed for scalability and performance.
-
-### ✨ Key Highlights
-
-<table>
-<tr>
-<td align="center" width="20%">
-  <img src="https://img.icons8.com/color/96/000000/shop.png" width="60"><br>
-  <strong>🏪 Multi-Tenant</strong><br>
-  <sub>Multiple stores support</sub>
-</td>
-<td align="center" width="20%">
-  <img src="https://img.icons8.com/color/96/000000/security-lock.png" width="60"><br>
-  <strong>🔐 Role-Based Auth</strong><br>
-  <sub>Admin, Tenant, User roles</sub>
-</td>
-<td align="center" width="20%">
-  <img src="https://img.icons8.com/color/96/000000/smartphone.png" width="60"><br>
-  <strong>📱 Mobile-First</strong><br>
-  <sub>Responsive design</sub>
-</td>
-<td align="center" width="20%">
-  <img src="https://img.icons8.com/color/96/000000/lightning-bolt.png" width="60"><br>
-  <strong>⚡ Real-Time</strong><br>
-  <sub>Live notifications</sub>
-</td>
-<td align="center" width="20%">
-  <img src="https://img.icons8.com/color/96/000000/bar-chart.png" width="60"><br>
-  <strong>📊 Analytics</strong><br>
-  <sub>Built-in reporting</sub>
-</td>
-</tr>
-</table>
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 🚀 Features
+## ✨ Fitur Lengkap
 
 <details>
-<summary><strong>🌐 Frontend Features (Click to expand)</strong></summary>
+<summary><b>🎨 Frontend</b></summary>
 
-<br>
+<br/>
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| 🎨 **Modern UI/UX** | Responsive design with Tailwind CSS | ✅ |
-| 🎬 **Smooth Animations** | Framer Motion integration | ✅ |
-| 🔐 **Multi-Role Auth** | Admin, Tenant, User roles | ✅ |
-| 🛍️ **Product Management** | Browse, search, filter products | ✅ |
-| 🛋 **Shopping Cart** | Add to cart, wishlist functionality | ✅ |
-| 📦 **Order Management** | Place orders, track status | ✅ |
-| 🔔 **Real-time Notifications** | Live updates | ✅ |
-| 🏪 **Store Pages** | Individual tenant stores | ✅ |
-| 📱 **WhatsApp Integration** | Order communication | ✅ |
-| 📷 **Image Sharing** | Product sharing with screenshots | ✅ |
+| Fitur | Detail |
+|-------|--------|
+| 🏠 **Homepage** | Carousel dinamis, kategori, produk unggulan |
+| 🔍 **Search & Filter** | Pencarian produk dengan analytics klik |
+| 🛍️ **Product Detail** | Galeri gambar, rating, komentar/review, likes |
+| 🛒 **Keranjang Belanja** | Tambah, hapus, update quantity |
+| ❤️ **Wishlist** | Simpan produk favorit |
+| 📦 **Order Management** | Riwayat order, detail, status tracking |
+| 🏪 **Store Pages** | Halaman toko per tenant |
+| 🔔 **Notifikasi** | Alert real-time untuk tenant |
+| 👤 **Profile** | Edit profil, foto, metode pembayaran |
+| 🔐 **Auth Lengkap** | Login, Register, Google OAuth, Forgot Password |
+| 📊 **Admin Dashboard** | Kelola user, tenant, produk, laporan |
+| 📋 **Tenant Dashboard** | Kelola produk, pesanan, analytics toko |
+| 📱 **WhatsApp Integration** | Hubungi penjual langsung via WA |
+| 📄 **Export** | Export data ke Excel / PDF (jsPDF + xlsx) |
+| 🎨 **Animasi** | Framer Motion transitions |
 
 </details>
 
 <details>
-<summary><strong>⚙️ Backend Features (Click to expand)</strong></summary>
+<summary><b>⚙️ Backend</b></summary>
 
-<br>
+<br/>
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| 🔗 **RESTful API** | Comprehensive API endpoints | ✅ |
-| 🏢 **Multi-tenant** | Separate dashboards | ✅ |
-| 📎 **File Upload** | Multer integration | ✅ |
-| 🗄 **Database** | MySQL with proper relationships | ✅ |
-| 📊 **Analytics** | Sales analytics and reporting | ✅ |
-| 🔔 **Notification System** | Real-time updates | ✅ |
-| 🔒 **Security** | JWT tokens, password hashing | ✅ |
-| 🛡️ **CORS Protection** | Cross-origin security | ✅ |
-| 📝 **Logging** | Comprehensive error handling | ✅ |
-| 🔄 **Auto-refresh** | Real-time data updates | ✅ |
+| Fitur | Detail |
+|-------|--------|
+| 🔗 **RESTful API** | 14+ route modules terstruktur |
+| 🔐 **JWT Auth** | Token 24 jam, refresh otomatis |
+| 🔑 **Google OAuth2** | Login/register via Google |
+| 📧 **Email Service** | Reset password via Nodemailer/SMTP |
+| 🚦 **Rate Limiting** | Global 1000/15min, Auth 50/15min |
+| 🛡️ **Input Validation** | express-validator di semua endpoint |
+| 📁 **File Upload** | Multer untuk produk, KTM, carousel, QRIS |
+| 🗄️ **MySQL** | Query langsung dengan mysql2 + connection pool |
+| 🔄 **Auto Migration** | Tabel dibuat otomatis saat server start |
+| 📊 **Analytics** | Sales, produk terlaris, pertumbuhan user |
+| 🌐 **CORS** | Whitelist origin via environment variable |
+| 📝 **Logger** | Winston-based structured logging |
 
 </details>
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
 ## 🛠️ Tech Stack
 
 <div align="center">
-  
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=DC2626&center=true&vCenter=true&width=500&lines=Modern+Tech+Stack;Cutting-Edge+Technologies" alt="Tech Stack" />
-  
-</div>
 
-<br>
+### Frontend
+| Package | Versi | Fungsi |
+|---------|-------|--------|
+| React | 19.1.0 | UI Library |
+| Vite | 6.3.6 | Build Tool |
+| Tailwind CSS | 4.1.11 | Styling |
+| Framer Motion | 12.23.9 | Animasi |
+| React Router DOM | 7.7.0 | Routing |
+| Axios | 1.13.2 | HTTP Client |
+| Chart.js + react-chartjs-2 | 4.5.0 | Grafik & Visualisasi |
+| React Icons | 5.5.0 | Icon Library |
+| Flowbite React | 0.12.3 | UI Components |
+| html2canvas + jsPDF | latest | Export PDF |
+| xlsx | 0.18.5 | Export Excel |
+| @emailjs/browser | 4.4.1 | Contact Form Email |
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 🎨 Frontend Technologies
-
-<div align="center">
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| <img src="https://img.icons8.com/color/20/000000/react-native.png"> **React** | 19.1.0 | UI Library |
-| <img src="https://img.icons8.com/color/20/000000/lightning-bolt.png"> **Vite** | 6.3.6 | Build Tool |
-| <img src="https://img.icons8.com/color/20/000000/css3.png"> **Tailwind CSS** | 4.1.11 | Styling |
-| <img src="https://img.icons8.com/color/20/000000/video.png"> **Framer Motion** | 12.23.9 | Animations |
-| <img src="https://img.icons8.com/color/20/000000/map.png"> **React Router** | 7.7.0 | Routing |
-| <img src="https://img.icons8.com/color/20/000000/api.png"> **Axios** | 1.13.2 | HTTP Client |
-| <img src="https://img.icons8.com/color/20/000000/star.png"> **React Icons** | 5.5.0 | Icons |
-| <img src="https://img.icons8.com/color/20/000000/bar-chart.png"> **Chart.js** | 4.5.0 | Data Visualization |
-
-</div>
-
-</td>
-<td width="50%" valign="top">
-
-### 🚀 Backend Technologies
-
-<div align="center">
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| <img src="https://img.icons8.com/color/20/000000/nodejs.png"> **Node.js** | Latest | Runtime |
-| <img src="https://img.icons8.com/color/20/000000/express-js.png"> **Express** | 4.18.2 | Web Framework |
-| <img src="https://img.icons8.com/color/20/000000/mysql-logo.png"> **MySQL2** | 3.6.5 | Database Driver |
-| <img src="https://img.icons8.com/color/20/000000/key.png"> **JWT** | 9.0.2 | Authentication |
-| <img src="https://img.icons8.com/color/20/000000/lock.png"> **Bcrypt** | 6.0.0 | Password Hashing |
-| <img src="https://img.icons8.com/color/20/000000/upload.png"> **Multer** | 1.4.5 | File Upload |
-| <img src="https://img.icons8.com/color/20/000000/globe.png"> **CORS** | 2.8.5 | Cross-Origin |
+### Backend
+| Package | Versi | Fungsi |
+|---------|-------|--------|
+| Express | 4.18.2 | Web Framework |
+| MySQL2 | 3.6.5 | Database Driver |
+| jsonwebtoken | 9.0.2 | JWT Auth |
+| bcrypt | 6.0.0 | Password Hashing |
+| Multer | 1.4.5-lts | File Upload |
+| Nodemailer | 9.0.1 | Email (SMTP) |
+| express-rate-limit | 8.5.2 | Rate Limiting |
+| express-validator | 7.3.2 | Input Validation |
+| jimp | 1.6.1 | Image Processing |
+| dotenv | 16.3.1 | Environment Config |
+| nodemon | 3.0.2 | Dev Hot-reload |
 
 </div>
 
-</td>
-</tr>
-</table>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 📁 Project Structure
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=2000&pause=1000&color=7C3AED&center=true&vCenter=true&width=400&lines=Clean+Architecture;Organized+Structure" alt="Structure" />
-</div>
-
-<br>
+## 📁 Struktur Project
 
 ```
 🛒 Ecommerce/
-├── 🎨 frontend/              # React.js Frontend Application
-│   ├── 📁 src/              # Source code
-│   │   ├── 📄 pages/        # Page components
-│   │   ├── 🧩 components/   # Reusable components
-│   │   ├── 🎨 assets/       # UI components & assets
-│   │   ├── 🔄 context/      # React context providers
-│   │   ├── 🔧 services/     # API services
-│   │   └── 🛠️ utils/        # Utility functions
-│   ├── 🌐 public/           # Static assets
-│   ├── 📦 package.json      # Frontend dependencies
-│   └── 📖 README.md         # Frontend documentation
-├── 🚀 backend/              # Node.js Backend API
-│   ├── 📁 src/             # API source code
-│   │   ├── 🎮 controllers/ # Route handlers
-│   │   ├── 📊 models/      # Database models
-│   │   ├── 🛣️ routes/       # API routes
-│   │   ├── 🔒 middleware/  # Custom middleware
-│   │   └── ⚙️ config/      # Configuration files
-│   ├── 📂 public/          # File uploads
-│   ├── 📦 package.json     # Backend dependencies
-│   └── 📖 README.md        # Backend documentation
-├── 🗄️ database-diagram.dbml # Database schema diagram
-└── 📋 README.md            # Main project documentation
+├── 📦 frontend/                    # React + Vite App
+│   └── src/
+│       ├── pages/                  # 25+ halaman (Home, Cart, Orders, Dashboard, dll)
+│       ├── components/             # Komponen reusable (Modal, ProtectedRoute, dll)
+│       ├── context/                # AuthContext, SettingsContext
+│       ├── hooks/                  # useLastVisited, useGoogleAuth, useErrorHandler
+│       ├── services/               # Axios API service layer
+│       ├── utils/                  # errorHandler, imageUtils, iconMapper
+│       └── config/                 # api.js (base URL config)
+│
+├── 🚀 backend/                     # Node.js + Express API
+│   └── src/
+│       ├── controllers/            # 10 controllers (product, order, analytics, dll)
+│       ├── routes/                 # 14 route modules
+│       ├── middleware/             # auth.js (JWT verify), validate.js
+│       ├── models/                 # Product.js, Category.js
+│       ├── migrations/             # Auto-run DB migrations
+│       ├── utils/                  # logger.js, mailer.js
+│       └── config/                 # database.js (MySQL pool)
+│
+├── 🗄️ ecommerce.sql                # Full database dump
+├── 🗺️ database-diagram.dbml        # Skema DB (dbdiagram.io)
+├── 🐳 docker-compose.yml           # Semua service (backend, frontend, mysql, phpmyadmin)
+├── 🐳 docker-compose-phpmyadmin.yml
+└── 📋 README.md
 ```
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-## 📊 Database Schema
-
-<div align="center">
-  <img src="https://img.shields.io/badge/Database-🗄️_MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white&labelColor=000000" alt="MySQL">
-</div>
-
-<br>
-
-### 🗄 Core Tables Overview
-
-<div align="center">
+## 🗄️ Skema Database
 
 ```mermaid
 erDiagram
-    USERS ||--o{ PRODUCTS : creates
-    USERS ||--o{ ORDERS : places
-    PRODUCTS ||--o{ COMMENTS : receives
-    PRODUCTS ||--o{ LIKES : gets
-    CATEGORIES ||--o{ PRODUCTS : contains
-    ORDERS ||--o{ ORDER_ITEMS : contains
-    PRODUCTS ||--o{ ORDER_ITEMS : included_in
-    USERS ||--o{ NOTIFICATIONS : receives
+    users ||--o{ products : "creates (tenant)"
+    users ||--o{ orders : "places (user)"
+    users ||--o{ likes : "gives"
+    users ||--o{ comments : "writes"
+    users ||--o{ notifications : "receives (tenant)"
+    categories ||--o{ products : "contains"
+    products ||--o{ comments : "receives"
+    products ||--o{ likes : "gets"
+    products ||--o{ order_items : "included_in"
+    orders ||--o{ order_items : "contains"
+    orders ||--o{ notifications : "triggers"
 ```
 
-</div>
-
 <details>
-<summary><strong>📋 Database Tables (Click to expand)</strong></summary>
+<summary><b>📋 Detail Tabel Database</b></summary>
 
-<br>
+<br/>
 
-| Table | Purpose | Key Features | Records |
-|-------|---------|-------------|---------|
-| 👥 **users** | Multi-role user management | Admin/Tenant/User roles | ![Users](https://img.shields.io/badge/Users-Active-success) |
-| 🛍️ **products** | Product catalog | Categories, ratings, stock | ![Products](https://img.shields.io/badge/Products-Available-blue) |
-| 📋 **categories** | Product categorization | Hierarchical structure | ![Categories](https://img.shields.io/badge/Categories-5-orange) |
-| 📦 **orders** | Order management | Status tracking, items | ![Orders](https://img.shields.io/badge/Orders-Processing-yellow) |
-| 💬 **comments** | Reviews and ratings | Product feedback system | ![Comments](https://img.shields.io/badge/Comments-Active-green) |
-| ❤️ **likes** | Wishlist functionality | User preferences | ![Likes](https://img.shields.io/badge/Likes-Growing-red) |
-| 🔔 **notifications** | Real-time alerts | User interactions | ![Notifications](https://img.shields.io/badge/Notifications-Live-purple) |
-| 🎠 **carousel_items** | Homepage banners | Dynamic content | ![Carousel](https://img.shields.io/badge/Carousel-3_Items-cyan) |
-| 📧 **contacts** | Contact form | Customer support | ![Contacts](https://img.shields.io/badge/Contacts-Open-teal) |
+| Tabel | Kolom Penting | Keterangan |
+|-------|--------------|------------|
+| `users` | id, username, email, role, store_name, nim, student_card_image, google_id | Multi-role: admin/tenant/user |
+| `products` | id, name, price, stock, stock_status, category_id, created_by, likes_count, whatsapp | Produk milik tenant |
+| `categories` | id, name, icon, link | Kategori produk |
+| `orders` | order_id, user_id, total, status, rejection_reason | Status: pending/accepted/rejected/completed |
+| `order_items` | order_id, product_id, quantity, price, status | Item per order |
+| `comments` | product_id, user_id, rating, comment_type | Komentar & review produk |
+| `likes` | user_id, product_id | Wishlist/like produk |
+| `notifications` | type, tenant_id, order_id, read_status | Alert untuk tenant |
+| `carousel_items` | title, image, button_link, active, display_order | Banner homepage |
+| `contacts` | name, email, subject, message, status | Form kontak |
+| `password_reset_tokens` | user_id, token, expires_at, used | Reset password 1 jam |
 
 </details>
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
 ## 🚀 Quick Start
 
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Get+Started+in+2+Minutes!;Docker+Ready+Setup" alt="Quick Start" />
-  
-  <br><br>
-  
-  <img src="https://img.shields.io/badge/Setup_Time-⏱️_2_minutes-success?style=for-the-badge&labelColor=000000" alt="Setup Time">
-</div>
+### Prasyarat
 
-<br>
-
-### 📋 Prerequisites
-
-<div align="center">
-
-```bash
-✅ Docker & Docker Compose    ✅ Git
+```
+✅ Docker & Docker Compose   ✅ Git   ✅ Node.js 18+ (untuk setup manual)
 ```
 
-</div>
+### 🐳 Dengan Docker (Direkomendasikan)
 
-### 🛠️ Installation Steps
-
-<details>
-<summary><strong>📁 Step 1: Clone Repository (Click to expand)</strong></summary>
-
-<br>
-
+**1. Clone repository**
 ```bash
-# 🔄 Clone the repository
 git clone https://github.com/your-username/ecommerce-platform.git
 cd ecommerce-platform
 ```
 
-</details>
-
-<details>
-<summary><strong>🗄️ Step 2: Import Database (Click to expand)</strong></summary>
-
-<br>
-
+**2. Salin dan isi environment variables**
 ```bash
-# 🚀 Start all services with Docker
-./start-all.sh
-
-# 📥 Import database (if you have ecommerce.sql)
-./import-db.sh
+cp .env.example .env
+# Edit .env sesuai kebutuhan
 ```
 
-</details>
+**3. Jalankan semua service**
+```bash
+docker compose up -d
+```
 
-<details>
-<summary><strong>🚀 Step 3: Access Applications (Click to expand)</strong></summary>
+**4. Import database** *(jika belum otomatis)*
+```bash
+docker exec -i ecommerce-mysql-1 mysql -u root -p<DB_ROOT_PASSWORD> e-commerce < ecommerce.sql
+```
 
-<br>
+**5. Akses aplikasi**
 
-**All services will be available at:**
-- 🎨 **Frontend**: http://localhost:3000
-- 🔧 **Backend API**: http://localhost:5006
-- 🗄️ **phpMyAdmin**: http://localhost:8080
-- 📊 **MySQL**: localhost:3306
+| Service | URL |
+|---------|-----|
+| 🎨 Frontend | http://localhost:3000 |
+| 🔧 Backend API | http://localhost:5006 |
+| 🗄️ phpMyAdmin | http://localhost:8080 |
+| 📊 MySQL | localhost:3306 |
 
-**Default Login Credentials:**
-- **phpMyAdmin**: root / *(set via docker-compose env)*
-- **Admin Panel**: admin@ekraft.com / *(set in database seed)*
-- **Tenant**: tenant@ekraf.com / *(set in database seed)*
-- **User**: user@ekraft.com / *(set in database seed)*
+---
 
-</details>
+### ⚙️ Setup Manual (Tanpa Docker)
 
-<details>
-<summary><strong>⚙️ Manual Setup (Without Docker)</strong></summary>
+**Backend**
+```bash
+cd backend
+cp .env.example .env   # isi semua variabel
+npm install
+npm run dev            # atau: npm start
+```
 
-<br>
+**Frontend**
+```bash
+cd frontend
+cp .env.example .env   # isi VITE_API_BASE_URL & VITE_SERVER_URL
+npm install
+npm run dev
+```
 
-**Frontend (.env)**
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
+## 🔧 Environment Variables
+
+### Root `.env` (Docker)
 ```env
+# Database
+DB_ROOT_PASSWORD=your_secure_db_password
+DB_NAME=e-commerce
+DB_USER=root
+
+# Backend
+PORT=5006
+JWT_SECRET=your_jwt_secret_min_32_characters
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+FRONTEND_URL=http://localhost:3000
+
+# Google OAuth2
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# SMTP Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_smtp_app_password
+
+# Frontend Build
 VITE_API_BASE_URL=http://localhost:5006/api
 VITE_SERVER_URL=http://localhost:5006
+VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
 
-**Backend (.env)**
-```env
-DB_HOST=localhost
-DB_USER=your_db_user
-DB_PASSWORD=your_secure_password
-DB_NAME=e-commerce
-JWT_SECRET=your_jwt_secret_min_32_characters
-PORT=5006
+> 💡 **Tips SMTP Gmail**: Aktifkan 2FA → buat App Password di myaccount.google.com → gunakan sebagai `SMTP_PASS`
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
+## 🔐 Autentikasi & Role
+
+<div align="center">
+
+| Role | Akses | Fitur Utama |
+|------|-------|-------------|
+| 👑 **Admin** | Full sistem | Kelola semua user, tenant, produk, analytics global, carousel |
+| 🏪 **Tenant** | Toko sendiri | Kelola produk & stok, terima order, analytics toko, QRIS/KTM |
+| 👤 **User** | Fitur konsumen | Browse, wishlist, keranjang, order, komentar & rating |
+
+</div>
+
+### Alur Autentikasi
+
+```
+Login/Register ──→ JWT Token (24h) ──→ Protected Routes
+     ↕
+Google OAuth2 ──→ Code Exchange ──→ JWT Token
+     ↕
+Forgot Password ──→ Email Token (1h) ──→ Reset Password
 ```
 
+### Default Credentials (dari database seed)
+
+```
+Admin   : admin@ekraft.com   / (cek database seed)
+Tenant  : tenant@ekraf.com   / (cek database seed)
+User    : user@ekraft.com    / (cek database seed)
+```
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
+## 📡 API Reference
+
+Base URL: `http://localhost:5006/api`
+
+<details>
+<summary><b>🔐 Auth</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| POST | `/auth/register` | ❌ | Registrasi user/tenant |
+| POST | `/auth/login` | ❌ | Login (username/email + password) |
+| POST | `/auth/google/code` | ❌ | Google OAuth — tukar code → JWT |
+| POST | `/auth/google/complete` | ❌ | Lengkapi profil Google user baru |
+| POST | `/auth/forgot-password` | ❌ | Kirim email reset password |
+| POST | `/auth/reset-password` | ❌ | Reset password dengan token |
+
+</details>
+
+<details>
+<summary><b>🛍️ Products</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET | `/products` | ❌ | List semua produk (query: category, search, page) |
+| GET | `/products/:id` | ❌ | Detail produk |
+| POST | `/products` | ✅ Tenant | Tambah produk baru |
+| PUT | `/products/:id` | ✅ Tenant | Update produk |
+| DELETE | `/products/:id` | ✅ Tenant | Hapus produk |
+
+</details>
+
+<details>
+<summary><b>📦 Orders</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| POST | `/orders` | ✅ User | Buat order baru |
+| GET | `/orders` | ✅ | Riwayat order user |
+| GET | `/orders/:id` | ✅ | Detail order |
+| PUT | `/orders/:id` | ✅ Tenant | Update status (accepted/rejected/completed) |
+
+</details>
+
+<details>
+<summary><b>💬 Comments & Likes</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET | `/comments?product_id=` | ❌ | Komentar produk |
+| POST | `/comments` | ✅ | Tambah komentar/review |
+| POST | `/likes` | ✅ | Toggle like/wishlist |
+| GET | `/likes?product_id=` | ✅ | Status like produk |
+
+</details>
+
+<details>
+<summary><b>🔔 Notifications</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET | `/notifications` | ✅ Tenant | Ambil notifikasi |
+| PUT | `/notifications/:id/read` | ✅ | Tandai dibaca |
+| DELETE | `/notifications/:id` | ✅ | Hapus notifikasi |
+
+</details>
+
+<details>
+<summary><b>📊 Analytics</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET | `/analytics/dashboard` | ✅ Admin | Statistik global |
+| GET | `/analytics/sales` | ✅ Admin | Data penjualan |
+| GET | `/tenant-analytics/dashboard` | ✅ Tenant | Statistik toko |
+| GET | `/tenant-analytics/products` | ✅ Tenant | Performa produk |
+
+</details>
+
+<details>
+<summary><b>Endpoint Lainnya</b></summary>
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET/POST/PUT/DELETE | `/categories` | Mixed | Manajemen kategori |
+| GET/POST/PUT/DELETE | `/carousel` | ✅ Admin | Manajemen banner |
+| GET/POST | `/contacts` | Mixed | Form kontak |
+| GET/PUT | `/profile` | ✅ | Profil pengguna |
+| GET/PUT/DELETE | `/users` | ✅ Admin | Manajemen user |
+| POST | `/upload` | ✅ | Upload gambar |
+| GET | `/health` | ❌ | Health check server |
+
+</details>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
+## 🐳 Docker Services
+
+```yaml
+# docker-compose.yml — 4 service:
+frontend    → port 3000  (Nginx + React build)
+backend     → port 5006  (Node.js + Express)
+mysql       → port 3306  (MySQL 8.0 + auto-import ecommerce.sql)
+phpmyadmin  → port 8080  (DB management UI)
+```
+
+**Perintah Docker berguna:**
 ```bash
-# Install dependencies
-cd frontend && npm install
-cd ../backend && npm install
-
-# Start services
-cd backend && npm run dev
-cd ../frontend && npm run dev
-```
-
-</details>
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 🔐 Authentication & Security
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=2000&pause=1000&color=DC2626&center=true&vCenter=true&width=500&lines=Enterprise-Grade+Security;Multi-Role+Authentication" alt="Security" />
-</div>
-
-<br>
-
-<table>
-<tr>
-<td width="33%" align="center">
-  <img src="https://img.icons8.com/color/80/000000/admin-settings-male.png"><br>
-  <strong>👑 Admin</strong><br>
-  <sub>Full system access<br>User management<br>Analytics dashboard</sub>
-</td>
-<td width="33%" align="center">
-  <img src="https://img.icons8.com/color/80/000000/shop.png"><br>
-  <strong>🏪 Tenant</strong><br>
-  <sub>Product management<br>Order handling<br>Store analytics</sub>
-</td>
-<td width="33%" align="center">
-  <img src="https://img.icons8.com/color/80/000000/user.png"><br>
-  <strong>👤 User</strong><br>
-  <sub>Browse products<br>Place orders<br>Manage wishlist</sub>
-</td>
-</tr>
-</table>
-
-### 🛡️ Security Features
-
-- 🔐 **JWT Authentication** - Secure token-based auth
-- 🔒 **Password Hashing** - Bcrypt encryption
-- 🛡️ **Role-Based Access** - Granular permissions
-- 🌐 **CORS Protection** - Cross-origin security
-- 🔍 **Input Validation** - SQL injection prevention
-- 🔄 **Auto Token Refresh** - Seamless experience
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 📊 Analytics & Reporting
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=2000&pause=1000&color=7C3AED&center=true&vCenter=true&width=500&lines=Real-Time+Analytics;Business+Intelligence" alt="Analytics" />
-</div>
-
-<br>
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 👑 Admin Analytics
-- 📊 **Dashboard Overview**
-  - Total users, products, orders
-  - Revenue tracking & trends
-  - User activity monitoring
-  - System health metrics
-- 📈 **Advanced Reports**
-  - Sales performance
-  - User engagement
-  - Product popularity
-  - Growth metrics
-
-</td>
-<td width="50%" valign="top">
-
-### 🏪 Tenant Analytics
-- 📋 **Store Performance**
-  - Product performance metrics
-  - Sales statistics & trends
-  - Customer interactions
-  - Revenue reports
-- 🎯 **Business Insights**
-  - Top-selling products
-  - Customer behavior
-  - Order patterns
-  - Profit analysis
-
-</td>
-</tr>
-</table>
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 🔗 API Documentation
-
-<div align="center">
-  <img src="https://img.shields.io/badge/API-📡_RESTful-success?style=for-the-badge&labelColor=000000" alt="API">
-  <img src="https://img.shields.io/badge/Format-📄_JSON-blue?style=for-the-badge&labelColor=000000" alt="JSON">
-  <img src="https://img.shields.io/badge/Auth-🔐_JWT-orange?style=for-the-badge&labelColor=000000" alt="JWT">
-</div>
-
-<br>
-
-<details>
-<summary><strong>🔐 Authentication Endpoints</strong></summary>
-
-<br>
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/auth/login` | User login | ❌ |
-| `POST` | `/api/auth/register` | User registration | ❌ |
-| `GET` | `/api/auth/profile` | Get user profile | ✅ |
-| `PUT` | `/api/auth/profile` | Update profile | ✅ |
-
-</details>
-
-<details>
-<summary><strong>🛍️ Product Endpoints</strong></summary>
-
-<br>
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/api/products` | List all products | ❌ |
-| `GET` | `/api/products/:id` | Get product details | ❌ |
-| `POST` | `/api/products` | Create product | ✅ (Tenant) |
-| `PUT` | `/api/products/:id` | Update product | ✅ (Tenant) |
-| `DELETE` | `/api/products/:id` | Delete product | ✅ (Tenant) |
-
-</details>
-
-<details>
-<summary><strong>📦 Order Endpoints</strong></summary>
-
-<br>
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/orders` | Create order | ✅ |
-| `GET` | `/api/orders` | Get user orders | ✅ |
-| `GET` | `/api/orders/:id` | Get order details | ✅ |
-| `PUT` | `/api/orders/:id` | Update order status | ✅ (Tenant) |
-
-</details>
-
-<details>
-<summary><strong>🔔 Notification Endpoints</strong></summary>
-
-<br>
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/api/notifications` | Get notifications | ✅ |
-| `PUT` | `/api/notifications/:id/read` | Mark as read | ✅ |
-| `DELETE` | `/api/notifications/:id` | Delete notification | ✅ |
-
-</details>
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 🚀 Deployment Guide
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=059669&center=true&vCenter=true&width=600&lines=Ready+for+Production!;Docker+Deployment" alt="Deployment" />
-</div>
-
-<br>
-
-### 🐳 Docker Deployment (Recommended)
-
-```bash
-# Production deployment
+# Jalankan semua service
 docker compose up -d
 
-# Scale services
-docker compose up -d --scale backend=3
+# Lihat log backend
+docker compose logs -f backend
 
-# View logs
-docker compose logs -f
+# Restart service tertentu
+docker compose restart backend
 
-# Stop services
+# Stop semua
 docker compose down
+
+# Stop + hapus volume (RESET database)
+docker compose down -v
 ```
 
-### 🔧 Available Scripts
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-| Script | Description | Usage |
-|--------|-------------|-------|
-| `./start-all.sh` | Start all services | `./start-all.sh` |
-| `./stop-phpmyadmin.sh` | Stop phpMyAdmin only | `./stop-phpmyadmin.sh` |
-| `./import-db.sh` | Import database | `./import-db.sh` |
+## 📜 NPM Scripts
 
-### 🌐 Service URLs
+### Backend
+```bash
+npm run dev        # Development dengan nodemon
+npm start          # Production
+npm run setup-db   # Setup database awal
+npm run migrate-db # Jalankan migrasi
+```
 
-<table>
-<tr>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/react-native.png"><br>
-  <strong>Frontend</strong><br>
-  <code>:3000</code>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/nodejs.png"><br>
-  <strong>Backend API</strong><br>
-  <code>:5006</code>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/database.png"><br>
-  <strong>phpMyAdmin</strong><br>
-  <code>:8080</code>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/mysql-logo.png"><br>
-  <strong>MySQL</strong><br>
-  <code>:3306</code>
-</td>
-</tr>
-</table>
+### Frontend
+```bash
+npm run dev        # Development server (Vite)
+npm run build      # Build production
+npm run preview    # Preview build
+npm run lint       # ESLint check
+```
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 🤝 Contributing
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&duration=2000&pause=1000&color=DC2626&center=true&vCenter=true&width=500&lines=Join+Our+Community!;Contributions+Welcome" alt="Contributing" />
-</div>
-
-<br>
-
-We welcome contributions! Here's how you can help:
-
-<table>
-<tr>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/bug.png"><br>
-  <strong>🐛 Bug Reports</strong><br>
-  <sub>Found a bug?<br>Report it!</sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/light-bulb.png"><br>
-  <strong>💡 Feature Ideas</strong><br>
-  <sub>Have an idea?<br>Share it!</sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/code.png"><br>
-  <strong>💻 Code</strong><br>
-  <sub>Want to code?<br>Fork it!</sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.icons8.com/color/60/000000/document.png"><br>
-  <strong>📖 Documentation</strong><br>
-  <sub>Improve docs?<br>Edit it!</sub>
-</td>
-</tr>
-</table>
-
-### 🔄 Development Workflow
-
-1. 🍴 **Fork** the repository
-2. 🌿 **Create** feature branch (`git checkout -b feature/AmazingFeature`)
-3. 💾 **Commit** changes (`git commit -m 'Add AmazingFeature'`)
-4. 📤 **Push** to branch (`git push origin feature/AmazingFeature`)
-5. 🔄 **Open** Pull Request
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
 ## 🐛 Known Issues & 🔮 Roadmap
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 🐛 Current Issues
-- ⭐ Rating system requires manual refresh
-- 🖼️ Image uploads limited to specific formats
-- 📱 WhatsApp integration needs manual setup
-- 🔄 Real-time updates need optimization
-
 <div align="center">
-  <img src="https://img.shields.io/badge/Priority-🔥_High-red?style=flat-square">
+
+| 🐛 Known Issues | 🔮 Coming Soon |
+|----------------|----------------|
+| Rating perlu manual refresh setelah submit | 💬 Real-time chat (WebSocket) |
+| Upload gambar belum ada validasi ukuran max | 💳 Payment gateway (Midtrans/Xendit) |
+| WhatsApp integration perlu nomor manual per produk | 📱 PWA / Mobile App |
+| Real-time notifikasi masih polling, belum SSE/WS | 🤖 AI product recommendation |
+| `dev_reset_url` tampil di response ketika SMTP belum dikonfigurasi | 🌍 Multi-language (i18n) |
+| — | 🧪 Unit & Integration Tests |
+| — | 🔄 CI/CD Pipeline |
+
 </div>
 
-</td>
-<td width="50%" valign="top">
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-### 🔮 Coming Soon
-- 💬 Real-time chat system
-- 💳 Advanced payment gateway
-- 📱 Mobile app development
-- 🤖 AI-powered recommendations
-- 🌍 Multi-language support
-- 📊 Advanced analytics dashboard
-- 🐳 Kubernetes deployment
-- 🔄 CI/CD pipeline
+## 🤝 Kontribusi
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Status-🚧_In_Progress-yellow?style=flat-square">
-</div>
+1. 🍴 Fork repository ini
+2. 🌿 Buat branch fitur: `git checkout -b feature/NamaFitur`
+3. 💾 Commit: `git commit -m 'feat: tambah NamaFitur'`
+4. 📤 Push: `git push origin feature/NamaFitur`
+5. 🔄 Buat Pull Request
 
-</td>
-</tr>
-</table>
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+## 📄 Lisensi
 
-## 📞 Support & Contact
-
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=2000&pause=1000&color=7C3AED&center=true&vCenter=true&width=500&lines=Need+Help%3F;We're+Here+for+You!" alt="Support" />
-  
-  <br><br>
-  
-  <p>
-    <a href="https://github.com/your-username/ecommerce-platform/issues">
-      <img src="https://img.shields.io/badge/Issues-🐛_GitHub-red?style=for-the-badge&logo=github&logoColor=white&labelColor=000000" alt="Issues">
-    </a>
-    <a href="mailto:info@ecommerce.com">
-      <img src="https://img.shields.io/badge/Email-📧_Contact-blue?style=for-the-badge&logo=gmail&logoColor=white&labelColor=000000" alt="Email">
-    </a>
-    <a href="#">
-      <img src="https://img.shields.io/badge/Docs-📖_Wiki-green?style=for-the-badge&logo=gitbook&logoColor=white&labelColor=000000" alt="Docs">
-    </a>
-  </p>
-  
-  <p>
-    <a href="#">
-      <img src="https://img.shields.io/badge/Discord-💬_Community-purple?style=for-the-badge&logo=discord&logoColor=white&labelColor=000000" alt="Discord">
-    </a>
-    <a href="#">
-      <img src="https://img.shields.io/badge/Twitter-🐦_Updates-blue?style=for-the-badge&logo=twitter&logoColor=white&labelColor=000000" alt="Twitter">
-    </a>
-  </p>
-</div>
-
-### 📋 Support Channels
-
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/your-username/ecommerce-platform/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/your-username/ecommerce-platform/discussions)
-- 📧 **Email Support**: info@ecommerce.com
-- 💬 **Community Chat**: [Discord Server](#)
-- 📖 **Documentation**: [Project Wiki](#)
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
-
-## 📄 License
-
-<div align="center">
-  <img src="https://img.shields.io/badge/License-📄_MIT-blue?style=for-the-badge&labelColor=000000" alt="MIT License">
-  
-  <br><br>
-  
-  <p>This project is licensed under the <strong>MIT License</strong> - see the <a href="LICENSE">LICENSE</a> file for details.</p>
-</div>
+Project ini dilisensikan di bawah **MIT License** — bebas digunakan, dimodifikasi, dan didistribusikan.
 
 ---
 
 <div align="center">
-  
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=30&duration=3000&pause=1000&color=DC2626&center=true&vCenter=true&width=800&lines=Built+with+❤️+by+Developers;For+Developers+and+Businesses;Thank+You+for+Visiting!" alt="Footer" />
-  
-  <br><br>
-  
-  <p>
-    <img src="https://img.shields.io/badge/Made_with-❤️_Love-red?style=for-the-badge&labelColor=000000" alt="Made with Love">
-    <img src="https://img.shields.io/badge/Open_Source-🚀_Forever-blue?style=for-the-badge&labelColor=000000" alt="Open Source">
-    <img src="https://img.shields.io/badge/Powered_by-☕_Coffee-brown?style=for-the-badge&labelColor=000000" alt="Powered by Coffee">
-  </p>
-  
-  <h3>🚀 Built with React, Node.js, and MySQL 🗄️</h3>
-  
-  <br>
-  
-  <!-- Visitor Counter -->
-  <img src="https://komarev.com/ghpvc/?username=ecommerce-platform&label=Project%20Views&color=dc2626&style=for-the-badge" alt="Project Views">
-  
-  <br><br>
-  
-  <!-- Star the repo -->
-  <p>
-    <strong>⭐ If you found this project helpful, please give it a star! ⭐</strong>
-  </p>
-  
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-  
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=DC2626&center=true&vCenter=true&width=600&lines=Built+with+❤️+React+%2B+Node.js+%2B+MySQL;Thanks+for+visiting+E-Kraft!" alt="Footer" />
+
+<br/>
+
+<img src="https://img.shields.io/badge/Made_with-❤️_and_☕-DC2626?style=for-the-badge&labelColor=0d1117" />
+<img src="https://img.shields.io/badge/Open_Source-MIT-3b82f6?style=for-the-badge&labelColor=0d1117" />
+
+<br/><br/>
+
+⭐ **Jika project ini bermanfaat, jangan lupa beri bintang!** ⭐
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
 </div>
