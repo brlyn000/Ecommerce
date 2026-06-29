@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiShield, FiX, FiMail } from 'react-icons/fi'
 import { API_BASE_URL as API_BASE } from '../config/api'
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
+import Logo from '../assets/image/Logo.png'
+import TextLogo from '../assets/image/TextLogo.png'
+import ImageLogin from '../assets/image/authImage/ImageSignIn.png'
 
 export default function UniversalLogin() {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -103,16 +106,16 @@ export default function UniversalLogin() {
       >
         <div className="max-w-md z-10">
           <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Simplify management with our <span className="underline decoration-4">dashboard.</span>
+            Welcome Back to Ekraf <span className="underline decoration-4">Market.</span>
           </h1>
           <p className="text-lg text-white/90 mb-8">
-            Simplify your e-commerce management with our user-friendly admin dashboard.
+            Sign in to explore creative products, manage your store, and connect with the campus creative community.
           </p>
           <div className="flex justify-center mt-12">
             <img
-              src="https://img.freepik.com/free-vector/business-people-working-together-project_74855-6308.jpg"
+              src={ImageLogin}
               alt="Team"
-              className="w-80 h-80 object-contain drop-shadow-2xl"
+              className="w-96 h-96 object-contain drop-shadow-2xl"
               onError={(e) => { e.target.style.display = 'none' }}
             />
           </div>
@@ -127,10 +130,8 @@ export default function UniversalLogin() {
           className="w-full max-w-md"
         >
           <div className="flex items-center justify-center mb-8">
-            <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mr-3">
-              <FiShield className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gray-900">EkrafMarket</span>
+            <img src={Logo} alt="Logo" className="w-12 h-12 mr-3" />
+            <img src={TextLogo} alt="EkrafMarket" className="h-10" />
           </div>
 
           <div className="text-center mb-8">

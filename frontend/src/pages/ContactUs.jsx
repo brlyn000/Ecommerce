@@ -1,4 +1,4 @@
-import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaTelegramPlane, FaWhatsapp, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaTelegramPlane, FaWhatsapp, FaCheckCircle, FaExclamationTriangle, FaInstagram } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Navbar from '../assets/components/Navbar';
@@ -225,12 +225,12 @@ const ContactUs = () => {
                     <motion.a 
                       whileHover={{ scale: 1.1, rotate: -5 }}
                       whileTap={{ scale: 0.95 }}
-                      href="https://t.me/username" 
+                      href="https://www.instagram.com/bem.polteksi_/" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                      className="bg-gradient-to-br from-red-500 to-purple-500 hover:from-red-400 hover:to-purple-500 p-3 sm:p-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
                     >
-                      <FaTelegramPlane className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                      <FaInstagram className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </motion.a>
                   </div>
                 </div>

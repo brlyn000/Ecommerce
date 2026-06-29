@@ -4,6 +4,7 @@ import HeadingTypography from "../assets/components/HeadingTypography";
 import CardProduct from "../assets/components/CardProduct";
 import CategoryCard from "../assets/components/CategoryCard";
 import StoreCards from "../assets/components/StoreCards";
+import Footer from "../assets/components/Footer";
 import { api } from '../services/api';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -226,61 +227,8 @@ export const Home = () => {
       {/* Additional mobile-specific decorations */}
       <div className="block sm:hidden fixed bottom-4 left-4 w-2 h-2 bg-red-400/60 rounded-full animate-pulse"></div>
       <div className="block sm:hidden fixed top-1/4 right-4 w-1.5 h-1.5 bg-red-500/60 rounded-full animate-pulse delay-1000"></div>
-      
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Company Info */}
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">E-Commerce</h3>
-              <p className="text-red-100 mb-4 leading-relaxed">
-                Platform e-commerce terpercaya yang menyediakan berbagai produk berkualitas dengan harga terjangkau. 
-                Berbelanja mudah, aman, dan nyaman bersama kami.
-              </p>
-              <div className="flex space-x-4">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">f</span>
-                </div>
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">t</span>
-                </div>
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">i</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Tautan Cepat</h4>
-              <ul className="space-y-2 text-red-100">
-                <li><a href="/" className="hover:text-white transition-colors">Beranda</a></li>
-                <li><a href="/about-us" className="hover:text-white transition-colors">Tentang Kami</a></li>
-                <li><a href="/contact-us" className="hover:text-white transition-colors">Kontak</a></li>
-                <li><a href="/login" className="hover:text-white transition-colors">Masuk</a></li>
-              </ul>
-            </div>
-            
-            {/* Contact Info */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Kontak Kami</h4>
-              <div className="space-y-2 text-red-100">
-                <p>📧 info@ecommerce.com</p>
-                <p>📞 +62 812-3456-7890</p>
-                <p>📍 Jakarta, Indonesia</p>
-                <p>🕒 24/7 Customer Support</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-red-500/30 mt-8 pt-8 text-center">
-            <p className="text-red-100">
-              © 2024 E-Commerce Platform. All rights reserved. Made with ❤️ in Indonesia
-            </p>
-          </div>
-        </div>
-      </footer>
+
+      <Footer />
     </div>
   );
 };

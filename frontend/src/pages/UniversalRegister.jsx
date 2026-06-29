@@ -4,6 +4,9 @@ import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiUserPlus } from 'react-icons/fi'
 import { API_BASE_URL } from '../config/api'
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
+import Logo from '../assets/image/Logo.png'
+import ImageRegister from '../assets/image/authImage/ImageSignUp.png'
+import TextLogo from '../assets/image/TextLogo.png'
 
 export default function UniversalRegister() {
   const [formData, setFormData] = useState({
@@ -108,16 +111,16 @@ export default function UniversalRegister() {
       >
         <div className="max-w-md z-10">
           <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Join our <span className="underline decoration-4">community</span> today.
+            Start Your Creative <span className="underline decoration-4">Journey</span> today.
           </h1>
           <p className="text-lg text-white/90 mb-8">
-            Create your account and start managing your e-commerce business with ease.
+            Create your account and begin selling products, offering services, and growing your business with Ekraf Market.
           </p>
           <div className="flex justify-center mt-12">
             <img 
-              src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7965.jpg" 
+              src={ImageRegister} 
               alt="Signup" 
-              className="w-80 h-80 object-contain drop-shadow-2xl"
+              className="w-96 h-96 object-contain drop-shadow-2xl"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -135,10 +138,8 @@ export default function UniversalRegister() {
         >
           {/* Logo */}
           <div className="flex items-center justify-center mb-8">
-            <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mr-3">
-              <FiUserPlus className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gray-900">EkrafMarket</span>
+            <img src={Logo} alt="Logo" className="w-12 h-12 mr-3" />
+            <img src={TextLogo} alt="EkrafMarket" className="h-10" />
           </div>
 
           <div className="text-center mb-8">

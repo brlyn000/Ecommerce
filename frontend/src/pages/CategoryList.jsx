@@ -66,7 +66,7 @@ export default function CategoryList() {
               Semua Kategori
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 capitalize">
-              Produk <span className="bg-gradient-to-r from-red-600 to-sky-500 bg-clip-text text-transparent">{categoryName || category}</span>
+              Produk <span className="text-red-500">{categoryName || category}</span>
             </h1>
             <p className="text-gray-500 mt-2">{filteredProducts.length} produk tersedia</p>
           </div>
@@ -159,11 +159,11 @@ export default function CategoryList() {
               Maaf, saat ini belum tersedia produk dalam kategori {category}.
             </p>
             <Link 
-              to="/categories" 
+              to="/" 
               className="inline-flex items-center px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-300"
             >
               <FiArrowLeft className="mr-2" />
-              Kembali ke Kategori
+              Kembali Ke Beranda
             </Link>
           </div>
         )}

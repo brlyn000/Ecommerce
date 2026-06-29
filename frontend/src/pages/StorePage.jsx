@@ -96,7 +96,7 @@ const StorePage = () => {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-white hover:text-blue-100 mb-6 transition-colors bg-white bg-opacity-20 px-4 py-2 rounded-full backdrop-blur-sm"
+              className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors bg-white bg-opacity-20 px-4 py-2 rounded-full backdrop-blur-sm"
             >
               <FiArrowLeft className="mr-2 h-4 w-4" />
               Kembali
