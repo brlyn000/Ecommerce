@@ -45,51 +45,262 @@
 ## ✨ Fitur Lengkap
 
 <details>
-<summary><b>🎨 Frontend</b></summary>
+<summary><b>🏠 Homepage & Navigasi</b></summary>
 
 <br/>
 
 | Fitur | Detail |
 |-------|--------|
-| 🏠 **Homepage** | Carousel dinamis, kategori, produk unggulan |
-| 🔍 **Search & Filter** | Pencarian produk dengan analytics klik |
-| 🛍️ **Product Detail** | Galeri gambar, rating, komentar/review, likes |
-| 🛒 **Keranjang Belanja** | Tambah, hapus, update quantity |
-| ❤️ **Wishlist** | Simpan produk favorit |
-| 📦 **Order Management** | Riwayat order, detail, status tracking |
-| 🏪 **Store Pages** | Halaman toko per tenant |
-| 🔔 **Notifikasi** | Alert real-time untuk tenant |
-| 👤 **Profile** | Edit profil, foto, metode pembayaran |
-| 🔐 **Auth Lengkap** | Login, Register, Google OAuth, Forgot Password |
-| 📊 **Admin Dashboard** | Kelola user, tenant, produk, laporan |
-| 📋 **Tenant Dashboard** | Kelola produk, pesanan, analytics toko |
-| 📱 **WhatsApp Integration** | Hubungi penjual langsung via WA |
-| 📄 **Export** | Export data ke Excel / PDF (jsPDF + xlsx) |
-| 🎨 **Animasi** | Framer Motion transitions |
+| 🎠 **Carousel Dinamis** | Banner homepage dikelola admin, dapat diaktifkan/nonaktifkan & diurutkan |
+| 🗂️ **Kategori Produk** | Grid kategori dengan ikon, auto-refresh setiap 60 detik |
+| 🏪 **Toko Terpercaya** | Section store cards di homepage |
+| 🌟 **Produk Unggulan** | Kartu produk dengan animasi Framer Motion |
+| 📱 **Responsive Layout** | Mobile-first, grid adaptif untuk semua ukuran layar |
+| 🎨 **Animasi Halaman** | Framer Motion scroll animations & floating elements |
+| 🔽 **Loading Skeleton** | Skeleton placeholder saat data loading |
 
 </details>
 
 <details>
-<summary><b>⚙️ Backend</b></summary>
+<summary><b>🔍 Search & Discovery</b></summary>
 
 <br/>
 
 | Fitur | Detail |
 |-------|--------|
-| 🔗 **RESTful API** | 14+ route modules terstruktur |
-| 🔐 **JWT Auth** | Token 24 jam, refresh otomatis |
-| 🔑 **Google OAuth2** | Login/register via Google |
-| 📧 **Email Service** | Reset password via Nodemailer/SMTP |
-| 🚦 **Rate Limiting** | Global 1000/15min, Auth 50/15min |
-| 🛡️ **Input Validation** | express-validator di semua endpoint |
-| 📁 **File Upload** | Multer untuk produk, KTM, carousel, QRIS |
-| 🗄️ **MySQL** | Query langsung dengan mysql2 + connection pool |
-| 🔄 **Auto Migration** | Tabel dibuat otomatis saat server start |
-| 📊 **Analytics** | Sales, produk terlaris, pertumbuhan user |
-| 🌐 **CORS** | Whitelist origin via environment variable |
-| 📝 **Logger** | Winston-based structured logging |
+| 🔍 **Pencarian Real-time** | Debounce 300ms, hasil langsung saat mengetik |
+| 💡 **Autocomplete Dropdown** | Saran produk + kategori dengan highlight teks |
+| 👻 **Ghost Text** | Teks abu-abu prediktif, diterima dengan tombol `Tab` |
+| 🔥 **Trending Searches** | Produk populer ditampilkan saat input kosong |
+| 🕐 **Riwayat Pencarian** | Simpan 5 pencarian terakhir di localStorage |
+| ⌨️ **Keyboard Navigation** | Arrow up/down untuk navigasi, Escape untuk tutup |
+| 📊 **Search Analytics** | Setiap klik produk dari hasil pencarian dicatat |
+| 🏷️ **Filter Kategori** | Browse produk berdasarkan kategori |
+| 💰 **Tampilan Harga Diskon** | Harga coret + harga setelah diskon |
 
 </details>
+
+<details>
+<summary><b>🛍️ Detail Produk</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 🖼️ **Galeri Produk** | Gambar produk dengan hover zoom effect |
+| 🏷️ **Badge Status** | Badge NEW & diskon otomatis |
+| ⭐ **Rating & Review** | Tampil rata-rata bintang + jumlah review |
+| ❤️ **Like / Wishlist** | Toggle like, sinkronisasi counter real-time |
+| 📦 **Indikator Stok** | Status available/limited/sold-out, jumlah stok |
+| 🛒 **Tambah ke Keranjang** | Validasi stok sebelum tambah |
+| 📋 **Order Now** | Modal konfirmasi + pilih quantity langsung |
+| 💬 **Hubungi Penjual** | Tombol WhatsApp & Instagram langsung ke penjual |
+| 🏪 **Link ke Toko** | Tombol kunjungi toko tenant |
+| 📤 **Share Produk** | Share via WhatsApp, Facebook, Twitter, copy link, download gambar |
+| 💳 **Metode Pembayaran** | Dropdown info metode pembayaran tenant |
+| 💬 **Komentar & Review** | Section komentar dengan rating bintang |
+
+</details>
+
+<details>
+<summary><b>🛒 Keranjang & Checkout</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| ➕ **Kelola Quantity** | Tambah/kurangi quantity dengan validasi stok |
+| 🗑️ **Hapus Item** | Hapus produk dari keranjang |
+| 🏪 **Grouping per Toko** | Item dikelompokkan per tenant |
+| 💰 **Total Harga** | Kalkulasi otomatis termasuk diskon |
+| ✅ **Validasi Stok** | Cek stok sebelum checkout |
+| 📦 **Multi-Tenant Order** | Buat order terpisah per tenant dalam satu checkout |
+| 📲 **Notifikasi Post-Order** | Tombol langsung WhatsApp/Instagram tenant setelah order |
+| 🔐 **Auth Guard** | Redirect ke login jika belum terautentikasi |
+
+</details>
+
+<details>
+<summary><b>📦 Orders & Status Tracking</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 📋 **Riwayat Order** | List semua order beserta detail produk & harga |
+| 🚦 **Status Badge** | pending / accepted / completed / confirmed / rejected / cancelled / disputed |
+| 📊 **Progress Tracker** | Visual progress bar 3 tahap: Placed → Accepted → Completed |
+| ❌ **Batalkan Order** | Batalkan order pending dengan alasan (opsional) |
+| ✅ **Konfirmasi Terima** | Tandai item diterima / belum diterima |
+| ⭐ **Rating Post-Order** | Modal rating muncul setelah order confirmed |
+| 💬 **Hubungi Penjual** | Tombol WhatsApp langsung dari halaman order |
+| 🚫 **Alasan Penolakan** | Tampil alasan jika order ditolak tenant |
+
+</details>
+
+<details>
+<summary><b>❤️ Wishlist</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 💾 **Simpan Produk** | Like produk otomatis masuk wishlist |
+| 🗑️ **Hapus dari Wishlist** | Hapus item individual |
+| 🛒 **Add to Cart** | Pindahkan item wishlist langsung ke keranjang |
+| 🔔 **Sinkronisasi Event** | Update count icon navbar via custom event |
+
+</details>
+
+<details>
+<summary><b>👤 Profil Pengguna</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| ✏️ **Edit Profil** | Edit nama, email, nomor HP, alamat dengan modal konfirmasi |
+| 🔒 **Ganti Password** | Ganti password dengan validasi & strength indicator (4 level) |
+| 👁️ **Show/Hide Password** | Toggle tampil password |
+| 🛒 **Mini Cart** | Lihat & kelola isi keranjang dari profil |
+| ❤️ **Mini Wishlist** | Lihat wishlist dari profil |
+| 🕐 **Riwayat Pembelian** | History order dengan status warna |
+| 🏪 **Shortcut Dashboard** | Link langsung ke Admin/Tenant dashboard |
+
+</details>
+
+<details>
+<summary><b>🔐 Autentikasi</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 📝 **Register User** | Register dengan username, email, password, role |
+| 📝 **Register Tenant** | Upload NIM + KTM sebagai verifikasi |
+| 🔑 **Login** | Login dengan username atau email |
+| 🌐 **Google OAuth2** | Login/register via Google, exchange code → JWT |
+| 🆕 **Complete Profile** | Form lengkapi profil untuk Google user baru |
+| 📧 **Forgot Password** | Kirim link reset via email (1 jam) |
+| 🔄 **Reset Password** | Reset dengan token, validasi kadaluarsa & sudah dipakai |
+| 🛡️ **Protected Routes** | ProtectedRoute + RoleProtectedRoute per role |
+| 🚪 **Auto Redirect** | Redirect ke halaman sebelumnya setelah login |
+
+</details>
+
+<details>
+<summary><b>📊 Admin Dashboard</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 📈 **Dashboard Overview** | Statistik global: user, produk, order, revenue |
+| 📦 **Order Management** | Lihat semua order dari semua tenant |
+| 🏷️ **Product Manager** | CRUD produk semua tenant |
+| 🗂️ **Category Manager** | CRUD kategori dengan ikon |
+| 🎠 **Carousel Manager** | Upload, aktifkan, urutkan banner homepage |
+| 👥 **Tenant Management** | Kelola akun tenant, lihat detail toko |
+| 👤 **User Management** | Kelola semua user (aktif/nonaktif) |
+| 📧 **Contact Manager** | Baca & kelola pesan dari form kontak |
+| 📊 **Analytics Global** | Grafik penjualan, pertumbuhan user, produk terlaris |
+| 🔔 **Notifikasi Pending** | Badge order pending di header + dropdown |
+| ⚙️ **Settings** | Konfigurasi nama situs, email, WA, alamat |
+
+</details>
+
+<details>
+<summary><b>📋 Tenant Dashboard</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 📦 **Kelola Produk** | CRUD produk milik sendiri + upload gambar |
+| 📋 **Order Management** | Terima/tolak/selesaikan order dengan konfirmasi modal |
+| ❌ **Tolak dengan Alasan** | Modal isi alasan penolakan wajib |
+| 🔍 **Filter Order** | Filter by status & rentang waktu (today/week/month/year) |
+| 📊 **Product Analytics** | Tabel performa: total orders, likes, quantity, revenue |
+| 📈 **Chart Penjualan** | Line chart monthly quantity + Bar chart top products |
+| 📅 **Filter Chart** | Filter per tahun & bulan |
+| 📥 **Export Excel** | Export analytics & orders ke file `.xlsx` |
+| 🔔 **Notifikasi** | Tab terpisah: likes, orders (checkout), komentar/review |
+| ✅ **Mark as Read** | Tandai 1 notifikasi / semua sekaligus |
+| 💳 **Payment Methods** | Konfigurasi QRIS, transfer bank, e-wallet |
+| 👤 **Edit Profil Toko** | Update nama toko, profil, username, email |
+
+</details>
+
+<details>
+<summary><b>🏪 Toko & Halaman Publik</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 🏪 **Halaman Toko** | Profil toko tenant + list produk |
+| 🗃️ **Daftar Toko** | List semua toko aktif |
+| 🗂️ **Halaman Kategori** | Browse produk per kategori |
+| ℹ️ **About Us** | Halaman informasi platform |
+| 📬 **Contact Us** | Form kontak dengan EmailJS |
+| ❌ **Error Pages** | Halaman 400, 401, 403, 404, 500 |
+
+</details>
+
+<details>
+<summary><b>⚙️ Backend & API</b></summary>
+
+<br/>
+
+| Fitur | Detail |
+|-------|--------|
+| 🔗 **RESTful API** | 14 route modules terstruktur |
+| 🔐 **JWT Auth** | Token 24 jam, validasi di setiap protected endpoint |
+| 🔑 **Google OAuth2** | Exchange authorization code → access token → user info |
+| 📧 **Email Service** | Reset password via Nodemailer/SMTP Gmail |
+| 🚦 **Rate Limiting** | Global 1000/15min, Auth endpoint 50/15min |
+| 🛡️ **Input Validation** | express-validator pada semua endpoint |
+| 📁 **File Upload** | Multer: produk, KTM, carousel, QRIS; diproses jimp |
+| 🗄️ **MySQL Connection Pool** | Query langsung dengan mysql2, pool koneksi |
+| 🔄 **Auto Migration** | 5 migration dijalankan otomatis saat server start |
+| 📊 **Analytics Engine** | Sales per periode, produk terlaris, chart data tenant |
+| 🌐 **CORS Whitelist** | Origin divalidasi dari environment variable |
+| 📝 **Winston Logger** | Structured logging untuk semua event server |
+| 🔒 **bcrypt** | Password hashing dengan salt rounds 12 |
+| 🖼️ **Image Processing** | Resize & optimasi gambar dengan jimp |
+| 🏥 **Health Check** | Endpoint `/api/health` untuk monitoring |
+
+</details>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
+
+## 📊 Ringkasan Fitur per Role
+
+<div align="center">
+
+| Fitur | 👑 Admin | 🏪 Tenant | 👤 User |
+|-------|:-------:|:--------:|:------:|
+| Browse produk & kategori | ✅ | ✅ | ✅ |
+| Pencarian + autocomplete | ✅ | ✅ | ✅ |
+| Detail produk + komentar | ✅ | ✅ | ✅ |
+| Like / Wishlist | ✅ | ✅ | ✅ |
+| Keranjang & Checkout | ✅ | ✅ | ✅ |
+| Riwayat & tracking order | ✅ | ✅ | ✅ |
+| Batalkan order | ✅ | ✅ | ✅ |
+| Rating & review produk | ✅ | ✅ | ✅ |
+| Kelola produk sendiri | ❌ | ✅ | ❌ |
+| Terima / tolak order | ❌ | ✅ | ❌ |
+| Analytics toko + chart | ❌ | ✅ | ❌ |
+| Notifikasi (like/order/review) | ❌ | ✅ | ❌ |
+| Export Excel (orders & analytics) | ❌ | ✅ | ❌ |
+| Konfigurasi payment methods | ❌ | ✅ | ❌ |
+| Kelola semua user & tenant | ✅ | ❌ | ❌ |
+| Kelola carousel homepage | ✅ | ❌ | ❌ |
+| Kelola semua produk & kategori | ✅ | ❌ | ❌ |
+| Analytics global platform | ✅ | ❌ | ❌ |
+| Kelola pesan kontak | ✅ | ❌ | ❌ |
+
+</div>
 
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%" />
 
